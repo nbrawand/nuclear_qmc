@@ -30,9 +30,13 @@ def get_tables(mass_number, as_jax_array=True, proton_number=None
     return tables
 
 
+def get_number_of_spin_states(n_particles):
+    return 2 ** n_particles
+
+
 def get_spin_state_indices(mass_number, as_jax_array=True):
     package = jnp if as_jax_array else np
-    return package.array(package.arange(2 ** mass_number), dtype=package.int32)
+    return package.array(package.arange(get_number_of_spin_states(mass_number)), dtype=package.int32)
 
 
 def get_spin_particle_pairs(mass_number, as_jax_array=True):

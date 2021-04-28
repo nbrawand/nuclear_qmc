@@ -1,6 +1,11 @@
-from nuclear_qmc.spin.get_tables import get_tables
-from nuclear_qmc.sample import sample
+from jax.config import config
 from jax import random
+# from nuclear_qmc.wave_function.wave_function_base import WaveFunctionBase as WaveFunction
+from nuclear_qmc.wave_function.wave_function_single_orbital import WaveFunctionSingleOrbital as WaveFunction
+from nuclear_qmc.sample import sample
+
+config.update("jax_enable_x64", True)
+# config.update('jax_platform_name', 'cpu')
 
 N_PROTON = 2
 N_NEUTRON = 2
@@ -12,22 +17,19 @@ N_DIMENSIONS = 3
 N_EQUILIBRIUM_STEPS = 20
 N_STEPS = 100
 N_VOID_STEPS = 10
-WAVE_FUNCTION = None
-KEY = random.PRNGKey(SEED)
+wave_function = WaveFunction(N_PROTON, N_NEUTRON)
 
-tables = get_tables(N_PROTON + N_NEUTRON
-                    , as_jax_array=True
-                    , proton_number=N_PROTON
-                    , also_return_binary_representation=False
-                    , include_iso_spin=True)
 
-sample(KEY
-       , INITIAL_WALKER_STANDARD_DEVIATION
-       , WALKER_STEP_SIZE
-       , N_WALKERS
-       , N_NEUTRON + N_PROTON
-       , N_DIMENSIONS
-       , N_EQUILIBRIUM_STEPS
-       , N_STEPS
-       , N_VOID_STEPS
-       , WAVE_FUNCTION)
+key = random.PRNGKey(SEED)
+key = sample(
+    wave_function
+    , N_STEPS
+    , INITIAL_WALKER_STANDARD_DEVIATION
+    , WALKER_STEP_SIZE
+    , N_WALKERS
+    , N_NEUTRON + N_PROTON
+    , N_DIMENSIONS
+    , N_EQUILIBRIUM_STEPS
+    , N_VOID_STEPS
+    , key
+)
