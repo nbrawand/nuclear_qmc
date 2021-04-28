@@ -1,17 +1,12 @@
 import jax.numpy as jnp
-
-from nuclear_qmc.spin.get_spin_isospin_wave_function import get_spin_isospin_wave_function
-from nuclear_qmc.wave_function.wave_function_base import WaveFunction
+from nuclear_qmc.wave_function.wave_function import WaveFunction
 
 
 class WaveFunctionSingleOrbital(WaveFunction):
 
-    def __init__(self, n_protons, n_neutrons):
-        self._n_protons = n_protons
-        self._n_neutrons = n_neutrons
-        self._n_particles = self._n_protons + self._n_neutrons
-        self.parameters = 0.5 * jnp.ones(self._n_particles, dtype=jnp.float64)
-        self.spin_isospin = get_spin_isospin_wave_function(self._n_protons, self._n_neutrons)
+    def __init__(self, n_protons, n_neutrons, include_iso_spin=True):
+        super().__init__(n_protons, n_neutrons, include_iso_spin=include_iso_spin)
+        self.parameters = 0.5 * jnp.ones(n_protons + n_neutrons, dtype=jnp.float64)
 
     def density(self, r_coords):
         """

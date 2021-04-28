@@ -7,20 +7,6 @@ from functools import partial
 from nuclear_qmc.constants.constants import H_BAR, NUCLEON_MASS, H_BAR_SQRD_OVER_2_M
 
 
-def hamiltonian(n_particles, wave_function, potential):
-    mass = NUCLEON_MASS
-    hbar = H_BAR
-    hbar2m = H_BAR_SQRD_OVER_2_M
-    nrho = 100
-    rho_min = 0.
-    rho_max = 5.
-    r_rho = np.linspace(rho_min, rho_max, num=nrho + 1)
-    v_rho = np.zeros(shape=[nrho])
-    for i in range(nrho):
-        v_rho[i] = r_rho[i + 1] ** 3 - r_rho[i] ** 3
-    v_rho = 4. / 3. * jnp.pi * v_rho
-
-
 @partial(jax.jit, static_argnums=(0,))
 def v_pair(k, params, r, sz):
     r_ij = r[ip[k], :] - r[jp[k], :]
@@ -94,21 +80,3 @@ def get_local_energy(wave_function, r_coords):
     potential_energy_value = potential_energy()
     return kinetic_energy_value + potential_energy_value
 
-
-def density(x):
-    """Computes the expectation value of the single-nucleon density
-    """
-    jnp.set_printoptions(threshold=np.inf)
-    xcm = jnp.mean(x, axis=1)
-    x = x - xcm[:, None, :]
-    r = jnp.sqrt(jnp.sum(x ** 2, axis=(2)))
-    rho = jnp.histogram(r, bins=nrho, range=(rho_min, rho_max))
-    rho = rho[0] / v_rho
-    return rho
-
-
-def density_print(rho, error_rho):
-    jnp.set_printoptions(precision=8, threshold=np.inf)
-    for i in range(nrho):
-        print((r_rho[i] + r_rho[i + 1]) / 2., rho[i], error_rho[i])
-    return
