@@ -34,14 +34,10 @@ def v_pair(k, params, r, sz):
 
 
 @partial(jax.jit, static_argnums=(0,))
-def potential_energy(params, r, sz):
-    "Returns potential energy"
+def potential_energy(wave_function, r_coords):
     v_ij = jnp.zeros(6)
     gr3b = jnp.zeros(npart)
     V_ijk = 0
-
-    #        vc_ij, vs_ij, t_ij = v_pair(0, params, r, sz)
-
     k = jnp.arange(npair)
     vc_ij, vs_ij, t_ij = vmap(v_pair, in_axes=(0, None, None, None))(k, params, r, sz)
     v_ij = index_add(v_ij, 0, jnp.sum(vc_ij[:]))
@@ -80,21 +76,23 @@ def kinetic_energy(wave_function, r_coords, psi_density_at_r):
 
 
 @partial(jax.jit, static_argnums=(0,))
-def get_kinetic_energy_jf(wave_function, r_coords, psi_density_at_r):
-    d_psi = jax.grad(wave_function.density, argnums=0)(r_coords)
-    d_psi = d_psi.reshape(-1)
-    d_psi = d_psi / psi_density_at_r
-    ke_jf = H_BAR_SQRD_OVER_2_M * jnp.sum(d_psi * d_psi)
-    return ke_jf
+def energy(wave_function, r_coords):
+    """
 
+    Parameters
+    ----------
+    wave_function: WaveFunction
+    r_coords: ndarray[n_particles, n_dimensions]
 
-@partial(jax.jit, static_argnums=(0,))
-def energy(params, r, sz):
-    ke, ke_jf = vmap(kinetic_energy, in_axes=(None, 0, None), out_axes=(0))(params, r, sz)
-    pe = vmap(potential_energy, in_axes=(None, 0, None))(params, r, sz)
-    energy_jf = ke_jf + pe
-    energy = ke + pe
-    return energy, energy_jf
+    Returns
+    -------
+    float
+
+    """
+    psi_density_at_r = wave_function.density(r_coords)
+    kinetic_energy_value = kinetic_energy(wave_function, r_coords, psi_density_at_r)
+    potential_energy_value = potential_energy()
+    return kinetic_energy_value + potential_energy_value
 
 
 def density(x):
