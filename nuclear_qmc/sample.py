@@ -56,7 +56,6 @@ def sample(
         key, x_o, x_stored))
 
     # Averaging steps
-    acc_x_tot = 0
     x_stored = jnp.zeros(shape=[n_steps, n_walkers, n_particles, n_dimensions], dtype=jnp.float64)
     key, x_o, x_stored = fori_loop(0, n_steps, step_nvoid, (
         key, x_o, x_stored))
