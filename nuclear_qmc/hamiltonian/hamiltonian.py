@@ -76,7 +76,7 @@ def kinetic_energy(wave_function, r_coords, psi_density_at_r):
 
 
 @partial(jax.jit, static_argnums=(0,))
-def energy(wave_function, r_coords):
+def get_local_energy(wave_function, r_coords):
     """
 
     Parameters
