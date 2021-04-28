@@ -2,7 +2,7 @@ import jax.numpy as jnp
 from abc import abstractmethod
 
 
-class WaveFunctionBase:
+class WaveFunction:
 
     @abstractmethod
     def density(self, r_coords):

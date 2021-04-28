@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-from jax import random, jit
+from jax import random, jit, vmap
 from jax.ops import index, index_update
 from jax.lax import fori_loop
 from functools import partial
@@ -30,7 +30,7 @@ def sample(
         def step(j, loop_carry_j):
             x_o, wpsi_o, = loop_carry_j
             x_n = x_o + move[j, :, :, :]
-            wpsi_n = wave_function.density(x_n)
+            wpsi_n = vmap(wave_function.density, in_axes=0)(x_n)
             prob = (jnp.abs(wpsi_n) / jnp.abs(wpsi_o)) ** 2
             accept = jnp.greater_equal(prob, unif_x[j, :])
             x_o = jnp.where(accept.reshape([n_walkers, 1, 1]), x_n, x_o)

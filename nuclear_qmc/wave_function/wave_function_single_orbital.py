@@ -1,10 +1,10 @@
 import jax.numpy as jnp
 
 from nuclear_qmc.spin.get_spin_isospin_wave_function import get_spin_isospin_wave_function
-from nuclear_qmc.wave_function.wave_function_base import WaveFunctionBase
+from nuclear_qmc.wave_function.wave_function_base import WaveFunction
 
 
-class WaveFunctionSingleOrbital(WaveFunctionBase):
+class WaveFunctionSingleOrbital(WaveFunction):
 
     def __init__(self, n_protons, n_neutrons):
         self._n_protons = n_protons
@@ -14,6 +14,17 @@ class WaveFunctionSingleOrbital(WaveFunctionBase):
         self.spin_isospin = get_spin_isospin_wave_function(self._n_protons, self._n_neutrons)
 
     def density(self, r_coords):
+        """
+
+        Parameters
+        ----------
+        r_coords: ndarray[n_particles, n_dimensions]
+
+        Returns
+        -------
+        float
+
+        """
         r_mag = jnp.linalg.norm(r_coords, axis=-1)
         density = jnp.exp(self.parameters * r_mag)
         density = jnp.prod(density, axis=-1)
