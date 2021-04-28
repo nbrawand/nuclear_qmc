@@ -7,12 +7,12 @@ from nuclear_qmc.spin.get_tables import get_spin_particle_pairs, get_spin_exchan
 
 class WaveFunction:
 
-    def __init__(self, n_protons, n_neutrons, include_iso_spin=True):
+    def __init__(self, n_protons, n_neutrons, include_isospin=True):
         self.n_protons = n_protons
         self.n_neutrons = n_neutrons
-        self.include_iso_spin = include_iso_spin
+        self.include_iso_spin = include_isospin
         self._initialize_spin_isospin()
-        self.spin = get_spin_isospin_wave_function(self.n_protons, self.n_neutrons)
+        self.spin = get_spin_isospin_wave_function(self.n_protons, self.n_neutrons, include_isospin=include_isospin)
 
     def _initialize_spin_isospin(self):
         mass_number = self.n_protons + self.n_neutrons
