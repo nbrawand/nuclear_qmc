@@ -5,6 +5,7 @@ from jax import random, grad, jit, vmap, jacfwd, jacrev
 from jax.ops import index, index_add, index_update
 from functools import partial
 from nuclear_qmc.constants.constants import H_BAR, NUCLEON_MASS, H_BAR_SQRD_OVER_2_M
+from nuclear_qmc.wave_function.wave_function import WaveFunction
 
 
 @partial(jax.jit, static_argnums=(0,))
@@ -19,6 +20,7 @@ def v_pair(k, params, r, sz):
     return vc_ij, vs_ij, t_ij
 
 
+"""
 @partial(jax.jit, static_argnums=(0,))
 def potential_energy(wave_function, r_coords):
     v_ij = jnp.zeros(6)
@@ -36,6 +38,19 @@ def potential_energy(wave_function, r_coords):
         V_ijk = 0.5 * jnp.sum(gr3b ** 2) - jnp.sum(t_ij ** 2)
     pe = v_ij[0] + v_ij[2] + V_ijk
     return pe
+"""
+
+
+def potential_energy(wave_function: WaveFunction, r_coords, potential):
+    """Potential from arXiv:2007.14282v2 [nucl-th] 13 Apr 2021"""
+    ultraviolet_cutoff = 4
+    C_1 = -487.6128
+    C_2 = -17.5515
+    D_0 = jnp.sqrt(677.79890)
+    r_ij_sqrd = get_r_ij_sqrd(r_coords, wave_function.particle_pairs)
+    exp_neg_r_lambda_4 = jnp.exp(-r_ij_sqrd * ultraviolet_cutoff ** 2 / 4.)
+    first_term_coefficients = C_1 * exp_neg_r_lambda_4
+    second_term_coefficients = C_2 * exp_neg_r_lambda_4
 
 
 @partial(jax.jit, static_argnums=(0,))
@@ -61,18 +76,19 @@ def kinetic_energy(wave_function, r_coords, psi_density_at_r):
     return ke
 
 
+@jit
 def get_r_ij_sqrd(r_coords, particle_pairs):
     """
 
     Parameters
     ----------
     r_coords: ndarray[n_particles, n_dimensions]
-    particle_pairs: ndarray[n_pairs, 2] the index of each pair in r_coords
+    particle_pairs: ndarray[n_pairs, 2] the index of each particle in r_coords
 
     Returns
     -------
     ndarray[n_pairs]
-        (r_i-r_j)^2 for each combo i<j, j
+        (r_i-r_j)^2 for each combo i<j, j in order of particle_pairs
     """
     r_ij_sqrd = r_coords[particle_pairs[:, 0]] - r_coords[particle_pairs[:, 1]]
     r_ij_sqrd = (r_ij_sqrd ** 2).sum(axis=-1)

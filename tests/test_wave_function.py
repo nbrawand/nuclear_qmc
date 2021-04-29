@@ -6,7 +6,6 @@ class TestWaveFunction:
 
     def test_sigma(self):
         computed = self.WFC.sigma(1.0)
-        print(computed)
 
     def test_tau(self):
         assert True
