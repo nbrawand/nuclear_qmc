@@ -1,7 +1,8 @@
 from nuclear_qmc.hamiltonian.hamiltonian import get_r_ij_sqrd, get_r_ik_r_ij_cycles, one_particle_kinetic_energy, \
-    kinetic_energy
+    kinetic_energy, get_local_energy
 import jax.numpy as jnp
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
+from nuclear_qmc.wave_function.wave_function import WaveFunction
 
 
 class TestHamiltonian:
@@ -45,3 +46,10 @@ class TestHamiltonian:
         expected = -H_BAR_SQRD_OVER_2_M*4.*2.
         computed = kinetic_energy(psi, r_coords)
         assert jnp.array_equal(computed, expected)
+
+    def test_get_local_energy(self):
+        wfc = WaveFunction(1, 1)
+        wfc.spin = jnp.real(wfc.spin)
+        r_coords = jnp.array([[0., 1., 2.], [0., 1., 2.]])
+        computed = get_local_energy(wfc, r_coords)
+        print(computed)

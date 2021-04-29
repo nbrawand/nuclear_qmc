@@ -53,9 +53,12 @@ def potential_energy(wave_function: WaveFunction, r_coords):
     C_2 = -17.5515
     second_term_coefficients = C_2 * exp_neg_r_lambda_4
 
-    D_0 = jnp.sqrt(677.79890)
-    r_ik_r_ij = get_r_ik_r_ij_cycles(r_coords, wave_function.particle_triplets)
-    third_term_coefficient = D_0 * jnp.exp(-r_ik_r_ij * ultraviolet_cutoff ** 2 / 4.).sum()
+    if wave_function.particle_triplets.shape[0] > 0:
+        D_0 = jnp.sqrt(677.79890)
+        r_ik_r_ij = get_r_ik_r_ij_cycles(r_coords, wave_function.particle_triplets)
+        third_term_coefficient = D_0 * jnp.exp(-r_ik_r_ij * ultraviolet_cutoff ** 2 / 4.).sum()
+    else:
+        third_term_coefficient = 0.0
 
     psi_r = wave_function.psi(r_coords)
     v_psi = (first_term_coefficient + third_term_coefficient) * psi_r
@@ -80,7 +83,7 @@ def one_particle_kinetic_energy(psi, r_coords):
 
     """
     d2_psi = jax.hessian(psi, argnums=0)(r_coords)
-    d2_psi = jnp.trace(d2_psi, axis1=1, axis2=2)
+    d2_psi = jnp.trace(d2_psi, axis1=-1, axis2=-2)
     ke = - H_BAR_SQRD_OVER_2_M * jnp.vdot(psi(r_coords), d2_psi)
     return ke
 
@@ -162,7 +165,7 @@ def get_r_ik_r_ij_cycles(r_coords, particle_triplets):
 
 
 @partial(jax.jit, static_argnums=(0,))
-def get_local_energy(wave_function, r_coords):
+def get_local_energy(wave_function: WaveFunction, r_coords):
     """
 
     Parameters
@@ -177,4 +180,6 @@ def get_local_energy(wave_function, r_coords):
     """
     kinetic_energy_value = kinetic_energy(wave_function.psi, r_coords)
     potential_energy_value = potential_energy(wave_function, r_coords)
-    return kinetic_energy_value + potential_energy_value
+    psi_r = wave_function.psi(r_coords)
+    psi_sqrd = jnp.real(jnp.vdot(psi_r, psi_r))
+    return (kinetic_energy_value + potential_energy_value) / psi_sqrd

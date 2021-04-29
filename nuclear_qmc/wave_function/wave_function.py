@@ -32,12 +32,12 @@ class WaveFunction:
                                                                        , also_return_binary_representation=False)
 
     def sigma(self, r_coords, pair_coefficients, psi_r=None):
-        if not psi_r:
+        if psi_r is None:
             psi_r = self.psi(r_coords)
         return self._tau_or_sigma(psi_r, self.spin_exchange_indices, pair_coefficients)
 
     def tau(self, r_coords, pair_coefficients, psi_r=None):
-        if not psi_r:
+        if psi_r is None:
             psi_r = self.psi(r_coords)
         return self._tau_or_sigma(psi_r, self.isospin_exchange_indices, pair_coefficients)
 
