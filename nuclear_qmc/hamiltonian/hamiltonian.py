@@ -61,6 +61,24 @@ def kinetic_energy(wave_function, r_coords, psi_density_at_r):
     return ke
 
 
+def get_r_ij_sqrd(r_coords, particle_pairs):
+    """
+
+    Parameters
+    ----------
+    r_coords: ndarray[n_particles, n_dimensions]
+    particle_pairs: ndarray[n_pairs, 2] the index of each pair in r_coords
+
+    Returns
+    -------
+    ndarray[n_pairs]
+        (r_i-r_j)^2 for each combo i<j, j
+    """
+    r_ij_sqrd = r_coords[particle_pairs[:, 0]] - r_coords[particle_pairs[:, 1]]
+    r_ij_sqrd = (r_ij_sqrd ** 2).sum(axis=-1)
+    return r_ij_sqrd
+
+
 @partial(jax.jit, static_argnums=(0,))
 def get_local_energy(wave_function, r_coords):
     """
@@ -79,4 +97,3 @@ def get_local_energy(wave_function, r_coords):
     kinetic_energy_value = kinetic_energy(wave_function, r_coords, psi_density_at_r)
     potential_energy_value = potential_energy()
     return kinetic_energy_value + potential_energy_value
-
