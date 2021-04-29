@@ -8,7 +8,7 @@ class WaveFunctionSingleOrbital(WaveFunction):
         super().__init__(n_protons, n_neutrons, include_isospin=include_isospin)
         self.parameters = 0.5 * jnp.ones(n_protons + n_neutrons, dtype=jnp.float64)
 
-    def density(self, r_coords):
+    def weight(self, r_coords):
         """
 
         Parameters

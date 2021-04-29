@@ -41,5 +41,5 @@ class WaveFunction:
         return sigma_spin.sum(axis=1)
 
     @abstractmethod
-    def density(self, r_coords):
+    def weight(self, r_coords):
         return jnp.ones(r_coords.shape[0], dtype=jnp.float64)

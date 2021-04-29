@@ -53,7 +53,7 @@ def kinetic_energy(wave_function, r_coords, psi_density_at_r):
     float
 
     """
-    d2_psi = jax.hessian(wave_function.density, argnums=0)(r_coords)
+    d2_psi = jax.hessian(wave_function.weight, argnums=0)(r_coords)
     dim = r_coords.shape[-1] * r_coords.shape[-2]
     d2_psi = d2_psi.reshape(dim, dim)
     d2_psi = d2_psi / psi_density_at_r
@@ -75,7 +75,7 @@ def get_local_energy(wave_function, r_coords):
     float
 
     """
-    psi_density_at_r = wave_function.density(r_coords)
+    psi_density_at_r = wave_function.weight(r_coords)
     kinetic_energy_value = kinetic_energy(wave_function, r_coords, psi_density_at_r)
     potential_energy_value = potential_energy()
     return kinetic_energy_value + potential_energy_value

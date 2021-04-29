@@ -30,7 +30,7 @@ def sample(
         def step(j, loop_carry_j):
             x_o, wpsi_o, = loop_carry_j
             x_n = x_o + move[j, :, :, :]
-            wpsi_n = vmap(wave_function.density, in_axes=0)(x_n)
+            wpsi_n = vmap(wave_function.weight, in_axes=0)(x_n)
             prob = (jnp.abs(wpsi_n) / jnp.abs(wpsi_o)) ** 2
             accept = jnp.greater_equal(prob, unif_x[j, :])
             x_o = jnp.where(accept.reshape([n_walkers, 1, 1]), x_n, x_o)
@@ -39,7 +39,7 @@ def sample(
 
         xcm = jnp.mean(x_o, axis=1)
         x_o = x_o - xcm[:, None, :]
-        wpsi_o = wave_function.density(x_o)
+        wpsi_o = wave_function.weight(x_o)
 
         x_o, wpsi_o = fori_loop(0, n_void_steps, step, (x_o, wpsi_o))
 
