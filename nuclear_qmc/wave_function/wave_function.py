@@ -3,6 +3,7 @@ from abc import abstractmethod
 from nuclear_qmc.spin.get_spin_isospin_wave_function import get_spin_isospin_wave_function
 from nuclear_qmc.spin.get_tables import get_spin_particle_pairs, get_spin_exchange_indices, get_isospin_exchange_index, \
     get_spin_state_indices
+from nuclear_qmc.utils.get_triplets import get_triplets
 
 
 class WaveFunction:
@@ -18,6 +19,7 @@ class WaveFunction:
         mass_number = self.n_protons + self.n_neutrons
         as_jax_array = True
         self.particle_pairs = get_spin_particle_pairs(mass_number, as_jax_array)
+        self.particle_triplets = get_triplets(jnp.array(mass_number))
         self.spin_exchange_indices = get_spin_exchange_indices(self.particle_pairs
                                                                , get_spin_state_indices(mass_number, as_jax_array)
                                                                , as_jax_array)
