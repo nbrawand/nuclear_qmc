@@ -176,5 +176,5 @@ def get_local_energy(wave_function, r_coords):
 
     """
     kinetic_energy_value = kinetic_energy(wave_function.psi, r_coords)
-    potential_energy_value = potential_energy()
+    potential_energy_value = potential_energy(wave_function, r_coords)
     return kinetic_energy_value + potential_energy_value
