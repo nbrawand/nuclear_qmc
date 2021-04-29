@@ -59,7 +59,7 @@ def potential_energy(wave_function: WaveFunction, r_coords):
 
     psi_r = wave_function.psi(r_coords)
     v_psi = (first_term_coefficient + third_term_coefficient) * psi_r
-    v_psi += wave_function.sigma(r_coords, second_term_coefficients)
+    v_psi += wave_function.sigma(None, second_term_coefficients, psi_r)
     psi_v_psi = jnp.vdot(psi_r, v_psi)
     return psi_v_psi
 

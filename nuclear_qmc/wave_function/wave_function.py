@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+from jax import jit
 from abc import abstractmethod
 from nuclear_qmc.spin.get_spin_isospin_wave_function import get_spin_isospin_wave_function
 from nuclear_qmc.spin.get_tables import get_spin_particle_pairs, get_spin_exchange_indices, get_isospin_exchange_index, \
@@ -30,14 +31,19 @@ class WaveFunction:
                                                                        , as_jax_array
                                                                        , also_return_binary_representation=False)
 
-    def sigma(self, r_coords, pair_coefficients):
-        return self._tau_or_sigma(r_coords, self.spin_exchange_indices, pair_coefficients)
+    def sigma(self, r_coords, pair_coefficients, psi_r=None):
+        if not psi_r:
+            psi_r = self.psi(r_coords)
+        return self._tau_or_sigma(psi_r, self.spin_exchange_indices, pair_coefficients)
 
-    def tau(self, r_coords, pair_coefficients):
-        return self._tau_or_sigma(r_coords, self.isospin_exchange_indices, pair_coefficients)
+    def tau(self, r_coords, pair_coefficients, psi_r=None):
+        if not psi_r:
+            psi_r = self.psi(r_coords)
+        return self._tau_or_sigma(psi_r, self.isospin_exchange_indices, pair_coefficients)
 
-    def _tau_or_sigma(self, r_coords, exchange_indices, pair_coefficients):
-        psi_r = self.psi(r_coords)
+    @staticmethod
+    @jit
+    def _tau_or_sigma(psi_r, exchange_indices, pair_coefficients):
         sigma_psi = psi_r[exchange_indices]
         sigma_psi = 2.0 * sigma_psi - psi_r.reshape(-1, 1)
         sigma_psi *= pair_coefficients
