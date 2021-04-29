@@ -34,5 +34,3 @@ key, r_coords = sample(
     , key
 )
 
-psi_density_at_r = wave_function.weight(r_coords)
-print(kinetic_energy(wave_function, r_coords[0, 0], psi_density_at_r[0, 0]))

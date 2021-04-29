@@ -6,6 +6,11 @@ from jax.lax import fori_loop
 from functools import partial
 
 
+@jit
+def weight(psi_r):
+    return jnp.real(jnp.vdot(psi_r, psi_r))
+
+
 @partial(jit, static_argnums=(range(9)))
 def sample(
         wave_function
@@ -30,7 +35,8 @@ def sample(
         def step(j, loop_carry_j):
             x_o, wpsi_o, = loop_carry_j
             x_n = x_o + move[j, :, :, :]
-            wpsi_n = vmap(wave_function.weight, in_axes=0)(x_n)
+            psi_r = vmap(wave_function.psi, in_axes=0)(x_n)
+            wpsi_n = vmap(weight, in_axes=0)(psi_r)
             prob = (jnp.abs(wpsi_n) / jnp.abs(wpsi_o)) ** 2
             accept = jnp.greater_equal(prob, unif_x[j, :])
             x_o = jnp.where(accept.reshape([n_walkers, 1, 1]), x_n, x_o)
@@ -39,7 +45,8 @@ def sample(
 
         xcm = jnp.mean(x_o, axis=1)
         x_o = x_o - xcm[:, None, :]
-        wpsi_o = wave_function.weight(x_o)
+        psi_r = vmap(wave_function.psi, in_axes=0)(x_o)
+        wpsi_o = vmap(weight, in_axes=0)(psi_r)
 
         x_o, wpsi_o = fori_loop(0, n_void_steps, step, (x_o, wpsi_o))
 

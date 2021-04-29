@@ -8,21 +8,6 @@ class WaveFunctionSingleOrbital(WaveFunction):
         super().__init__(n_protons, n_neutrons, include_isospin=include_isospin)
         self.parameters = 0.5 * jnp.ones(n_protons + n_neutrons, dtype=jnp.float64)
 
-    def weight(self, r_coords):
-        """
-
-        Parameters
-        ----------
-        r_coords: ndarray[n_particles, n_dimensions]
-
-        Returns
-        -------
-        float
-
-        """
-        psi = self.psi(r_coords)
-        return jnp.vdot(psi, psi)
-
     def psi(self, r_coords):
         r_mag = jnp.linalg.norm(r_coords, axis=-1)
         density = jnp.exp(self.parameters * r_mag)
