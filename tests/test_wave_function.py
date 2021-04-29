@@ -1,4 +1,5 @@
 from nuclear_qmc.wave_function.wave_function import WaveFunction
+import jax.numpy as jnp
 
 
 class TestWaveFunction:
@@ -9,3 +10,7 @@ class TestWaveFunction:
 
     def test_tau(self):
         assert True
+
+    def test_kinetic_energy(self):
+        r_coords = jnp.array([[0., 1., 2.], [0., 0., 0.]])
+        computed = self.WFC.kinetic_energy(r_coords)
