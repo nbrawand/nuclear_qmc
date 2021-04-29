@@ -1,7 +1,7 @@
 from jax.config import config
 from jax import random
 # from nuclear_qmc.wave_function.wave_function_base import WaveFunctionBase as WaveFunction
-from nuclear_qmc.hamiltonian.hamiltonian import kinetic_energy
+from nuclear_qmc.hamiltonian.hamiltonian import one_particle_kinetic_energy
 from nuclear_qmc.wave_function.wave_function_single_orbital import WaveFunctionSingleOrbital as WaveFunction
 from nuclear_qmc.sample import sample
 

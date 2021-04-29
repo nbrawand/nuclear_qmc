@@ -1,5 +1,7 @@
-from nuclear_qmc.hamiltonian.hamiltonian import get_r_ij_sqrd, get_r_ik_r_ij_cycles
+from nuclear_qmc.hamiltonian.hamiltonian import get_r_ij_sqrd, get_r_ik_r_ij_cycles, one_particle_kinetic_energy, \
+    kinetic_energy
 import jax.numpy as jnp
+from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
 
 
 class TestHamiltonian:
@@ -29,3 +31,17 @@ class TestHamiltonian:
             , [3, 2, 1]
         ])
         computed = get_r_ik_r_ij_cycles(r_coords, trips)
+
+    def test_one_particle_kinetic_energy(self):
+        psi = lambda x: (x[0] ** 2 + x[1] ** 2) * jnp.array([1, 0, 0, 0])
+        r_coords = jnp.array([0., 1., 2.])
+        computed = one_particle_kinetic_energy(psi, r_coords)
+        expected = -H_BAR_SQRD_OVER_2_M*4.
+        assert jnp.array_equal(computed, expected)
+
+    def test_one_particle_kinetic_energy(self):
+        psi = lambda x: (x[0] ** 2 + x[1] ** 2) * jnp.array([1, 0, 0, 0])
+        r_coords = jnp.array([[0., 1., 2.], [0., 1., 2.]])
+        expected = -H_BAR_SQRD_OVER_2_M*4.*2.
+        computed = kinetic_energy(psi, r_coords)
+        assert jnp.array_equal(computed, expected)

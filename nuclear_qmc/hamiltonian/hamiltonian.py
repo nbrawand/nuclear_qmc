@@ -64,8 +64,28 @@ def potential_energy(wave_function: WaveFunction, r_coords):
     return psi_v_psi
 
 
-@partial(jax.jit, static_argnums=(0,))
-def kinetic_energy(wave_function, r_coords, psi_density_at_r):
+# @partial(jax.jit, static_argnums=(0,))
+def one_particle_kinetic_energy(psi, r_coords):
+    """
+
+    Parameters
+    ----------
+    wave_function: WaveFunction
+    r_coords: ndarray[n_dimensions]
+    psi_density_at_r: float
+
+    Returns
+    -------
+    float
+
+    """
+    d2_psi = jax.hessian(psi, argnums=0)(r_coords)
+    d2_psi = jnp.trace(d2_psi, axis1=1, axis2=2)
+    ke = - H_BAR_SQRD_OVER_2_M * jnp.vdot(psi(r_coords), d2_psi)
+    return ke
+
+
+def kinetic_energy(psi, r_coords):
     """
 
     Parameters
@@ -79,12 +99,8 @@ def kinetic_energy(wave_function, r_coords, psi_density_at_r):
     float
 
     """
-    d2_psi = jax.hessian(wave_function.weight, argnums=0)(r_coords)
-    dim = r_coords.shape[-1] * r_coords.shape[-2]
-    d2_psi = d2_psi.reshape(dim, dim)
-    d2_psi = d2_psi / psi_density_at_r
-    ke = - H_BAR_SQRD_OVER_2_M * jnp.trace(d2_psi)
-    return ke
+    ke = vmap(one_particle_kinetic_energy, in_axes=(None, 0))(psi, r_coords)
+    return jnp.sum(ke)
 
 
 @jit
@@ -159,7 +175,6 @@ def get_local_energy(wave_function, r_coords):
     float
 
     """
-    psi_density_at_r = wave_function.weight(r_coords)
-    kinetic_energy_value = kinetic_energy(wave_function, r_coords, psi_density_at_r)
+    kinetic_energy_value = kinetic_energy(wave_function.psi, r_coords)
     potential_energy_value = potential_energy()
     return kinetic_energy_value + potential_energy_value
