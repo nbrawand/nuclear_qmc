@@ -30,17 +30,18 @@ class WaveFunction:
                                                                        , as_jax_array
                                                                        , also_return_binary_representation=False)
 
-    def sigma(self, pair_coefficients):
-        return self._tau_or_sigma(self.spin_exchange_indices, pair_coefficients)
+    def sigma(self, r_coords, pair_coefficients):
+        return self._tau_or_sigma(r_coords, self.spin_exchange_indices, pair_coefficients)
 
-    def tau(self, pair_coefficients):
-        return self._tau_or_sigma(self.isospin_exchange_indices, pair_coefficients)
+    def tau(self, r_coords, pair_coefficients):
+        return self._tau_or_sigma(r_coords, self.isospin_exchange_indices, pair_coefficients)
 
-    def _tau_or_sigma(self, exchange_indices, pair_coefficients):
-        sigma_spin = self.spin[exchange_indices]
-        sigma_spin = 2.0 * sigma_spin - self.spin.reshape(-1, 1)
-        sigma_spin *= pair_coefficients
-        return sigma_spin.sum(axis=1)
+    def _tau_or_sigma(self, r_coords, exchange_indices, pair_coefficients):
+        psi_r = self.psi(r_coords)
+        sigma_psi = psi_r[exchange_indices]
+        sigma_psi = 2.0 * sigma_psi - psi_r.reshape(-1, 1)
+        sigma_psi *= pair_coefficients
+        return sigma_psi.sum(axis=1)
 
     def weight(self, r_coords):
         psi = self.psi(r_coords)
