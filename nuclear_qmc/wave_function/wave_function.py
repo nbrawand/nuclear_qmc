@@ -19,7 +19,7 @@ class WaveFunction:
         mass_number = self.n_protons + self.n_neutrons
         as_jax_array = True
         self.particle_pairs = get_spin_particle_pairs(mass_number, as_jax_array)
-        self.particle_triplets = get_triplets(jnp.array(mass_number))
+        self.particle_triplets = get_triplets(jnp.arange(mass_number))
         self.spin_exchange_indices = get_spin_exchange_indices(self.particle_pairs
                                                                , get_spin_state_indices(mass_number, as_jax_array)
                                                                , as_jax_array)

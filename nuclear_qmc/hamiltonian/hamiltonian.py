@@ -95,6 +95,45 @@ def get_r_ij_sqrd(r_coords, particle_pairs):
     return r_ij_sqrd
 
 
+@jit
+def get_r_ik_r_ij_sqrd(r_coords, particle_triplets, i, j, k):
+    """
+    Parameters
+    ----------
+    r_coords: ndarray[n_particles, n_dimensions]
+    particle_triplets: ndarray[n_particle_triplets, 3] the index of each particle in r_coords
+
+    Returns
+    -------
+    ndarray[n_triplets]
+        (r_i-r_k)^2+(r_i-r_j)^2 in particle_triplets
+    """
+    r_ik = r_coords[particle_triplets[:, i]] - r_coords[particle_triplets[:, k]]
+    r_ij = r_coords[particle_triplets[:, i]] - r_coords[particle_triplets[:, j]]
+    r_ik_ij = (r_ik ** 2).sum(axis=-1) + (r_ij ** 2).sum(axis=-1)
+    return r_ik_ij
+
+
+@jit
+def get_r_ik_r_ij_cycles(r_coords, particle_triplets):
+    """
+
+    Parameters
+    ----------
+    r_coords: ndarray[n_particles, n_dimensions]
+    particle_triplets: ndarray[n_particle_triplets, 3] the index of each particle in r_coords
+
+    Returns
+    -------
+    ndarray[n_triplets]
+        cyclic combinations of ijk of terms: (r_i-r_k)^2+(r_i-r_j)^2 in particle_triplets
+    """
+    cycles = get_r_ik_r_ij_sqrd(r_coords, particle_triplets, 0, 1, 2)
+    cycles = jnp.append(cycles, get_r_ik_r_ij_sqrd(r_coords, particle_triplets, 2, 0, 1))
+    cycles = jnp.append(cycles, get_r_ik_r_ij_sqrd(r_coords, particle_triplets, 1, 2, 0))
+    return cycles
+
+
 @partial(jax.jit, static_argnums=(0,))
 def get_local_energy(wave_function, r_coords):
     """

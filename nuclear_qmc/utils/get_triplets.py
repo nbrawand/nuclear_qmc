@@ -14,6 +14,8 @@ def get_triplets(int_arr):
     -------
     ndarray[n_combindations, 3]
     """
+    if int_arr.shape[0] < 3:
+        return jnp.array([])
     triplets = jnp.array(list(combinations(int_arr, 3)))
     triplets = triplets[jnp.where(triplets[:, 0] < triplets[:, 1])]
     triplets = triplets[jnp.where(triplets[:, 1] < triplets[:, 2])]
