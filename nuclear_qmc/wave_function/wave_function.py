@@ -42,6 +42,10 @@ class WaveFunction:
         sigma_spin *= pair_coefficients
         return sigma_spin.sum(axis=1)
 
-    @abstractmethod
     def weight(self, r_coords):
-        return jnp.ones(r_coords.shape[0], dtype=jnp.float64)
+        psi = self.psi(r_coords)
+        return jnp.vdot(psi, psi)
+
+    @abstractmethod
+    def psi(self, r_coords):
+        return self.spin

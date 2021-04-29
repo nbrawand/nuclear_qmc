@@ -45,12 +45,22 @@ def potential_energy(wave_function: WaveFunction, r_coords, potential):
     """Potential from arXiv:2007.14282v2 [nucl-th] 13 Apr 2021"""
     ultraviolet_cutoff = 4
     C_1 = -487.6128
-    C_2 = -17.5515
     D_0 = jnp.sqrt(677.79890)
     r_ij_sqrd = get_r_ij_sqrd(r_coords, wave_function.particle_pairs)
     exp_neg_r_lambda_4 = jnp.exp(-r_ij_sqrd * ultraviolet_cutoff ** 2 / 4.)
-    first_term_coefficients = C_1 * exp_neg_r_lambda_4
+    first_term_coefficient = C_1 * exp_neg_r_lambda_4.sum()
+    r_ik_r_ij = get_r_ik_r_ij_cycles(r_coords, wave_function.particle_triplets)
+    third_term_coefficient = D_0 * jnp.exp(-r_ik_r_ij * ultraviolet_cutoff ** 2 / 4.).sum()
+
+    C_2 = -17.5515
     second_term_coefficients = C_2 * exp_neg_r_lambda_4
+    second_term = wave_function.sigma(second_term_coefficients)
+
+    first_plus_second_term_coefficeints = first_term_coefficient + third_term_coefficient
+
+    v_psi = first_plus_second_term_coefficeints*wave_function.spin + second_term
+    psi_v_psi = jnp.dot(wave_function.spin)
+
 
 
 @partial(jax.jit, static_argnums=(0,))

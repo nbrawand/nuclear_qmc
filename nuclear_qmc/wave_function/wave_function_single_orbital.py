@@ -20,7 +20,11 @@ class WaveFunctionSingleOrbital(WaveFunction):
         float
 
         """
+        psi = self.psi(r_coords)
+        return jnp.vdot(psi, psi)
+
+    def psi(self, r_coords):
         r_mag = jnp.linalg.norm(r_coords, axis=-1)
         density = jnp.exp(self.parameters * r_mag)
         density = jnp.prod(density, axis=-1)
-        return density
+        return density * self.spin
