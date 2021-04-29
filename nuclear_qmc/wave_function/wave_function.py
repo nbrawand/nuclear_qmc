@@ -43,7 +43,7 @@ class WaveFunction:
     def tau(self, r_coords, pair_coefficients, psi_r=None):
         if psi_r is None:
             psi_r = self.psi(r_coords)
-        return self._tau_or_sigma(psi_r, self.isospin_exchange_indices, pair_coefficients)
+        return self._tau_or_sigma(psi_r.T, self.isospin_exchange_indices, pair_coefficients)
 
     def kinetic_energy(self, r_coords):
         d2_psi = jax.hessian(self.psi, argnums=0)(r_coords)
@@ -53,8 +53,11 @@ class WaveFunction:
         ke = - H_BAR_SQRD_OVER_2_M * jnp.vdot(self.psi(r_coords), d2_psi)
         return ke
 
+    def weight(self, r_coords):
+        psi_r = self.psi(r_coords)
+        return jnp.real(jnp.vdot(psi_r, psi_r))
+
     @staticmethod
-    @jit
     def _tau_or_sigma(psi_r, exchange_indices, pair_coefficients):
         sigma_psi = psi_r[exchange_indices]
         sigma_psi = 2.0 * sigma_psi - psi_r.reshape(-1, 1)
@@ -63,7 +66,7 @@ class WaveFunction:
 
     @abstractmethod
     def psi(self, r_coords):
-        psi = (r_coords ** 2).sum(-1)
-        psi = psi.sum()
+        psi = jnp.sum(r_coords ** 2, axis=-1)
+        psi = jnp.sum(psi)
         psi = jnp.exp(-psi)
         return psi * self.spin
