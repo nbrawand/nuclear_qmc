@@ -58,10 +58,12 @@ class TestNeuralNetwork(WaveFunction):
         with open(params_file_name, 'rb') as fil:
             return pickle.load(fil)
 
+    @partial(jit, static_argnums=(0,))
     def weight(self, r):
         """The weight that was used in the original code used psi(r) not |psi(r)|^2 so this gives the correct sampling stats"""
         return self._psi_r(r)
 
+    @partial(jit, static_argnums=(0,))
     def _psi_r(self, r):
         rcm = jnp.mean(r, axis=0)
         r = r - rcm[None, :]

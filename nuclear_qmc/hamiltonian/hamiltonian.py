@@ -11,6 +11,7 @@ D_0 = jnp.sqrt(677.79890)
 ultraviolet_cutoff = 4
 
 
+@partial(jax.jit, static_argnums=(0,))
 def potential_energy(wave_function: WaveFunction, r_coords):
     """Potential from arXiv:2007.14282v2 [nucl-th] 13 Apr 2021"""
 
@@ -91,6 +92,7 @@ def get_r_ik_r_ij_cycles(r_coords, particle_triplets):
     return cycles
 
 
+@partial(jax.jit, static_argnums=(0,))
 def get_local_energy(wave_function: WaveFunction, r_coords):
     """
 
