@@ -41,9 +41,10 @@ class WaveFunction:
         return self._tau_or_sigma(psi_r, self.spin_exchange_indices, pair_coefficients)
 
     def tau(self, r_coords, pair_coefficients, psi_r=None):
+        raise RuntimeError('tau not tested')
         if psi_r is None:
             psi_r = self.psi(r_coords)
-        return self._tau_or_sigma(psi_r.T, self.isospin_exchange_indices, pair_coefficients)
+        return self._tau_or_sigma(psi_r.T, self.isospin_exchange_indices, pair_coefficients).T
 
     def kinetic_energy(self, r_coords):
         d2_psi = jax.hessian(self.psi, argnums=0)(r_coords)
@@ -59,10 +60,10 @@ class WaveFunction:
 
     @staticmethod
     def _tau_or_sigma(psi_r, exchange_indices, pair_coefficients):
-        sigma_psi = psi_r[exchange_indices]
-        sigma_psi = 2.0 * sigma_psi - psi_r.reshape(-1, 1)
+        sigma_psi = psi_r[:, exchange_indices]
+        sigma_psi = 2.0 * sigma_psi - psi_r.T
         sigma_psi *= pair_coefficients
-        return sigma_psi.sum(axis=1)
+        return sigma_psi.sum(axis=2)
 
     @abstractmethod
     def psi(self, r_coords):
