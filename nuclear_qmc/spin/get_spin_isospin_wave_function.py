@@ -14,9 +14,9 @@ def get_spin_isospin_wave_function(n_protons, n_neutrons, include_isospin=True, 
         wave_function = jnp.zeros(shape=n_spin_states, dtype=dtype)
 
     if n_protons == 1 and n_neutrons == 1:
-        wave_function = index_update(wave_function, index[0, -1], 1.0 + 0.j)  # n up, p up
+        wave_function = index_update(wave_function, index[0, -1], 1.0)  # n up, p up
         if include_isospin:
-            wave_function = index_update(wave_function, index[1, -1], -1.0 + 0.j)  # p up, n up
+            wave_function = index_update(wave_function, index[1, -1], -1.0)  # p up, n up
 
     else:
         RuntimeError(f'get_spin_isospin_wave_function {n_protons} and {n_neutrons} not implemented.')
