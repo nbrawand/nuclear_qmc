@@ -91,7 +91,6 @@ def get_r_ik_r_ij_cycles(r_coords, particle_triplets):
     return cycles
 
 
-@partial(jax.jit, static_argnums=(0,))
 def get_local_energy(wave_function: WaveFunction, r_coords):
     """
 

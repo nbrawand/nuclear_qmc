@@ -1,4 +1,5 @@
 from jax.config import config
+import jax.numpy as jnp
 from jax import random, vmap
 from nuclear_qmc.hamiltonian.hamiltonian import get_local_energy
 # from nuclear_qmc.wave_function.wave_function_single_orbital import WaveFunctionSingleOrbital as WaveFunction
@@ -7,7 +8,7 @@ from nuclear_qmc.wave_function.nn_two_h import TwoBodyNeuralNetwork as WaveFunct
 from nuclear_qmc.sample import sample
 
 config.update("jax_enable_x64", True)
-# config.update('jax_platform_name', 'cpu')
+config.update('jax_platform_name', 'cpu')
 
 N_PROTON = 1
 N_NEUTRON = 1
@@ -21,23 +22,34 @@ N_STEPS = 20
 N_VOID_STEPS = 50
 # wave_function = WaveFunction(N_PROTON, N_NEUTRON)
 key = random.PRNGKey(SEED)
-wave_function = WaveFunction(N_DIMENSIONS, N_PROTON + N_NEUTRON, 1, key, 0.0, N_PROTON, N_NEUTRON,
+wave_function = WaveFunction(N_DIMENSIONS, N_PROTON + N_NEUTRON, 0.1, key, 0.0, N_PROTON, N_NEUTRON,
                              params_file='pionless_4_nucleus_2.model')
 
-key, r_coord_samples = sample(
-    wave_function
-    , N_STEPS
-    , INITIAL_WALKER_STANDARD_DEVIATION
-    , WALKER_STEP_SIZE
-    , N_WALKERS
-    , N_NEUTRON + N_PROTON
-    , N_DIMENSIONS
-    , N_EQUILIBRIUM_STEPS
-    , N_VOID_STEPS
-    , key
-)
+ex_r = jnp.array([[0.43, 0, 0], [0, 0,0]])
+eng = get_local_energy(wave_function, ex_r)
+print(eng)
 
-r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
-local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coord_samples)
-
-print(local_energy.mean())
+# key, r_coord_samples = sample(
+#     wave_function
+#     , N_STEPS
+#     , INITIAL_WALKER_STANDARD_DEVIATION
+#     , WALKER_STEP_SIZE
+#     , N_WALKERS
+#     , N_NEUTRON + N_PROTON
+#     , N_DIMENSIONS
+#     , N_EQUILIBRIUM_STEPS
+#     , N_VOID_STEPS
+#     , key
+# )
+#
+# r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
+# local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coord_samples)
+# print('total_energy', local_energy.mean())
+# print(delta_r.mean())
+"""
+psi_r = vmap(wave_function.psi, in_axes=(0,))(r_coord_samples)[:, 0, 3]
+delta_r = jnp.linalg.norm(r_coord_samples[:, 0, :] - r_coord_samples[:, 1, :], axis=-1)
+from matplotlib import pyplot as plt
+plt.scatter(delta_r[:4000], psi_r[:4000])
+plt.show()
+"""

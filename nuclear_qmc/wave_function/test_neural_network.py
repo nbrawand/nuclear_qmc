@@ -1,14 +1,14 @@
 import jax
 import jax.numpy as jnp
 from jax import random, jit, vmap
-from jax.flatten_util import ravel_pytree
 from jax.experimental import stax
 from jax.experimental.stax import Dense, elementwise, Tanh
-from jax.nn.initializers import glorot_normal, normal
 from functools import partial
 import pickle
-
 from nuclear_qmc.wave_function.wave_function import WaveFunction
+import os
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 @jit
@@ -20,14 +20,14 @@ Lintanh = elementwise(lintanh)
 Sin = elementwise(jnp.sin)
 
 
-class TwoBodyNeuralNetwork(WaveFunction):
-    def __init__(self, ndim, npart, conf, key, mix, n_protons, n_neutrons, params_file=None):
-        super().__init__(n_protons, n_neutrons)
-        self.ndim = ndim
-        self.npart = npart
-        self.conf = conf
-        self.key = key
-        self.mix = mix
+class TestNeuralNetwork(WaveFunction):
+    def __init__(self, params_file=os.path.join(dir_path, 'test_neural_network.model')):
+        super().__init__(n_protons=1, n_neutrons=1)
+        self.ndim = 3
+        self.npart = self.n_protons + self.n_neutrons
+        self.conf = 0.1
+        self.key = random.PRNGKey(0)
+        self.mix = 0.0
         self.ndense = 8
         self.nlat = 32  ## 1 * (self.ndim * self.npart + 4)
         self.activation = Tanh
@@ -87,4 +87,3 @@ class TwoBodyNeuralNetwork(WaveFunction):
         sp_conf = jnp.exp(- self.conf * jnp.sum(r ** 2))
 
         return sp_conf
-
