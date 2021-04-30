@@ -4,21 +4,23 @@ from jax import jit
 from functools import partial
 from nuclear_qmc.wave_function.wave_function import WaveFunction
 
+# potential enregy coefficients from arXiv:2007.14282v2 [nucl-th] 13 Apr 2021
+C_1 = -487.6128
+C_2 = -17.5515
+D_0 = jnp.sqrt(677.79890)
+ultraviolet_cutoff = 4
+
 
 def potential_energy(wave_function: WaveFunction, r_coords):
     """Potential from arXiv:2007.14282v2 [nucl-th] 13 Apr 2021"""
 
-    C_1 = -487.6128
-    ultraviolet_cutoff = 4
     r_ij_sqrd = get_r_ij_sqrd(r_coords, wave_function.particle_pairs)
     exp_neg_r_lambda_4 = jnp.exp(-r_ij_sqrd * ultraviolet_cutoff ** 2 / 4.)
     first_term_coefficient = C_1 * exp_neg_r_lambda_4.sum()
 
-    C_2 = -17.5515
     second_term_coefficients = C_2 * exp_neg_r_lambda_4
 
     if wave_function.particle_triplets.shape[0] > 0:
-        D_0 = jnp.sqrt(677.79890)
         r_ik_r_ij = get_r_ik_r_ij_cycles(r_coords, wave_function.particle_triplets)
         third_term_coefficient = D_0 * jnp.exp(-r_ik_r_ij * ultraviolet_cutoff ** 2 / 4.).sum()
     else:
