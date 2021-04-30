@@ -60,10 +60,12 @@ class WaveFunction:
 
     @staticmethod
     def _tau_or_sigma(psi_r, exchange_indices, pair_coefficients):
-        sigma_psi = psi_r[:, exchange_indices]
-        sigma_psi = 2.0 * sigma_psi - psi_r.T
-        sigma_psi *= pair_coefficients
-        return sigma_psi.sum(axis=2)
+        exchanged_psi_r = psi_r[:, exchange_indices]  # for sigma: [n_isospin, n_spin, n_pair_exchanges]
+        psi_r = jnp.expand_dims(psi_r, -1)  # for sigma: [n_isospin, n_spin, 1]
+        psi_r_prime = 2.0 * exchanged_psi_r - psi_r
+        psi_r_prime *= pair_coefficients
+        psi_r_prime = psi_r_prime.sum(-1)
+        return psi_r_prime
 
     @abstractmethod
     def psi(self, r_coords):

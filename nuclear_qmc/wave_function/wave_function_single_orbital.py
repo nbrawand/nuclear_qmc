@@ -4,8 +4,8 @@ from nuclear_qmc.wave_function.wave_function import WaveFunction
 
 class WaveFunctionSingleOrbital(WaveFunction):
 
-    def __init__(self, n_protons, n_neutrons, include_isospin=True):
-        super().__init__(n_protons, n_neutrons, include_isospin=include_isospin)
+    def __init__(self, n_protons, n_neutrons, include_isospin=True, dtype=jnp.float64):
+        super().__init__(n_protons, n_neutrons, include_isospin=include_isospin, dtype=dtype)
         self.parameters = 0.5 * jnp.ones(n_protons + n_neutrons, dtype=jnp.float64)
 
     def psi(self, r_coords):
