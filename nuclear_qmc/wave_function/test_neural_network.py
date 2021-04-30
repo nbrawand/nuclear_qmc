@@ -20,7 +20,7 @@ Lintanh = elementwise(lintanh)
 Sin = elementwise(jnp.sin)
 
 
-class TestNeuralNetwork(WaveFunction):
+class NeuralNetworkTestWaveFunction(WaveFunction):
     def __init__(self, params_file=os.path.join(dir_path, 'test_neural_network.model')):
         super().__init__(n_protons=1, n_neutrons=1)
         self.ndim = 3

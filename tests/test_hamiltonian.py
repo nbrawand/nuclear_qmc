@@ -2,7 +2,7 @@ from nuclear_qmc.hamiltonian.hamiltonian import get_r_ij_sqrd, get_r_ik_r_ij_cyc
     C_2, C_1
 import jax.numpy as jnp
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
-from nuclear_qmc.wave_function.test_neural_network import TestNeuralNetwork
+from nuclear_qmc.wave_function.test_neural_network import NeuralNetworkTestWaveFunction
 from nuclear_qmc.wave_function.wave_function import WaveFunction
 from jax.config import config
 
@@ -50,14 +50,14 @@ class TestHamiltonian:
         assert expected == computed
 
     def test_get_local_energy(self):
-        wfc = TestNeuralNetwork()
+        wfc = NeuralNetworkTestWaveFunction()
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
         computed = get_local_energy(wfc, ex_r)
         expected = jnp.array(-2.42576814)
         jnp.array_equal(computed, expected)
 
     def test_potential_energy_with_test_wfc(self):
-        wfc = TestNeuralNetwork()
+        wfc = NeuralNetworkTestWaveFunction()
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
         wfc_r = wfc.psi(ex_r)
         psi_norm = jnp.vdot(wfc_r, wfc_r)
@@ -66,7 +66,7 @@ class TestHamiltonian:
         jnp.array_equal(computed, expected)
 
     def test_kinetic_energy_with_test_wfc(self):
-        wfc = TestNeuralNetwork()
+        wfc = NeuralNetworkTestWaveFunction()
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
         expected = 238.69157666
         wfc_r = wfc.psi(ex_r)
@@ -75,7 +75,7 @@ class TestHamiltonian:
         jnp.array_equal(computed, jnp.array(expected, dtype=jnp.float64))
 
     def test_psi_r_test_wfc(self):
-        wfc = TestNeuralNetwork()
+        wfc = NeuralNetworkTestWaveFunction()
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
         expected = -0.05251155
         computed = wfc.psi(ex_r)[1, -1]
