@@ -23,18 +23,18 @@ class TestHamiltonian:
     def test_get_r_ik_r_ij_cycles_is_callable(self):
         trips = jnp.array([
             [0, 1, 2]
-            , [0, 2, 1]
         ])
         r_coords = jnp.array([
-            [1, 1, 2]
-            , [1, 1, 1]
-            , [3, 2, 1]
+            [0, 0, 1]
+            , [0, 0, 0]
+            , [0, 0, 0]
         ])
+        expected = jnp.array([2, 1, 1])
         computed = get_r_ik_r_ij_cycles(r_coords, trips)
+        assert jnp.array_equal(computed, expected)
 
     def test_get_local_energy(self):
         wfc = WaveFunction(1, 1)
-        wfc.spin = jnp.real(wfc.spin)
-        r_coords = jnp.array([[0., 1., 2.], [0., 1., 2.]])
+        r_coords = jnp.array([[0., 0., 0.], [0., 0., 0.]])
         computed = get_local_energy(wfc, r_coords)
         print(computed)
