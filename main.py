@@ -1,7 +1,7 @@
 from jax.config import config
 import jax.numpy as jnp
 from jax import random, vmap
-from nuclear_qmc.hamiltonian.hamiltonian import get_local_energy
+from nuclear_qmc.operators.hamiltonian import get_local_energy
 # from nuclear_qmc.wave_function.wave_function_single_orbital import WaveFunctionSingleOrbital as WaveFunction
 # from nuclear_qmc.wave_function.wave_function import WaveFunction as WaveFunction
 from nuclear_qmc.wave_function.test_neural_network import NeuralNetworkTestWaveFunction as WaveFunction

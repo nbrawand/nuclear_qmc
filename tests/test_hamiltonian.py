@@ -1,4 +1,4 @@
-from nuclear_qmc.hamiltonian.hamiltonian import get_r_ij_sqrd, get_r_ik_r_ij_cycles, get_local_energy, potential_energy, \
+from nuclear_qmc.operators.hamiltonian import get_r_ij_sqrd, get_r_ik_r_ij_cycles, get_local_energy, potential_energy, \
     C_2, C_1
 import jax.numpy as jnp
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M

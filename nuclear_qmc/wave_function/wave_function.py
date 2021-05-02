@@ -20,6 +20,8 @@ class WaveFunction:
         self.spin = get_spin_isospin_wave_function(self.n_protons, self.n_neutrons
                                                    , include_isospin=include_isospin, dtype=dtype)
 
+        self.params = jnp.array([1.0])
+
     def _initialize_spin_isospin(self):
         mass_number = self.n_protons + self.n_neutrons
         as_jax_array = True
@@ -35,41 +37,24 @@ class WaveFunction:
                                                                        , as_jax_array
                                                                        , also_return_binary_representation=False)
 
-    def sigma(self, r_coords, pair_coefficients, psi_r=None):
-        if psi_r is None:
-            psi_r = self.psi(r_coords)
-        return self._tau_or_sigma(psi_r, self.spin_exchange_indices, pair_coefficients)
-
-    def tau(self, r_coords, pair_coefficients, psi_r=None):
-        raise RuntimeError('tau not tested')
-        if psi_r is None:
-            psi_r = self.psi(r_coords)
-        return self._tau_or_sigma(psi_r.T, self.isospin_exchange_indices, pair_coefficients).T
-
-    def kinetic_energy(self, r_coords):
-        d2_psi = jax.hessian(self.psi, argnums=0)(r_coords)
-        dim = r_coords.shape[0] * r_coords.shape[1]
-        d2_psi = d2_psi.reshape(*self.spin.shape, dim, dim)
-        d2_psi = jnp.trace(d2_psi, axis1=-1, axis2=-2)
-        ke = - H_BAR_SQRD_OVER_2_M * jnp.vdot(self.psi(r_coords), d2_psi)
-        return ke
 
     def weight(self, r_coords):
         psi_r = self.psi(r_coords)
         return jnp.real(jnp.vdot(psi_r, psi_r))
 
-    @staticmethod
-    def _tau_or_sigma(psi_r, exchange_indices, pair_coefficients):
-        exchanged_psi_r = psi_r[:, exchange_indices]  # for sigma: [n_isospin, n_spin, n_pair_exchanges]
-        psi_r = jnp.expand_dims(psi_r, -1)  # for sigma: [n_isospin, n_spin, 1]
-        psi_r_prime = 2.0 * exchanged_psi_r - psi_r
-        psi_r_prime *= pair_coefficients
-        psi_r_prime = psi_r_prime.sum(-1)
-        return psi_r_prime
 
-    @abstractmethod
     def psi(self, r_coords):
-        psi = jnp.sum(r_coords ** 2, axis=-1)
-        psi = jnp.sum(psi)
-        psi = jnp.exp(-psi)
-        return psi * self.spin
+        spin = self.psi_spinor(r_coords, self.params, self.spin)
+        prefactor = self.psi_prefactor(r_coords, self.params)
+        return prefactor * spin
+
+    @staticmethod
+    def psi_prefactor(r_coords, params):
+        psi_prefac = jnp.sum(r_coords ** 2, axis=-1)
+        psi_prefac = jnp.sum(psi_prefac)
+        psi_prefac = jnp.exp(-params[0] * psi_prefac)
+        return psi_prefac
+
+    @staticmethod
+    def psi_spinor(r_coords, params, spin):
+        return jnp.array([1])
