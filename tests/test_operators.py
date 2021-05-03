@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
-from nuclear_qmc.operators.hamiltonian import partial_psi_prefactor_parameters, partial_full_psi_parameters
+from nuclear_qmc.optimize.optimize import partial_full_psi_parameters, partial_psi_prefactor_parameters
 from nuclear_qmc.operators.operators import _tau_or_sigma, kinetic_energy_psi
 from nuclear_qmc.wave_function.wave_function import WaveFunction
 

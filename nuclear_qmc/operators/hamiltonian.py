@@ -92,8 +92,7 @@ def get_r_ik_r_ij_cycles(r_coords, particle_triplets):
     return cycles
 
 
-# @partial(jax.jit, static_argnums=(0,))
-def get_local_energy(wave_function: WaveFunction, r_coords, kinetic_energy_operator=kinetic_energy_psi):
+def hamiltonian_psi(wave_function: WaveFunction, r_coords, kinetic_energy_operator=kinetic_energy_psi):
     """
 
     Parameters
@@ -109,16 +108,27 @@ def get_local_energy(wave_function: WaveFunction, r_coords, kinetic_energy_opera
     ke_psi = kinetic_energy_operator(wave_function, r_coords)
     v_psi = potential_energy_psi(wave_function, r_coords)
     h_psi = ke_psi + v_psi
+    return h_psi
+
+
+# @partial(jax.jit, static_argnums=(0,))
+def get_local_energy(wave_function: WaveFunction, r_coords, kinetic_energy_operator=kinetic_energy_psi):
+    """
+
+    Parameters
+    ----------
+    wave_function: WaveFunction
+    r_coords: ndarray[n_particles, n_dimensions]
+
+    Returns
+    -------
+    float
+
+    """
+    h_psi = hamiltonian_psi(wave_function, r_coords, kinetic_energy_operator=kinetic_energy_operator)
     psi_r = wave_function.psi(r_coords)
     psi_psi = jnp.real(jnp.vdot(psi_r, psi_r))
     psi_h_psi = jnp.real(jnp.vdot(psi_r, h_psi))
     return psi_h_psi / psi_psi
 
 
-def partial_full_psi_parameters(wave_function: WaveFunction, r_coords):
-    psi = lambda r, p, s: wave_function.psi_prefactor(r, p) * wave_function.psi_vector(r, p, s)
-    return jax.jacrev(psi, argnums=1)(r_coords, wave_function.params, wave_function.spin)
-
-
-def partial_psi_prefactor_parameters(wave_function: WaveFunction, r_coords):
-    return jax.grad(wave_function.psi_prefactor, argnums=1)(r_coords, wave_function.params)

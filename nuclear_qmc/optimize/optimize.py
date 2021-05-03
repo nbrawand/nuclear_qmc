@@ -1,0 +1,86 @@
+import jax
+from jax import vmap, numpy as jnp
+
+from nuclear_qmc.operators.hamiltonian import hamiltonian_psi
+from nuclear_qmc.operators.operators import kinetic_energy_psi
+from nuclear_qmc.wave_function.wave_function import WaveFunction
+
+
+def partial_full_psi_parameters(wave_function: WaveFunction, r_coords):
+    """ \partial_{params} \vec{\psi_{params}(r)}
+
+    Parameters
+    ----------
+    wave_function: WaveFunction
+    r_coords: ndarray[n_particles, n_dimensions]
+
+    Returns
+    -------
+
+    """
+    psi = lambda r, p, s: wave_function.psi_prefactor(r, p) * wave_function.psi_vector(r, p, s)
+    return jax.jacrev(psi, argnums=1)(r_coords, wave_function.params, wave_function.spin)
+
+
+def partial_psi_prefactor_parameters(wave_function: WaveFunction, r_coords):
+    """ \partial_{params} \psi_{params}(r)
+
+    Parameters
+    ----------
+    wave_function: WaveFunction
+    r_coords: ndarray[n_particles, n_dimensions]
+
+    Returns
+    -------
+
+    """
+    return jax.grad(wave_function.psi_prefactor, argnums=1)(r_coords, wave_function.params)
+
+
+def get_new_wave_function_parameters(wave_function: WaveFunction
+                                     , r_coords
+                                     , learning_rate
+                                     , partial_function=partial_full_psi_parameters
+                                     , kinetic_energy_operator=kinetic_energy_psi):
+    """
+
+    Parameters
+    ----------
+    learning_rate: float
+    wave_function: WaveFunction
+    energy: ndarray[n_walkers]
+    r_coords: ndarray[n_walkers, n_particles, n_dimensions]
+
+    Returns
+    -------
+
+    """
+    #  calculate necessary components and average over walkers
+    d_psi = vmap(partial_function, in_axes=(None, 0))(wave_function, r_coords).mean(
+        axis=0)  # [n_spin, n_params]
+    h_psi = vmap(hamiltonian_psi, in_axes=(None, 0, None))(wave_function, r_coords, kinetic_energy_operator).mean(
+        axis=0)  # [n_spin]
+    psi_r = vmap(wave_function.psi, in_axes=(0,))(r_coords).mean(axis=0)  # [n_spin]
+
+    # energy derivative
+    psi_psi = jnp.vdot(psi_r, psi_r)  # float
+    d_psi_h_psi = vmap(jnp.vdot, in_axes=(2, None))(d_psi, h_psi)  # [n_params]
+    d_psi_psi = vmap(jnp.vdot, in_axes=(2, None))(d_psi, psi_r)  # [n_params]
+    psi_h_psi = jnp.vdot(psi_r, h_psi)  # float
+    d_energy = 2.0 * (d_psi_h_psi - psi_h_psi * d_psi_psi) / psi_psi  # [n_params]
+
+    # quantum fisher information
+    def vdot_nested(in_d_psi):
+        return vmap(jnp.vdot, in_axes=(2, None))(d_psi, in_d_psi)
+
+    d_psi_d_psi = vmap(vdot_nested, in_axes=(2,))(d_psi)  # [n_params, n_params]
+    quantum_fisher_information = d_psi_d_psi / psi_psi
+    quantum_fisher_information -= jnp.matmul(d_psi_d_psi, d_psi_d_psi) / psi_psi ** 2
+
+    # new parameters
+    machine_epsilon = jnp.finfo(r_coords.dtype).eps
+    small_diag_matrix = machine_epsilon * jnp.identity(quantum_fisher_information.shape[0])
+    inverse_fisher_small_diag = jnp.linalg.inv(quantum_fisher_information + small_diag_matrix)
+    new_params = wave_function.params
+    new_params -= learning_rate * jnp.matmul(inverse_fisher_small_diag, d_energy)
+    return new_params
