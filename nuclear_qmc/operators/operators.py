@@ -12,9 +12,9 @@ def laplacian(wave_function, r_coords):
     return d2_psi
 
 
-def kinetic_energy(wave_function, r_coords):
+def kinetic_energy_psi(wave_function, r_coords):
     d2_psi = laplacian(wave_function, r_coords)
-    ke = - H_BAR_SQRD_OVER_2_M * jnp.vdot(wave_function.psi(r_coords), d2_psi)
+    ke = - H_BAR_SQRD_OVER_2_M * d2_psi
     return ke
 
 

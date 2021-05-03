@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
-from nuclear_qmc.operators.operators import _tau_or_sigma, kinetic_energy
+from nuclear_qmc.operators.operators import _tau_or_sigma, kinetic_energy_psi
 from nuclear_qmc.wave_function.wave_function import WaveFunction
 
 
@@ -38,5 +38,5 @@ class TestOperators:
         ke_psi = - H_BAR_SQRD_OVER_2_M * grad_psi * n_particles * n_dims
         psi_r = wfc.psi(r_coords)
         expected = jnp.dot(psi_r, ke_psi)
-        computed = kinetic_energy(wfc, r_coords)
+        computed = kinetic_energy_psi(wfc, r_coords)
         assert expected == computed
