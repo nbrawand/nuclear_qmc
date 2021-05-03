@@ -40,6 +40,6 @@ def test_full_energy_run():
 
     r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
     local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coord_samples)
-    computed = local_energy.mean()
-    expected = jnp.array(-2.20571193860801, dtype=jnp.float64)
+    computed = local_energy.mean().round(12)
+    expected = jnp.array(-2.20571193860801, dtype=jnp.float64).round(12)
     assert jnp.array_equal(expected, computed)
