@@ -1,4 +1,5 @@
 import jax
+from nuclear_qmc.operators.operators import kinetic_energy, sigma
 import jax.numpy as jnp
 from jax import jit
 from functools import partial
@@ -29,7 +30,7 @@ def potential_energy(wave_function: WaveFunction, r_coords):
 
     psi_r = wave_function.psi(r_coords)
     v_psi = (first_term_coefficient + third_term_coefficient) * psi_r
-    v_psi += wave_function.sigma(None, second_term_coefficients, psi_r)
+    v_psi += sigma(wave_function, psi_r, second_term_coefficients)
     psi_v_psi = jnp.vdot(psi_r, v_psi)
     return psi_v_psi
 
@@ -92,8 +93,8 @@ def get_r_ik_r_ij_cycles(r_coords, particle_triplets):
     return cycles
 
 
-@partial(jax.jit, static_argnums=(0,))
-def get_local_energy(wave_function: WaveFunction, r_coords):
+# @partial(jax.jit, static_argnums=(0,))
+def get_local_energy(wave_function: WaveFunction, r_coords, kinetic_energy_operator=kinetic_energy):
     """
 
     Parameters
@@ -106,7 +107,7 @@ def get_local_energy(wave_function: WaveFunction, r_coords):
     float
 
     """
-    kinetic_energy_value = wave_function.kinetic_energy(r_coords)
+    kinetic_energy_value = kinetic_energy_operator(wave_function, r_coords)
     potential_energy_value = potential_energy(wave_function, r_coords)
     psi_r = wave_function.psi(r_coords)
     psi_sqrd = jnp.real(jnp.vdot(psi_r, psi_r))

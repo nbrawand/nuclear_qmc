@@ -1,4 +1,5 @@
 import jax
+from nuclear_qmc.sampling.weight_functions import v_dot_weight
 import jax.numpy as jnp
 from jax import random, jit, vmap
 from jax.ops import index, index_update
@@ -6,9 +7,10 @@ from jax.lax import fori_loop
 from functools import partial
 
 
-@partial(jit, static_argnums=(range(9)))
+@partial(jit, static_argnums=(range(10)))
 def sample(
         wave_function
+        , weight_function
         , n_steps
         , initial_walker_standard_deviation
         , walker_step_size
@@ -30,7 +32,7 @@ def sample(
         def step(j, loop_carry_j):
             x_o, wpsi_o, = loop_carry_j
             x_n = x_o + move[j, :, :, :]
-            wpsi_n = vmap(wave_function.weight, in_axes=0)(x_n)
+            wpsi_n = vmap(weight_function, in_axes=(None, 0))(wave_function, x_n)
             prob = (jnp.abs(wpsi_n) / jnp.abs(wpsi_o)) ** 2
             accept = jnp.greater_equal(prob, unif_x[j, :])
             x_o = jnp.where(accept.reshape([n_walkers, 1, 1]), x_n, x_o)
@@ -39,7 +41,7 @@ def sample(
 
         xcm = jnp.mean(x_o, axis=1)
         x_o = x_o - xcm[:, None, :]
-        wpsi_o = vmap(wave_function.weight, in_axes=0)(x_o)
+        wpsi_o = vmap(weight_function, in_axes=(None, 0))(wave_function, x_o)
 
         x_o, wpsi_o = fori_loop(0, n_void_steps, step, (x_o, wpsi_o))
 

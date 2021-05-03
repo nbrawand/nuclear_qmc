@@ -37,24 +37,16 @@ class WaveFunction:
                                                                        , as_jax_array
                                                                        , also_return_binary_representation=False)
 
-
-    def weight(self, r_coords):
-        psi_r = self.psi(r_coords)
-        return jnp.real(jnp.vdot(psi_r, psi_r))
-
-
     def psi(self, r_coords):
-        spin = self.psi_spinor(r_coords, self.params, self.spin)
+        spin = self.psi_vector(r_coords, self.params, self.spin)
         prefactor = self.psi_prefactor(r_coords, self.params)
         return prefactor * spin
 
-    @staticmethod
-    def psi_prefactor(r_coords, params):
+    def psi_prefactor(self, r_coords, params):
         psi_prefac = jnp.sum(r_coords ** 2, axis=-1)
         psi_prefac = jnp.sum(psi_prefac)
         psi_prefac = jnp.exp(-params[0] * psi_prefac)
         return psi_prefac
 
-    @staticmethod
-    def psi_spinor(r_coords, params, spin):
-        return jnp.array([1])
+    def psi_vector(self, r_coords, params, spin):
+        return spin

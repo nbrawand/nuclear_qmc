@@ -59,17 +59,12 @@ class NeuralNetworkTestWaveFunction(WaveFunction):
             return pickle.load(fil)
 
     @partial(jit, static_argnums=(0,))
-    def weight(self, r):
-        """The weight that was used in the original code used psi(r) not |psi(r)|^2 so this gives the correct sampling stats"""
-        return self._psi_r(r)
-
-    @partial(jit, static_argnums=(0,))
-    def _psi_r(self, r):
-        rcm = jnp.mean(r, axis=0)
-        r = r - rcm[None, :]
+    def psi_prefactor(self, r_coords, params):
+        rcm = jnp.mean(r_coords, axis=0)
+        r = r_coords - rcm[None, :]
         delta_r = jnp.linalg.norm(r[0, :] - r[1, :])
 
-        phi_a_params = self.params[0:self.num_phi_a_params]
+        phi_a_params = params[0:self.num_phi_a_params]
         phi_a_out = self.phi_a_apply(phi_a_params, delta_r)
         phi_a_out = jnp.mean(phi_a_out)
 
@@ -78,16 +73,12 @@ class NeuralNetworkTestWaveFunction(WaveFunction):
         return jnp.reshape(psi, ())
 
     @partial(jit, static_argnums=(0,))
-    def psi(self, r):
-        return self._psi_r(r) * self.spin
-
-    @partial(jit, static_argnums=(0,))
     def phi(self, r):
         """ Boundary condition imposed on multiple particles
         """
         rcm = jnp.mean(r, axis=0)
         r = r - rcm[None, :]
-        return jnp.prod(vmap(self.sp_boundary, in_axes=(0))(r))
+        return jnp.prod(vmap(self.sp_boundary, in_axes=(0,))(r))
 
     @partial(jit, static_argnums=(0,))
     def sp_boundary(self, r):
