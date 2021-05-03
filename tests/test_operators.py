@@ -39,6 +39,7 @@ class TestOperators:
         psi_r = wfc.psi(r_coords)
         expected = jnp.dot(psi_r, ke_psi)
         computed = kinetic_energy_psi(wfc, r_coords)
+        computed = jnp.dot(psi_r, computed)
         assert expected == computed
 
     def test_partial_psi_prefactor_parameters(self):
