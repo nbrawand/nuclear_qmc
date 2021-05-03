@@ -1,6 +1,7 @@
 import jax.numpy as jnp
 
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
+from nuclear_qmc.operators.hamiltonian import partial_psi_prefactor_parameters, partial_full_psi_parameters
 from nuclear_qmc.operators.operators import _tau_or_sigma, kinetic_energy_psi
 from nuclear_qmc.wave_function.wave_function import WaveFunction
 
@@ -26,7 +27,6 @@ class TestOperators:
         computed = _tau_or_sigma(wfc, xi, pair_coefs)
         assert jnp.array_equal(expected, computed)
 
-
     def test_kinetic_energy_base_wfc(self):
         wfc = WaveFunction(1, 1)
         wfc.spin = jnp.array([1, 0])
@@ -40,3 +40,25 @@ class TestOperators:
         expected = jnp.dot(psi_r, ke_psi)
         computed = kinetic_energy_psi(wfc, r_coords)
         assert expected == computed
+
+    def test_partial_psi_prefactor_parameters(self):
+        wfc = WaveFunction(1, 1)
+        wfc.params = jnp.array([1., 1.])
+        wfc.psi_prefactor = lambda x, p: jnp.vdot(p, p)
+        r_coords = jnp.array([[1., 0., 0.], [0., 0., 0.]])
+        computed = partial_psi_prefactor_parameters(wfc, r_coords)
+        expected = jnp.array([2., 2.])
+        assert jnp.array_equal(expected, computed)
+
+    def test_partial_full_psi_parameters(self):
+        wfc = WaveFunction(1, 1)
+        wfc.params = jnp.array([1., 1.])
+        wfc.psi_prefactor = lambda x, p: jnp.vdot(p, p)
+        wfc.psi_vector = lambda x, p, s: jnp.array([[1., 0.], [0., 2.]])
+        r_coords = jnp.array([[1., 0., 0.], [0., 0., 0.]])
+        computed = partial_full_psi_parameters(wfc, r_coords)
+        expected = jnp.array([
+            [[2., 2.], [0., 0.]]
+            , [[0., 0.], [4., 4.]]
+        ])
+        assert jnp.array_equal(expected, computed)

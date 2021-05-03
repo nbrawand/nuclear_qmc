@@ -113,3 +113,12 @@ def get_local_energy(wave_function: WaveFunction, r_coords, kinetic_energy_opera
     psi_psi = jnp.real(jnp.vdot(psi_r, psi_r))
     psi_h_psi = jnp.real(jnp.vdot(psi_r, h_psi))
     return psi_h_psi / psi_psi
+
+
+def partial_full_psi_parameters(wave_function: WaveFunction, r_coords):
+    psi = lambda r, p, s: wave_function.psi_prefactor(r, p) * wave_function.psi_vector(r, p, s)
+    return jax.jacrev(psi, argnums=1)(r_coords, wave_function.params, wave_function.spin)
+
+
+def partial_psi_prefactor_parameters(wave_function: WaveFunction, r_coords):
+    return jax.grad(wave_function.psi_prefactor, argnums=1)(r_coords, wave_function.params)
