@@ -39,18 +39,6 @@ class TestHamiltonian:
         computed = get_r_ik_r_ij_cycles(r_coords, trips)
         assert jnp.array_equal(computed, expected)
 
-    def test_potential_energy_base_wfc_no_3b_terms(self):
-        wfc = WaveFunction(1, 1)
-        r_coords = jnp.array([
-            [0, 0, 0]
-            , [0, 0, 0]
-        ])
-        psi_r = wfc.psi(r_coords)
-        psi_dot = jnp.vdot(psi_r, psi_r)
-        expected =  psi_dot * (C_1 + C_2) /psi_dot
-        computed = potential_energy(wfc, r_coords)
-        assert expected == computed
-
     def test_get_local_energy(self):
         wfc = NeuralNetworkTestWaveFunction()
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
