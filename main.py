@@ -1,4 +1,7 @@
 from jax.config import config
+
+from nuclear_qmc.operators.operators import kinetic_energy_psi
+from nuclear_qmc.optimize.optimize import get_new_wave_function_parameters, partial_full_psi_parameters
 import jax.numpy as jnp
 from jax import random, vmap
 from nuclear_qmc.operators.hamiltonian import get_local_energy
@@ -14,31 +17,42 @@ config.update("jax_enable_x64", True)
 N_PROTON = 1
 N_NEUTRON = 1
 SEED = 0
-INITIAL_WALKER_STANDARD_DEVIATION = 1.0
+INITIAL_WALKER_STANDARD_DEVIATION = 0.3
 WALKER_STEP_SIZE = 1.0
-N_WALKERS = 2000
+N_WALKERS = 8000
 N_DIMENSIONS = 3
 N_EQUILIBRIUM_STEPS = 100
 N_STEPS = 20
 N_VOID_STEPS = 100
+N_OPTIMIZATION_STEPS = 20
+LEARNING_RATE = 0.0001
 wave_function = WaveFunction()
 
 key = random.PRNGKey(SEED)
 
-key, r_coord_samples = sample(
-    wave_function
-    , wave_function_prefactor_weight
-    , N_STEPS
-    , INITIAL_WALKER_STANDARD_DEVIATION
-    , WALKER_STEP_SIZE
-    , N_WALKERS
-    , N_NEUTRON + N_PROTON
-    , N_DIMENSIONS
-    , N_EQUILIBRIUM_STEPS
-    , N_VOID_STEPS
-    , key
-)
+for n_opt in range(N_OPTIMIZATION_STEPS):
+    key, r_coord_samples = sample(
+        wave_function
+        , wave_function_prefactor_weight
+        , N_STEPS
+        , INITIAL_WALKER_STANDARD_DEVIATION
+        , WALKER_STEP_SIZE
+        , N_WALKERS
+        , N_NEUTRON + N_PROTON
+        , N_DIMENSIONS
+        , N_EQUILIBRIUM_STEPS
+        , N_VOID_STEPS
+        , key
+    )
 
-r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
-local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coord_samples)
-print('total_energy', local_energy.mean())
+    r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
+    local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coord_samples)
+    print('total_energy', local_energy.mean())
+    param_updates = get_new_wave_function_parameters(wave_function
+                                                     , r_coord_samples
+                                                     , LEARNING_RATE
+                                                     ,
+                                                     partial_function=partial_full_psi_parameters
+                                                     ,
+                                                     kinetic_energy_operator=kinetic_energy_psi)
+    wave_function.params = param_updates

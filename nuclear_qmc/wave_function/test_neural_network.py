@@ -1,4 +1,5 @@
 import jax
+from jax.flatten_util import ravel_pytree
 import jax.numpy as jnp
 from jax import random, jit, vmap
 from jax.experimental import stax
@@ -22,20 +23,21 @@ Sin = elementwise(jnp.sin)
 
 class NeuralNetworkTestWaveFunction(WaveFunction):
     def __init__(self, params_file=os.path.join(dir_path, 'test_neural_network.model')):
-        super().__init__(n_protons=1, n_neutrons=1)
-        self.ndim = 3
-        self.npart = self.n_protons + self.n_neutrons
-        self.conf = 0.1
-        self.key = random.PRNGKey(0)
-        self.mix = 0.0
         self.ndense = 8
         self.nlat = 32  ## 1 * (self.ndim * self.npart + 4)
         self.activation = Tanh
         self.a = 8
+        self.conf = 0.1
+        self.key = random.PRNGKey(0)
+        self.mix = 0.0
         self._build()
         self.params_file = params_file
         if self.params_file is not None:
-            self.params = self.load_params(self.params_file)
+            self._params = self.load_params(self.params_file)
+        _, self.unflatten_params_function = ravel_pytree(self._params)
+        super().__init__(n_protons=1, n_neutrons=1)
+        self.ndim = 3
+        self.npart = self.n_protons + self.n_neutrons
 
     def _build(self):
         # phi_a
@@ -48,18 +50,28 @@ class NeuralNetworkTestWaveFunction(WaveFunction):
         self.key, key_input = jax.random.split(self.key)
         phi_a_shape, phi_a_params = self.phi_a_init(key_input, in_shape)
         self.num_phi_a_params = len(phi_a_params)
-        self.params = phi_a_params
+        self._params = phi_a_params
 
     def save(self, file_name):
         with open(file_name, 'wb') as file:
-            pickle.dump(self.params, file)
+            pickle.dump(self._params, file)
 
     def load_params(self, params_file_name):
         with open(params_file_name, 'rb') as fil:
             return pickle.load(fil)
 
+    @property
+    def params(self):
+        flat_params, self.unflatten_params_function = ravel_pytree(self._params)
+        return flat_params
+
+    @params.setter
+    def params(self, value):
+        self._params = self.unflatten_params_function(value)
+
     @partial(jit, static_argnums=(0,))
     def psi_prefactor(self, r_coords, params):
+        params = self.unflatten_params_function(params)
         rcm = jnp.mean(r_coords, axis=0)
         r = r_coords - rcm[None, :]
         delta_r = jnp.linalg.norm(r[0, :] - r[1, :])

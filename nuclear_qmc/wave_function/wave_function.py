@@ -19,9 +19,6 @@ class WaveFunction:
         self._initialize_spin_isospin()
         self.spin = get_spin_isospin_wave_function(self.n_protons, self.n_neutrons
                                                    , include_isospin=include_isospin, dtype=dtype)
-
-        self.params = jnp.array([1.0])
-
     def _initialize_spin_isospin(self):
         mass_number = self.n_protons + self.n_neutrons
         as_jax_array = True
@@ -36,6 +33,16 @@ class WaveFunction:
                                                                        , self.n_protons
                                                                        , as_jax_array
                                                                        , also_return_binary_representation=False)
+
+    @property
+    def params(self):
+        if not hasattr(self, '_params'):
+            self._params = jnp.array([1.])
+        return self._params
+
+    @params.setter
+    def params(self, value):
+        self._params = value
 
     def psi(self, r_coords):
         spin = self.psi_vector(r_coords, self.params, self.spin)
