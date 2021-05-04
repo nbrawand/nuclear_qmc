@@ -1,6 +1,6 @@
 import jax
 from jax import vmap, numpy as jnp
-
+from jax.scipy.linalg import cho_factor, cho_solve
 from nuclear_qmc.operators.hamiltonian import hamiltonian_psi
 from nuclear_qmc.operators.operators import kinetic_energy_psi
 from nuclear_qmc.wave_function.wave_function import WaveFunction
@@ -74,13 +74,17 @@ def get_new_wave_function_parameters(wave_function: WaveFunction
         return vmap(jnp.vdot, in_axes=(2, None))(d_psi, in_d_psi)
 
     d_psi_d_psi = vmap(vdot_nested, in_axes=(2,))(d_psi)  # [n_params, n_params]
-    quantum_fisher_information = d_psi_d_psi / psi_psi
-    quantum_fisher_information -= jnp.matmul(d_psi_d_psi, d_psi_d_psi) / psi_psi ** 2
+    fisher_information = d_psi_d_psi / psi_psi
+    fisher_information -= jnp.tensordot(d_psi_psi, d_psi_psi, axes=0) / psi_psi ** 2
 
-    # new parameters
+    # fisher + small_diag_matrix
     machine_epsilon = jnp.finfo(r_coords.dtype).eps
-    small_diag_matrix = machine_epsilon * jnp.identity(quantum_fisher_information.shape[0])
-    inverse_fisher_small_diag = jnp.linalg.inv(quantum_fisher_information + small_diag_matrix)
-    new_params = wave_function.params
-    new_params -= learning_rate * jnp.matmul(inverse_fisher_small_diag, d_energy)
+    small_diag_matrix = machine_epsilon
+    small_diag_matrix *= jnp.identity(fisher_information.shape[0]) + jnp.diag(jnp.diag(fisher_information))
+    fisher_information += small_diag_matrix
+
+    # solve for delta_p:  (S+lambda) delta_p = -learning_rate*d_energy
+    cho_factor_solution = cho_factor(fisher_information)
+    delta_p = cho_solve(cho_factor_solution, -learning_rate * d_energy)
+    new_params = wave_function.params + delta_p
     return new_params
