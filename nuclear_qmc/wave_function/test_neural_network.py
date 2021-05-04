@@ -32,8 +32,6 @@ class NeuralNetworkTestWaveFunction(WaveFunction):
         self.mix = 0.0
         self._build()
         self.params_file = params_file
-        if self.params_file is not None:
-            self._params = self.load_params(self.params_file)
         _, self.unflatten_params_function = ravel_pytree(self._params)
         super().__init__(n_protons=1, n_neutrons=1)
         self.ndim = 3

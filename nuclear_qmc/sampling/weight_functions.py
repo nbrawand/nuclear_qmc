@@ -7,5 +7,5 @@ def v_dot_weight(wave_function: WaveFunction, r_coords):
     return jnp.vdot(psi_r, psi_r)
 
 
-def wave_function_prefactor_weight(wave_function: WaveFunction, r_coords):
-    return wave_function.psi_prefactor(r_coords, wave_function.params)
+def wave_function_prefactor_weight(psi, r_coords):
+    return wight(r_coords, params)
