@@ -78,9 +78,11 @@ def get_new_wave_function_parameters(wave_function: WaveFunction
     fisher_information -= jnp.tensordot(d_psi_psi, d_psi_psi, axes=0) / psi_psi ** 2
 
     # fisher + small_diag_matrix
-    machine_epsilon = jnp.finfo(r_coords.dtype).eps
-    small_diag_matrix = machine_epsilon
-    small_diag_matrix *= jnp.identity(fisher_information.shape[0]) + jnp.diag(jnp.diag(fisher_information))
+    fish_mag = abs(jnp.mean(jnp.diag(fisher_information)))
+    d_energy_mag = abs(jnp.mean(jnp.diag(d_energy)))
+    small_diag_matrix = 0.0001 * d_energy_mag / fish_mag * learning_rate
+    print(small_diag_matrix)
+    small_diag_matrix *=  jnp.identity(fisher_information.shape[0])
     fisher_information += small_diag_matrix
 
     # solve for delta_p:  (S+lambda) delta_p = -learning_rate*d_energy

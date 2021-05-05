@@ -1,4 +1,5 @@
 from jax.config import config
+import jax
 
 from nuclear_qmc.operators.operators import kinetic_energy_psi
 from nuclear_qmc.optimize.optimize import get_new_wave_function_parameters, partial_full_psi_parameters
@@ -24,12 +25,13 @@ N_DIMENSIONS = 3
 N_EQUILIBRIUM_STEPS = 100
 N_STEPS = 20
 N_VOID_STEPS = 100
-N_OPTIMIZATION_STEPS = 20
+N_OPTIMIZATION_STEPS = 100
 LEARNING_RATE = 0.0001
 wave_function = WaveFunction()
 
 key = random.PRNGKey(SEED)
 
+rand_count = 0
 for n_opt in range(N_OPTIMIZATION_STEPS):
     key, r_coord_samples = sample(
         wave_function
@@ -55,4 +57,12 @@ for n_opt in range(N_OPTIMIZATION_STEPS):
                                                      partial_function=partial_full_psi_parameters
                                                      ,
                                                      kinetic_energy_operator=kinetic_energy_psi)
+
+    if rand_count > 30:
+        key, key_input = random.split(key)
+        unif_x = jax.random.uniform(key_input, shape=[param_updates.shape[0]], dtype=param_updates.dtype)
+        rand_count = 0
+        param_updates = 0.9 * param_updates + 0.1 * unif_x
+    rand_count += 1
+
     wave_function.params = param_updates
