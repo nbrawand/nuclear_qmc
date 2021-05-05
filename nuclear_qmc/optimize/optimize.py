@@ -1,7 +1,7 @@
 import jax
 from jax import vmap, numpy as jnp
 from jax.scipy.linalg import cho_factor, cho_solve
-from nuclear_qmc.operators.hamiltonian import hamiltonian_psi
+from nuclear_qmc.operators.hamiltonian import hamiltonian_psi, get_local_energy
 from nuclear_qmc.operators.operators import kinetic_energy_psi
 from nuclear_qmc.wave_function.wave_function import WaveFunction
 
@@ -77,14 +77,35 @@ def get_new_wave_function_parameters(wave_function: WaveFunction
     fisher_information = d_psi_d_psi / psi_psi
     fisher_information -= jnp.tensordot(d_psi_psi, d_psi_psi, axes=0) / psi_psi ** 2
 
-    # fisher + small_diag_matrix
-    machine_epsilon = jnp.finfo(r_coords.dtype).eps
-    small_diag_matrix = machine_epsilon
-    small_diag_matrix *= jnp.identity(fisher_information.shape[0]) + jnp.diag(jnp.diag(fisher_information))
-    fisher_information += small_diag_matrix
+    max_eps = 0.1
+    min_eps = 0.0000001
+    energy_change_min = 1.0
+    out_params = wave_function.params
+    for n in range(4):
+        eps = (max_eps + min_eps) / 2.0
+        small_diag_matrix = eps * jnp.identity(fisher_information.shape[0])
+        fisher_information = small_diag_matrix + fisher_information
+        cho_factor_solution = cho_factor(fisher_information)
+        delta_p = cho_solve(cho_factor_solution, -learning_rate * d_energy)
 
-    # solve for delta_p:  (S+lambda) delta_p = -learning_rate*d_energy
-    cho_factor_solution = cho_factor(fisher_information)
-    delta_p = cho_solve(cho_factor_solution, -learning_rate * d_energy)
-    new_params = wave_function.params + delta_p
-    return new_params
+        original_local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coords)
+        original_local_energy_mean = original_local_energy.mean()
+        original_local_energy_std = original_local_energy.std()
+
+        wave_function.params += delta_p
+        new_local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coords)
+        new_local_energy_mean = new_local_energy.mean()
+        new_local_energy_std = new_local_energy.std()
+        wave_function.params -= delta_p
+
+        energy_change = new_local_energy_mean - original_local_energy_mean
+        energy_std_change = new_local_energy_std - original_local_energy_std
+        if energy_change < energy_change_min and energy_std_change < 1.:
+            energy_change_min = energy_change
+            out_params = wave_function.params + delta_p
+            max_eps = eps
+            print('param update')
+        else:
+            min_eps = eps
+
+    return out_params

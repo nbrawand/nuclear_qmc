@@ -19,12 +19,12 @@ N_NEUTRON = 1
 SEED = 0
 INITIAL_WALKER_STANDARD_DEVIATION = 0.3
 WALKER_STEP_SIZE = 1.0
-N_WALKERS = 8000
+N_WALKERS = 4000
 N_DIMENSIONS = 3
 N_EQUILIBRIUM_STEPS = 100
-N_STEPS = 20
+N_STEPS = 10
 N_VOID_STEPS = 100
-N_OPTIMIZATION_STEPS = 20
+N_OPTIMIZATION_STEPS = 100
 LEARNING_RATE = 0.0001
 wave_function = WaveFunction()
 
@@ -46,8 +46,12 @@ for n_opt in range(N_OPTIMIZATION_STEPS):
     )
 
     r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
+
     local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coord_samples)
-    print('total_energy', local_energy.mean())
+    local_energy_mean = local_energy.mean()
+    local_energy_std = local_energy.std()
+    print(local_energy_mean, local_energy_std)
+
     param_updates = get_new_wave_function_parameters(wave_function
                                                      , r_coord_samples
                                                      , LEARNING_RATE
@@ -56,3 +60,5 @@ for n_opt in range(N_OPTIMIZATION_STEPS):
                                                      ,
                                                      kinetic_energy_operator=kinetic_energy_psi)
     wave_function.params = param_updates
+
+wave_function.save('wfc.model')
