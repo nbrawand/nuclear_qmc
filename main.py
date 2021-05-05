@@ -32,7 +32,6 @@ N_STEPS = 8
 N_VOID_STEPS = 200
 N_OPTIMIZATION_STEPS = 2000
 LEARNING_RATE = 0.001
-KEY = random.PRNGKey(SEED)
 
 wave_function = WaveFunction()
 particle_pairs = wave_function.particle_pairs
@@ -42,6 +41,7 @@ spin = wave_function.spin
 
 
 def loss_fn(params):
+    KEY = random.PRNGKey(SEED)
 
     def psi(r_coords):
         vec = wave_function.psi_vector(r_coords, params, spin)
@@ -52,7 +52,7 @@ def loss_fn(params):
         prefactor = wave_function.psi_prefactor(r_coords, params)
         return prefactor
 
-    Key, r_coord_samples = sample(
+    KEY, r_coord_samples = sample(
         weight_function
         , N_STEPS
         , INITIAL_WALKER_STANDARD_DEVIATION
