@@ -31,13 +31,11 @@ spin_exchange_indices = wave_function.spin_exchange_indices
 spin = wave_function.spin
 
 KEY = random.PRNGKey(SEED)
-global KEY
 
 KEY, key_input = jax.random.split(KEY)
 x_o = INITIAL_WALKER_STANDARD_DEVIATION * jax.random.normal(key_input,
                                                             shape=[N_WALKERS, N_PROTON + N_NEUTRON, N_DIMENSIONS],
                                                             dtype=jnp.float64)
-global x_o
 
 x_o = center_walkers(x_o)
 
@@ -67,7 +65,7 @@ def loss_fn(params):
         , KEY
         , x_o
     )
-   
+
     x_o = r_coord_samples[-1]
 
     r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
