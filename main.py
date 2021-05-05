@@ -1,21 +1,11 @@
-from jax._src.tree_util import register_pytree_node
-from jax import jit
 from jax.config import config
-from jax.tree_util import tree_structure
-import copy
 import jax
 from jax.experimental import optimizers
-
 from nuclear_qmc.operators.operators import kinetic_energy_psi
-from nuclear_qmc.optimize.optimize import get_new_wave_function_parameters, partial_full_psi_parameters
-import jax.numpy as jnp
 from jax import random, vmap
 from nuclear_qmc.operators.hamiltonian import get_local_energy
-# from nuclear_qmc.wave_function.wave_function_single_orbital import WaveFunctionSingleOrbital as WaveFunction
-# from nuclear_qmc.wave_function.wave_function import WaveFunction as WaveFunction
 from nuclear_qmc.wave_function.test_neural_network import NeuralNetworkTestWaveFunction as WaveFunction
 from nuclear_qmc.sampling.sample import sample
-from nuclear_qmc.sampling.weight_functions import wave_function_prefactor_weight
 
 config.update("jax_enable_x64", True)
 # config.update('jax_platform_name', 'cpu')
@@ -67,11 +57,11 @@ def loss_fn(params):
 
     r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
     local_energy = vmap(get_local_energy, in_axes=(None, 0, None, None, None, None))(psi
-                                                                                           , r_coord_samples
-                                                                                           , particle_pairs
-                                                                                           , particle_triplets
-                                                                                           , spin_exchange_indices
-                                                                                           , kinetic_energy_psi).mean()
+                                                                                     , r_coord_samples
+                                                                                     , particle_pairs
+                                                                                     , particle_triplets
+                                                                                     , spin_exchange_indices
+                                                                                     , kinetic_energy_psi).mean()
     return local_energy
 
 
