@@ -1,11 +1,12 @@
 from jax.config import config
+import jax.numpy as jnp
 import jax
 from jax.experimental import optimizers
 from nuclear_qmc.operators.operators import kinetic_energy_psi
 from jax import random, vmap
 from nuclear_qmc.operators.hamiltonian import get_local_energy
 from nuclear_qmc.wave_function.test_neural_network import NeuralNetworkTestWaveFunction as WaveFunction
-from nuclear_qmc.sampling.sample import sample
+from nuclear_qmc.sampling.sample import sample, center_walkers
 
 config.update("jax_enable_x64", True)
 # config.update('jax_platform_name', 'cpu')
@@ -29,9 +30,20 @@ particle_triplets = wave_function.particle_triplets
 spin_exchange_indices = wave_function.spin_exchange_indices
 spin = wave_function.spin
 
+KEY = random.PRNGKey(SEED)
+global KEY
+
+KEY, key_input = jax.random.split(KEY)
+x_o = INITIAL_WALKER_STANDARD_DEVIATION * jax.random.normal(key_input,
+                                                            shape=[N_WALKERS, N_PROTON + N_NEUTRON, N_DIMENSIONS],
+                                                            dtype=jnp.float64)
+global x_o
+
+x_o = center_walkers(x_o)
+
 
 def loss_fn(params):
-    KEY = random.PRNGKey(SEED)
+    global KEY, x_o
 
     def psi(r_coords):
         vec = wave_function.psi_vector(r_coords, params, spin)
@@ -53,7 +65,10 @@ def loss_fn(params):
         , N_EQUILIBRIUM_STEPS
         , N_VOID_STEPS
         , KEY
+        , x_o
     )
+   
+    x_o = r_coord_samples[-1]
 
     r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
     local_energy = vmap(get_local_energy, in_axes=(None, 0, None, None, None, None))(psi
