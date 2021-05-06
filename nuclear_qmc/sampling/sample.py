@@ -6,12 +6,13 @@ from jax.ops import index, index_update
 from jax.lax import fori_loop
 from functools import partial
 
+
 def center_walkers(walkers):
     cm = walkers.mean(axis=1)
     walkers -= cm[:, None, :]
     return walkers
 
-@partial(jit, static_argnums=(range(9)))
+
 def sample(
         wave_function
         , weight_function
@@ -23,7 +24,7 @@ def sample(
         , n_equilibrium_steps
         , n_void_steps
         , key
-        , x_o
+        , initial_walker_standard_deviation
 ):
     def step_nvoid(i, loop_carry_i):
         key, x_o, x_stored = loop_carry_i
@@ -53,6 +54,11 @@ def sample(
 
         return key, x_o, x_stored
 
+    key, key_input = jax.random.split(key)
+    x_o = initial_walker_standard_deviation * jax.random.normal(key_input,
+                                                                shape=[n_walkers, n_particles, n_dimensions],
+                                                                dtype=jnp.float64)
+    x_o = center_walkers(x_o)
 
     # Equilibrium steps
     x_stored = jnp.zeros(shape=[n_equilibrium_steps, n_walkers, n_particles, n_dimensions], dtype=jnp.float64)

@@ -26,19 +26,13 @@ N_STEPS = 10
 N_VOID_STEPS = 100
 N_OPTIMIZATION_STEPS = 2000
 LEARNING_RATE = 0.001
-#wave_function = WaveFunction()
+# wave_function = WaveFunction()
 wave_function = WaveFunction(jnp.array([1.085]))
 
 key = random.PRNGKey(SEED)
 
-
 rand_count = 0
 for n_opt in range(N_OPTIMIZATION_STEPS):
-    key, key_input = jax.random.split(key)
-    x_o = INITIAL_WALKER_STANDARD_DEVIATION * jax.random.normal(key_input,
-                                                                shape=[N_WALKERS, N_PROTON + N_NEUTRON, N_DIMENSIONS],
-                                                                dtype=jnp.float64)
-    x_o = center_walkers(x_o)
     key, r_coord_samples = sample(
         wave_function
         , v_dot_weight
@@ -50,12 +44,12 @@ for n_opt in range(N_OPTIMIZATION_STEPS):
         , N_EQUILIBRIUM_STEPS
         , N_VOID_STEPS
         , key
-        , x_o
+        , INITIAL_WALKER_STANDARD_DEVIATION
     )
 
     r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
     local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coord_samples)
-    print(wave_function.params[0], local_energy.mean())#, wave_function.params)
+    print(wave_function.params[0], local_energy.mean())  # , wave_function.params)
     param_updates = get_new_wave_function_parameters(wave_function
                                                      , r_coord_samples
                                                      , LEARNING_RATE
