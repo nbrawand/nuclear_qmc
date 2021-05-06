@@ -9,7 +9,6 @@ class ExpWaveFunction(WaveFunction):
         self.params = params
         super().__init__(n_protons=1, n_neutrons=1)
 
-    @partial(jit, static_argnums=(0,))
     def psi_prefactor(self, r_coords, params):
         rcm = jnp.mean(r_coords, axis=0)
         r = r_coords - rcm[None, :]
