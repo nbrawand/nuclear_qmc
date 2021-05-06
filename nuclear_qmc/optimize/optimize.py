@@ -55,6 +55,7 @@ def get_new_wave_function_parameters(wave_function: WaveFunction
     -------
 
     """
+
     #  calculate necessary components and average over walkers
     d_psi = vmap(partial_function, in_axes=(None, 0))(wave_function, r_coords)
     h_psi = vmap(hamiltonian_psi, in_axes=(None, 0, None))(wave_function, r_coords, kinetic_energy_operator)
@@ -62,11 +63,20 @@ def get_new_wave_function_parameters(wave_function: WaveFunction
 
     # energy derivative
     psi_psi = vmap(jnp.vdot, in_axes=(0, 0))(psi_r, psi_r)
-    d_psi_h_psi = vmap(jnp.vdot, in_axes=(0, 0))(d_psi, h_psi)
-    d_psi_psi = vmap(jnp.vdot, in_axes=(0, 0))(d_psi, psi_r)
+
+    def nested_vdot_with_h_psi(a_vec):
+        return vmap(jnp.vdot, in_axes=(0, 0))(a_vec, h_psi)
+
+    d_psi_h_psi = vmap(nested_vdot_with_h_psi, in_axes=(-1,))(d_psi)
+
+    def nested_vdot_with_psi_r(a_vec):
+        return vmap(jnp.vdot, in_axes=(0, 0))(a_vec, psi_r)
+
+    d_psi_psi = vmap(nested_vdot_with_psi_r, in_axes=(-1,))(d_psi)
+
     psi_h_psi = vmap(jnp.vdot, in_axes=(0, 0))(psi_r, h_psi)
     d_energy = 2.0 * (d_psi_h_psi - psi_h_psi * d_psi_psi) / psi_psi
-    return wave_function.params - learning_rate * d_energy.mean(axis=0)
+    return wave_function.params - learning_rate * d_energy.mean(axis=1)
 
 
 """Condition S+Lambda
