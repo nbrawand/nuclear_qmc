@@ -13,5 +13,6 @@ class ExpWaveFunction(WaveFunction):
     def psi_prefactor(self, r_coords, params):
         rcm = jnp.mean(r_coords, axis=0)
         r = r_coords - rcm[None, :]
-        delta_r = jnp.linalg.norm(r[0, :] - r[1, :]) ** 2
-        return jnp.exp(- delta_r / params[0] ** 2)
+        delta_r1 = jnp.linalg.norm(r[0, :]) ** 2
+        delta_r2 = jnp.linalg.norm(r[1, :]) ** 2
+        return jnp.exp(- (delta_r1 + delta_r2) / params[0] ** 2)
