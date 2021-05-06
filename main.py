@@ -11,7 +11,7 @@ from nuclear_qmc.operators.hamiltonian import get_local_energy
 from nuclear_qmc.wave_function.test_neural_network import NeuralNetworkTestWaveFunction as WaveFunction
 # from nuclear_qmc.wave_function.exp_network import ExpWaveFunction as WaveFunction
 from nuclear_qmc.sampling.sample import sample, center_walkers
-from nuclear_qmc.sampling.weight_functions import wave_function_prefactor_weight
+from nuclear_qmc.sampling.weight_functions import v_dot_weight
 
 config.update("jax_enable_x64", True)
 # config.update('jax_platform_name', 'cpu')
@@ -42,7 +42,7 @@ rand_count = 0
 for n_opt in range(N_OPTIMIZATION_STEPS):
     key, r_coord_samples = sample(
         wave_function
-        , wave_function_prefactor_weight
+        , v_dot_weight
         , N_STEPS
         , WALKER_STEP_SIZE
         , N_WALKERS
