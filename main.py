@@ -12,7 +12,7 @@ from nuclear_qmc.sampling.sample import sample, center_walkers
 from nuclear_qmc.sampling.weight_functions import v_dot_weight
 
 config.update("jax_enable_x64", True)
-config.update('jax_platform_name', 'cpu')
+# config.update('jax_platform_name', 'cpu')
 
 N_PROTON = 1
 N_NEUTRON = 1
