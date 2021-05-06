@@ -25,9 +25,9 @@ N_EQUILIBRIUM_STEPS = 100
 N_STEPS = 10
 N_VOID_STEPS = 100
 N_OPTIMIZATION_STEPS = 2000
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.001
 #wave_function = WaveFunction()
-wave_function = WaveFunction(jnp.array([1.141]))
+wave_function = WaveFunction(jnp.array([1.085]))
 
 key = random.PRNGKey(SEED)
 
@@ -55,7 +55,7 @@ for n_opt in range(N_OPTIMIZATION_STEPS):
 
     r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
     local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coord_samples)
-    print('total_energy', wave_function.params[0], local_energy.mean())#, wave_function.params)
+    print(wave_function.params[0], local_energy.mean())#, wave_function.params)
     param_updates = get_new_wave_function_parameters(wave_function
                                                      , r_coord_samples
                                                      , LEARNING_RATE
