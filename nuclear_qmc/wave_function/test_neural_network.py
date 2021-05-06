@@ -67,7 +67,6 @@ class NeuralNetworkTestWaveFunction(WaveFunction):
     def params(self, value):
         self._params = self.unflatten_params_function(value)
 
-    @partial(jit, static_argnums=(0,))
     def psi_prefactor(self, r_coords, params):
         params = self.unflatten_params_function(params)
         rcm = jnp.mean(r_coords, axis=0)
@@ -82,7 +81,6 @@ class NeuralNetworkTestWaveFunction(WaveFunction):
         psi *= self.phi(r)
         return jnp.reshape(psi, ())
 
-    @partial(jit, static_argnums=(0,))
     def phi(self, r):
         """ Boundary condition imposed on multiple particles
         """
@@ -90,7 +88,6 @@ class NeuralNetworkTestWaveFunction(WaveFunction):
         r = r - rcm[None, :]
         return jnp.prod(vmap(self.sp_boundary, in_axes=(0,))(r))
 
-    @partial(jit, static_argnums=(0,))
     def sp_boundary(self, r):
         """ Boundary condition imposed on single particle 
         """

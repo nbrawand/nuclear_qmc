@@ -11,7 +11,6 @@ def center_walkers(walkers):
     walkers -= cm[:, None, :]
     return walkers
 
-@partial(jit, static_argnums=(range(9)))
 def sample(
          weight_function
         , n_steps

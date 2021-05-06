@@ -11,7 +11,6 @@ D_0 = jnp.sqrt(677.79890)
 ultraviolet_cutoff = 4
 
 
-@partial(jax.jit, static_argnums=(0,))
 def potential_energy_psi(psi
                          , r_coords
                          , particle_pairs
@@ -38,7 +37,6 @@ def potential_energy_psi(psi
     return v_psi
 
 
-@jit
 def get_r_ij_sqrd(r_coords, particle_pairs):
     """
 
@@ -57,7 +55,6 @@ def get_r_ij_sqrd(r_coords, particle_pairs):
     return r_ij_sqrd
 
 
-@jit
 def get_r_ik_r_ij_sqrd(r_coords, particle_triplets, i, j, k):
     """
     Parameters
@@ -76,7 +73,6 @@ def get_r_ik_r_ij_sqrd(r_coords, particle_triplets, i, j, k):
     return r_ik_ij
 
 
-@jit
 def get_r_ik_r_ij_cycles(r_coords, particle_triplets):
     """
 
@@ -123,7 +119,6 @@ def hamiltonian_psi(psi
     return h_psi
 
 
-# @partial(jax.jit, static_argnums=(0, 5))
 def get_local_energy(psi
                      , r_coords
                      , particle_pairs
