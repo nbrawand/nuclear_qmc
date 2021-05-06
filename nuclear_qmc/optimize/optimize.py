@@ -68,7 +68,10 @@ def get_new_wave_function_parameters(wave_function: WaveFunction
     d_psi_psi = vmap(jnp.vdot, in_axes=(2, None))(d_psi, psi_r)  # [n_params]
     psi_h_psi = jnp.vdot(psi_r, h_psi)  # float
     d_energy = 2.0 * (d_psi_h_psi - psi_h_psi * d_psi_psi) / psi_psi  # [n_params]
+    return wave_function.params - learning_rate * d_energy
 
+
+"""Condition S+Lambda
     # return wave_function.params -learning_rate * d_energy
 
     # quantum fisher information
@@ -110,3 +113,4 @@ def get_new_wave_function_parameters(wave_function: WaveFunction
             min_eps = eps
 
     return out_params
+"""
