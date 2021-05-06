@@ -69,6 +69,8 @@ def get_new_wave_function_parameters(wave_function: WaveFunction
     psi_h_psi = jnp.vdot(psi_r, h_psi)  # float
     d_energy = 2.0 * (d_psi_h_psi - psi_h_psi * d_psi_psi) / psi_psi  # [n_params]
 
+    # return wave_function.params -learning_rate * d_energy
+
     # quantum fisher information
     def vdot_nested(in_d_psi):
         return vmap(jnp.vdot, in_axes=(2, None))(d_psi, in_d_psi)
@@ -104,7 +106,6 @@ def get_new_wave_function_parameters(wave_function: WaveFunction
             energy_change_min = energy_change
             out_params = wave_function.params + delta_p
             max_eps = eps
-            print('param update')
         else:
             min_eps = eps
 
