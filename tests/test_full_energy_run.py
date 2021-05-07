@@ -20,14 +20,13 @@ def test_full_energy_run():
     N_STEPS = 20
     N_VOID_STEPS = 100
     _, psi_prefactor, psi_params = build_test_nn_wfc()
-    sqrt_psi_prefactor = lambda p, r: jnp.sqrt(psi_prefactor(p, r))
     particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
         N_PROTON, N_NEUTRON,
         include_isospin=True,
         dtype=jnp.float64,
         as_jax_array=True)
     key = random.PRNGKey(0)
-    key, r_coord_samples = sample(sqrt_psi_prefactor
+    key, r_coord_samples = sample(psi_prefactor
                                   , psi_params
                                   , psi_vector
                                   , N_STEPS

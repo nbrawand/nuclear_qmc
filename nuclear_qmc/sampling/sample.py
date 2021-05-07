@@ -63,7 +63,7 @@ def sample(
             x_o, wpsi_o, = loop_carry_j
             x_n = x_o + move[j, :, :, :]
             wpsi_n = vmap(get_psi_psi_r, in_axes=(None, None, None, 0))(psi, psi_params, psi_vector, x_n)
-            prob = (jnp.abs(wpsi_n) / jnp.abs(wpsi_o)) ** 2
+            prob = jnp.abs(wpsi_n) / jnp.abs(wpsi_o)
             accept = jnp.greater_equal(prob, unif_x[j, :])
             x_o = jnp.where(accept.reshape([n_walkers, 1, 1]), x_n, x_o)
             wpsi_o = jnp.where(accept, wpsi_n, wpsi_o)
