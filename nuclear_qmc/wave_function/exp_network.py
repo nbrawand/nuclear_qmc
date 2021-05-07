@@ -1,5 +1,4 @@
 import jax.numpy as jnp
-from nuclear_qmc.wave_function.wave_function import get_wave_function_system
 
 
 def psi_prefactor(params, r_coords):

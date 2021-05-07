@@ -1,12 +1,11 @@
 from nuclear_qmc.operators.hamiltonian import get_r_ij_sqrd, get_r_ik_r_ij_cycles, get_local_energy, \
-    potential_energy_psi, \
-    C_2, C_1
+    potential_energy_psi
 import jax.numpy as jnp
-from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
 from nuclear_qmc.operators.operators import kinetic_energy_psi
-from nuclear_qmc.wave_function.test_neural_network import NeuralNetworkTestWaveFunction
-from nuclear_qmc.wave_function.wave_function import WaveFunction
 from jax.config import config
+
+from nuclear_qmc.wave_function.test_neural_network import build_test_nn_wfc
+from nuclear_qmc.wave_function.wave_function import get_wave_function_system
 
 config.update("jax_enable_x64", True)
 
@@ -41,18 +40,30 @@ class TestHamiltonian:
         assert jnp.array_equal(computed, expected)
 
     def test_get_local_energy(self):
-        wfc = NeuralNetworkTestWaveFunction()
-        ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
-        computed = get_local_energy(wfc, ex_r).round(8)
+        r_coords = jnp.array([[0.43, 0, 0], [0, 0, 0]])
+        _, psi, psi_params = build_test_nn_wfc()
+        particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+            1, 1,
+            include_isospin=True,
+            dtype=jnp.float64,
+            as_jax_array=True)
+        computed = get_local_energy(psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets,
+                                    spin_exchange_indices).round(8)
         expected = jnp.array(-2.42576814)
         assert jnp.array_equal(computed, expected)
 
     def test_potential_energy_with_test_wfc(self):
-        wfc = NeuralNetworkTestWaveFunction()
+        _, psi, psi_params = build_test_nn_wfc()
+        particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+            1, 1,
+            include_isospin=True,
+            dtype=jnp.float64,
+            as_jax_array=True)
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
-        wfc_r = wfc.psi(ex_r)
+        wfc_r = psi(psi_params, ex_r) * psi_vector
         psi_norm = jnp.vdot(wfc_r, wfc_r)
-        v_psi = potential_energy_psi(wfc, ex_r)
+        v_psi = potential_energy_psi(psi, psi_params, psi_vector, ex_r, particle_pairs, particle_triplets,
+                                     spin_exchange_indices)
         psi_v_psi = jnp.vdot(wfc_r, v_psi)
         computed = psi_v_psi / psi_norm
         computed = computed.round(8)
@@ -60,20 +71,25 @@ class TestHamiltonian:
         assert jnp.array_equal(computed, expected)
 
     def test_kinetic_energy_with_test_wfc(self):
-        wfc = NeuralNetworkTestWaveFunction()
+        _, psi, psi_params = build_test_nn_wfc()
+        particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+            1, 1,
+            include_isospin=True,
+            dtype=jnp.float64,
+            as_jax_array=True)
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
         expected = 238.69157666
-        wfc_r = wfc.psi(ex_r)
+        wfc_r = psi(psi_params, ex_r) * psi_vector
         psi_norm = jnp.vdot(wfc_r, wfc_r)
-        ke_psi = kinetic_energy_psi(wfc, ex_r)
+        ke_psi = kinetic_energy_psi(psi, psi_params, ex_r) * psi_vector
         psi_ke_psi = jnp.vdot(wfc_r, ke_psi)
         computed = psi_ke_psi / psi_norm
         computed = computed.round(8)
         assert jnp.array_equal(computed, jnp.array(expected, dtype=jnp.float64))
 
     def test_psi_r_test_wfc(self):
-        wfc = NeuralNetworkTestWaveFunction()
+        _, psi, psi_params = build_test_nn_wfc()
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
-        expected = -0.05251155
-        computed = wfc.psi(ex_r)[1, -1].round(8)
-        assert jnp.array_equal(computed, jnp.array(expected))
+        expected = jnp.array(0.05251155, dtype=jnp.float64)
+        computed = round(psi(psi_params, ex_r), 8)
+        assert jnp.array_equal(expected, computed)

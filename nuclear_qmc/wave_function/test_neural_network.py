@@ -36,7 +36,7 @@ def sp_boundary(r):
     return sp_conf
 
 
-def build(key=None, params_file=os.path.join(dir_path, 'test_neural_network.model')):
+def build_test_nn_wfc(key=None, params_file=os.path.join(dir_path, 'test_neural_network.model')):
     if key is None:
         key = random.PRNGKey(0)
     ndense = 8

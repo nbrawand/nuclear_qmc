@@ -2,9 +2,8 @@ from jax.config import config
 import jax.numpy as jnp
 from jax import random, vmap
 from nuclear_qmc.operators.hamiltonian import get_local_energy
-from nuclear_qmc.wave_function.test_neural_network import build
+from nuclear_qmc.wave_function.test_neural_network import build_test_nn_wfc
 from nuclear_qmc.sampling.sample import sample
-import copy
 from nuclear_qmc.wave_function.wave_function import get_wave_function_system
 
 config.update("jax_enable_x64", True)
@@ -20,12 +19,13 @@ def test_full_energy_run():
     N_EQUILIBRIUM_STEPS = 100
     N_STEPS = 20
     N_VOID_STEPS = 100
-    _, psi_prefactor, psi_params = build()
+    _, psi_prefactor, psi_params = build_test_nn_wfc()
     sqrt_psi_prefactor = lambda p, r: jnp.sqrt(psi_prefactor(p, r))
-    particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(N_PROTON, N_NEUTRON,
-                                                                                                                              include_isospin=True,
-                                                                                                                              dtype=jnp.float64,
-                                                                                                                              as_jax_array=True)
+    particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+        N_PROTON, N_NEUTRON,
+        include_isospin=True,
+        dtype=jnp.float64,
+        as_jax_array=True)
     key = random.PRNGKey(0)
     key, r_coord_samples = sample(sqrt_psi_prefactor
                                   , psi_params
