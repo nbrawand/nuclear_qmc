@@ -28,7 +28,6 @@ def test_full_energy_run():
         wave_function
         , wave_function_prefactor_weight
         , N_STEPS
-        , INITIAL_WALKER_STANDARD_DEVIATION
         , WALKER_STEP_SIZE
         , N_WALKERS
         , N_NEUTRON + N_PROTON
@@ -36,6 +35,7 @@ def test_full_energy_run():
         , N_EQUILIBRIUM_STEPS
         , N_VOID_STEPS
         , key
+        , INITIAL_WALKER_STANDARD_DEVIATION
     )
 
     r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
