@@ -4,6 +4,7 @@ from jax import random, vmap
 from nuclear_qmc.operators.hamiltonian import get_local_energy
 from nuclear_qmc.wave_function.test_neural_network import NeuralNetworkTestWaveFunction as WaveFunction
 from nuclear_qmc.sampling.sample import sample
+import copy
 from nuclear_qmc.sampling.weight_functions import wave_function_prefactor_weight
 
 config.update("jax_enable_x64", True)
@@ -20,13 +21,18 @@ def test_full_energy_run():
     N_EQUILIBRIUM_STEPS = 100
     N_STEPS = 20
     N_VOID_STEPS = 100
+    _ = WaveFunction()
+
+    def psi_prefac(r, params):
+        psi = _.psi_prefactor(r, _.params)
+        return jnp.sqrt(psi)
+
     wave_function = WaveFunction()
+    wave_function.psi_prefactor = psi_prefac
 
     key = random.PRNGKey(SEED)
-
     key, r_coord_samples = sample(
-        wave_function
-        , wave_function_prefactor_weight
+        wave_function.psi
         , N_STEPS
         , WALKER_STEP_SIZE
         , N_WALKERS
@@ -37,6 +43,7 @@ def test_full_energy_run():
         , key
         , INITIAL_WALKER_STANDARD_DEVIATION
     )
+    wave_function = WaveFunction()
 
     r_coord_samples = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
     local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coord_samples)

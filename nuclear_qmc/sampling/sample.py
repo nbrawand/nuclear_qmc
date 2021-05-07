@@ -1,21 +1,44 @@
 import jax
-from nuclear_qmc.sampling.weight_functions import v_dot_weight
 import jax.numpy as jnp
 from jax import random, jit, vmap
 from jax.ops import index, index_update
 from jax.lax import fori_loop
-from functools import partial
 
 
 def center_walkers(walkers):
+    """
+
+    Parameters
+    ----------
+    walkers: ndarray [n_walkers, n_particles, n_coordinates]
+
+    Returns
+    -------
+
+    """
     cm = walkers.mean(axis=1)
     walkers -= cm[:, None, :]
     return walkers
 
 
+def get_psi_psi_r(psi, r_coords):
+    """
+
+    Parameters
+    ----------
+    psi: function
+    r_coords: ndarray [n_particles, n_coordinates]
+
+    Returns
+    -------
+
+    """
+    psi_r = psi(r_coords)
+    return jnp.vdot(psi_r, psi_r)
+
+
 def sample(
-        wave_function
-        , weight_function
+        psi
         , n_steps
         , walker_step_size
         , n_walkers
@@ -37,7 +60,7 @@ def sample(
         def step(j, loop_carry_j):
             x_o, wpsi_o, = loop_carry_j
             x_n = x_o + move[j, :, :, :]
-            wpsi_n = vmap(weight_function, in_axes=(None, 0))(wave_function, x_n)
+            wpsi_n = vmap(get_psi_psi_r, in_axes=(None, 0))(psi, x_n)
             prob = (jnp.abs(wpsi_n) / jnp.abs(wpsi_o)) ** 2
             accept = jnp.greater_equal(prob, unif_x[j, :])
             x_o = jnp.where(accept.reshape([n_walkers, 1, 1]), x_n, x_o)
@@ -45,7 +68,7 @@ def sample(
             return x_o, wpsi_o
 
         x_o = center_walkers(x_o)
-        wpsi_o = vmap(weight_function, in_axes=(None, 0))(wave_function, x_o)
+        wpsi_o = vmap(get_psi_psi_r, in_axes=(None, 0))(psi, x_o)
 
         x_o, wpsi_o = fori_loop(0, n_void_steps, step, (x_o, wpsi_o))
         x_o = center_walkers(x_o)
