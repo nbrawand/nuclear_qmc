@@ -70,7 +70,7 @@ class NeuralNetworkTestWaveFunction(WaveFunction):
         self._params = self.unflatten_params_function(value)
 
     @partial(jit, static_argnums=(0,))
-    def psi_prefactor(self, r_coords, params):
+    def psi_prefactor(self, params, r_coords):
         params = self.unflatten_params_function(params)
         rcm = jnp.mean(r_coords, axis=0)
         r = r_coords - rcm[None, :]

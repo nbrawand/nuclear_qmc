@@ -9,7 +9,7 @@ class ExpWaveFunction(WaveFunction):
         self.params = params
         super().__init__(n_protons=1, n_neutrons=1)
 
-    def psi_prefactor(self, r_coords, params):
+    def psi_prefactor(self, params, r_coords):
         rcm = jnp.mean(r_coords, axis=0)
         r = r_coords - rcm[None, :]
         delta_r1 = jnp.linalg.norm(r[0, :]) ** 2

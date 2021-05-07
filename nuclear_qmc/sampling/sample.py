@@ -21,7 +21,7 @@ def center_walkers(walkers):
     return walkers
 
 
-def get_psi_psi_r(psi, r_coords):
+def get_psi_psi_r(psi, psi_params, psi_vector, r_coords):
     """
 
     Parameters
@@ -33,12 +33,14 @@ def get_psi_psi_r(psi, r_coords):
     -------
 
     """
-    psi_r = psi(r_coords)
+    psi_r = psi(psi_params, r_coords) * psi_vector
     return jnp.vdot(psi_r, psi_r)
 
 
 def sample(
         psi
+        , psi_params
+        , psi_vector
         , n_steps
         , walker_step_size
         , n_walkers
@@ -60,7 +62,7 @@ def sample(
         def step(j, loop_carry_j):
             x_o, wpsi_o, = loop_carry_j
             x_n = x_o + move[j, :, :, :]
-            wpsi_n = vmap(get_psi_psi_r, in_axes=(None, 0))(psi, x_n)
+            wpsi_n = vmap(get_psi_psi_r, in_axes=(None, None, None, 0))(psi, psi_params, psi_vector, x_n)
             prob = (jnp.abs(wpsi_n) / jnp.abs(wpsi_o)) ** 2
             accept = jnp.greater_equal(prob, unif_x[j, :])
             x_o = jnp.where(accept.reshape([n_walkers, 1, 1]), x_n, x_o)
@@ -68,7 +70,7 @@ def sample(
             return x_o, wpsi_o
 
         x_o = center_walkers(x_o)
-        wpsi_o = vmap(get_psi_psi_r, in_axes=(None, 0))(psi, x_o)
+        wpsi_o = vmap(get_psi_psi_r, in_axes=(None, None, None, 0))(psi, psi_params, psi_vector, x_o)
 
         x_o, wpsi_o = fori_loop(0, n_void_steps, step, (x_o, wpsi_o))
         x_o = center_walkers(x_o)

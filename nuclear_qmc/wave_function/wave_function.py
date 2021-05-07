@@ -19,6 +19,7 @@ class WaveFunction:
         self._initialize_spin_isospin()
         self.spin = get_spin_isospin_wave_function(self.n_protons, self.n_neutrons
                                                    , include_isospin=include_isospin, dtype=dtype)
+
     def _initialize_spin_isospin(self):
         mass_number = self.n_protons + self.n_neutrons
         as_jax_array = True
@@ -44,16 +45,9 @@ class WaveFunction:
     def params(self, value):
         self._params = value
 
-    def psi(self, r_coords):
-        spin = self.psi_vector(r_coords, self.params, self.spin)
-        prefactor = self.psi_prefactor(r_coords, self.params)
-        return prefactor * spin
-
-    def psi_prefactor(self, r_coords, params):
+    def psi_prefactor(self, params, r_coords):
         psi_prefac = jnp.sum(r_coords ** 2, axis=-1)
         psi_prefac = jnp.sum(psi_prefac)
         psi_prefac = jnp.exp(-params[0] * psi_prefac)
         return psi_prefac
 
-    def psi_vector(self, r_coords, params, spin):
-        return spin

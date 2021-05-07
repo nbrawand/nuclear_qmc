@@ -12,24 +12,25 @@ D_0 = jnp.sqrt(677.79890)
 ultraviolet_cutoff = 4
 
 
-def potential_energy_psi(wave_function: WaveFunction, r_coords):
+def potential_energy_psi(psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets,
+                         spin_exchange_indices):
     """Potential from arXiv:2007.14282v2 [nucl-th] 13 Apr 2021"""
 
-    r_ij_sqrd = get_r_ij_sqrd(r_coords, wave_function.particle_pairs)
+    r_ij_sqrd = get_r_ij_sqrd(r_coords, particle_pairs)
     exp_neg_r_lambda_4 = jnp.exp(-r_ij_sqrd * ultraviolet_cutoff ** 2 / 4.)
     first_term_coefficient = C_1 * exp_neg_r_lambda_4.sum()
 
     second_term_coefficients = C_2 * exp_neg_r_lambda_4
 
-    if wave_function.particle_triplets.shape[0] > 0:
-        r_ik_r_ij = get_r_ik_r_ij_cycles(r_coords, wave_function.particle_triplets)
+    if particle_triplets.shape[0] > 0:
+        r_ik_r_ij = get_r_ik_r_ij_cycles(r_coords, particle_triplets)
         third_term_coefficient = D_0 * jnp.exp(-r_ik_r_ij * ultraviolet_cutoff ** 2 / 4.).sum()
     else:
         third_term_coefficient = 0.0
 
-    psi_r = wave_function.psi(r_coords)
+    psi_r = psi(psi_params, r_coords) * psi_vector
     v_psi = (first_term_coefficient + third_term_coefficient) * psi_r
-    v_psi += sigma(wave_function, r_coords, second_term_coefficients)
+    v_psi += sigma(psi, psi_params, psi_vector, r_coords, spin_exchange_indices, second_term_coefficients)
     return v_psi
 
 
@@ -88,7 +89,7 @@ def get_r_ik_r_ij_cycles(r_coords, particle_triplets):
     return cycles
 
 
-def hamiltonian_psi(wave_function: WaveFunction, r_coords, kinetic_energy_operator=kinetic_energy_psi):
+def hamiltonian_psi(psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets, spin_exchange_indices):
     """
 
     Parameters
@@ -101,13 +102,14 @@ def hamiltonian_psi(wave_function: WaveFunction, r_coords, kinetic_energy_operat
     float
 
     """
-    ke_psi = kinetic_energy_operator(wave_function, r_coords)
-    v_psi = potential_energy_psi(wave_function, r_coords)
+    ke_psi = kinetic_energy_psi(psi, psi_params, r_coords) * psi_vector
+    v_psi = potential_energy_psi(psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets,
+                                 spin_exchange_indices)
     h_psi = ke_psi + v_psi
     return h_psi
 
 
-def get_local_energy(wave_function: WaveFunction, r_coords, kinetic_energy_operator=kinetic_energy_psi):
+def get_local_energy(psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets, spin_exchange_indices):
     """
 
     Parameters
@@ -120,10 +122,9 @@ def get_local_energy(wave_function: WaveFunction, r_coords, kinetic_energy_opera
     float
 
     """
-    h_psi = hamiltonian_psi(wave_function, r_coords, kinetic_energy_operator=kinetic_energy_operator)
-    psi_r = wave_function.psi(r_coords)
+    h_psi = hamiltonian_psi(psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets,
+                            spin_exchange_indices)
+    psi_r = psi(psi_params, r_coords) * psi_vector
     psi_psi = jnp.real(jnp.vdot(psi_r, psi_r))
     psi_h_psi = jnp.real(jnp.vdot(psi_r, h_psi))
     return psi_h_psi / psi_psi
-
-
