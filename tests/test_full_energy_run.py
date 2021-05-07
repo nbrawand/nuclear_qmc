@@ -2,10 +2,10 @@ from jax.config import config
 import jax.numpy as jnp
 from jax import random, vmap
 from nuclear_qmc.operators.hamiltonian import get_local_energy
-from nuclear_qmc.wave_function.test_neural_network import NeuralNetworkTestWaveFunction as WaveFunction
+from nuclear_qmc.wave_function.test_neural_network import build
 from nuclear_qmc.sampling.sample import sample
 import copy
-from nuclear_qmc.sampling.weight_functions import wave_function_prefactor_weight
+from nuclear_qmc.wave_function.wave_function import get_wave_function_system
 
 config.update("jax_enable_x64", True)
 
@@ -13,7 +13,6 @@ config.update("jax_enable_x64", True)
 def test_full_energy_run():
     N_PROTON = 1
     N_NEUTRON = 1
-    SEED = 0
     INITIAL_WALKER_STANDARD_DEVIATION = 1.0
     WALKER_STEP_SIZE = 1.0
     N_WALKERS = 2000
@@ -21,17 +20,14 @@ def test_full_energy_run():
     N_EQUILIBRIUM_STEPS = 100
     N_STEPS = 20
     N_VOID_STEPS = 100
-    wave_function = WaveFunction()
-    psi_prefac = wave_function.psi_prefactor
-    sqrt_psi_prefac = lambda p, r: jnp.sqrt(psi_prefac(p, r))
-    psi_params = wave_function.params
-    psi_vector = wave_function.spin
-    particle_pairs = wave_function.particle_pairs
-    particle_triplets = wave_function.particle_triplets
-    spin_exchange_indices = wave_function.spin_exchange_indices
-
-    key = random.PRNGKey(SEED)
-    key, r_coord_samples = sample(sqrt_psi_prefac
+    _, psi_prefactor, psi_params = build()
+    sqrt_psi_prefactor = lambda p, r: jnp.sqrt(psi_prefactor(p, r))
+    particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(N_PROTON, N_NEUTRON,
+                                                                                                                              include_isospin=True,
+                                                                                                                              dtype=jnp.float64,
+                                                                                                                              as_jax_array=True)
+    key = random.PRNGKey(0)
+    key, r_coord_samples = sample(sqrt_psi_prefactor
                                   , psi_params
                                   , psi_vector
                                   , N_STEPS
@@ -46,13 +42,13 @@ def test_full_energy_run():
                                   )
 
     r_coords = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
-    local_energy = vmap(get_local_energy, in_axes=(None, None, None, 0, None, None, None))(psi_prefac
-                                                                                     , psi_params
-                                                                                     , psi_vector
-                                                                                     , r_coords
-                                                                                     , particle_pairs
-                                                                                     , particle_triplets
-                                                                                     , spin_exchange_indices)
+    local_energy = vmap(get_local_energy, in_axes=(None, None, None, 0, None, None, None))(psi_prefactor
+                                                                                           , psi_params
+                                                                                           , psi_vector
+                                                                                           , r_coords
+                                                                                           , particle_pairs
+                                                                                           , particle_triplets
+                                                                                           , spin_exchange_indices)
     computed = local_energy.mean().round(12)
     expected = jnp.array(-2.20571193860801, dtype=jnp.float64).round(12)
     assert jnp.array_equal(expected, computed)

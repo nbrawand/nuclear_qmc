@@ -3,7 +3,6 @@ from nuclear_qmc.operators.operators import kinetic_energy_psi, sigma
 import jax.numpy as jnp
 from jax import jit
 from functools import partial
-from nuclear_qmc.wave_function.wave_function import WaveFunction
 
 # potential enregy coefficients from arXiv:2007.14282v2 [nucl-th] 13 Apr 2021
 C_1 = -487.6128

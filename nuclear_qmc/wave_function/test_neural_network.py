@@ -1,99 +1,70 @@
 import jax
+from jax import random
 from jax.flatten_util import ravel_pytree
 import jax.numpy as jnp
-from jax import random, jit, vmap
 from jax.experimental import stax
-from jax.experimental.stax import Dense, elementwise, Tanh
-from functools import partial
+from jax.experimental.stax import Dense, Tanh
 import pickle
-from nuclear_qmc.wave_function.wave_function import WaveFunction
 import os
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
-@jit
-def lintanh(x):
-    return x - jnp.tanh(x) / 2
+def load_params(params_file_name):
+    with open(params_file_name, 'rb') as fil:
+        return pickle.load(fil)
 
 
-Lintanh = elementwise(lintanh)
-Sin = elementwise(jnp.sin)
+def save(params, file_name):
+    with open(file_name, 'wb') as file:
+        pickle.dump(params, file)
 
 
-class NeuralNetworkTestWaveFunction(WaveFunction):
-    def __init__(self, params_file=os.path.join(dir_path, 'test_neural_network.model')):
-        self.ndense = 8
-        self.nlat = 32  ## 1 * (self.ndim * self.npart + 4)
-        self.activation = Tanh
-        self.a = 8
-        self.conf = 0.1
-        self.key = random.PRNGKey(0)
-        self.mix = 0.0
-        self._build()
-        self.params_file = params_file
-        if self.params_file is not None:
-            self._params = self.load_params(self.params_file)
-        _, self.unflatten_params_function = ravel_pytree(self._params)
-        super().__init__(n_protons=1, n_neutrons=1)
-        self.ndim = 3
-        self.npart = self.n_protons + self.n_neutrons
+def phi(r):
+    """ Boundary condition imposed on multiple particles
+    """
+    rcm = jnp.mean(r, axis=0)
+    r = r - rcm[None, :]
+    return jnp.prod(jax.vmap(sp_boundary, in_axes=(0,))(r))
 
-    def _build(self):
-        # phi_a
-        self.phi_a_init, self.phi_a_apply = stax.serial(
-            Dense(self.ndense), self.activation,
-            Dense(self.ndense), Tanh,
-            Dense(1),
-        )
-        in_shape = (1,)
-        self.key, key_input = jax.random.split(self.key)
-        phi_a_shape, phi_a_params = self.phi_a_init(key_input, in_shape)
-        self.num_phi_a_params = len(phi_a_params)
-        self._params = phi_a_params
 
-    def save(self, file_name):
-        with open(file_name, 'wb') as file:
-            pickle.dump(self._params, file)
+def sp_boundary(r):
+    """ Boundary condition imposed on single particle
+    """
+    sp_conf = jnp.exp(- 0.1 * jnp.sum(r ** 2))
 
-    def load_params(self, params_file_name):
-        with open(params_file_name, 'rb') as fil:
-            return pickle.load(fil)
+    return sp_conf
 
-    @property
-    def params(self):
-        flat_params, self.unflatten_params_function = ravel_pytree(self._params)
-        return flat_params
 
-    @params.setter
-    def params(self, value):
-        self._params = self.unflatten_params_function(value)
+def build(key=None, params_file=os.path.join(dir_path, 'test_neural_network.model')):
+    if key is None:
+        key = random.PRNGKey(0)
+    ndense = 8
+    activation = Tanh
+    phi_a_init, phi_a_apply = stax.serial(
+        Dense(ndense), activation,
+        Dense(ndense), Tanh,
+        Dense(1),
+    )
+    in_shape = (1,)
 
-    @partial(jit, static_argnums=(0,))
-    def psi_prefactor(self, params, r_coords):
-        params = self.unflatten_params_function(params)
+    if params_file is not None:
+        unflattened_params = load_params(params_file)
+    else:
+        key, key_input = jax.random.split(key)
+        _, unflattened_params = phi_a_init(key_input, in_shape)
+
+    flat_params, unflatten_params_function = ravel_pytree(unflattened_params)
+
+    def psi_prefactor(flat_params_in, r_coords):
         rcm = jnp.mean(r_coords, axis=0)
         r = r_coords - rcm[None, :]
         delta_r = jnp.linalg.norm(r[0, :] - r[1, :])
-
-        phi_a_params = params[0:self.num_phi_a_params]
-        phi_a_out = self.phi_a_apply(phi_a_params, delta_r)
+        unflat_params = unflatten_params_function(flat_params_in)
+        phi_a_out = phi_a_apply(unflat_params, delta_r)
         phi_a_out = jnp.mean(phi_a_out)
-
         psi = jnp.exp(phi_a_out)
-        psi *= self.phi(r)
+        psi *= phi(r)
         return jnp.reshape(psi, ())
 
-    def phi(self, r):
-        """ Boundary condition imposed on multiple particles
-        """
-        rcm = jnp.mean(r, axis=0)
-        r = r - rcm[None, :]
-        return jnp.prod(vmap(self.sp_boundary, in_axes=(0,))(r))
-
-    def sp_boundary(self, r):
-        """ Boundary condition imposed on single particle 
-        """
-        sp_conf = jnp.exp(- self.conf * jnp.sum(r ** 2))
-
-        return sp_conf
+    return key, psi_prefactor, flat_params
