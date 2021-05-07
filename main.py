@@ -15,19 +15,17 @@ N_NEUTRON = 1
 SEED = 0
 INITIAL_WALKER_STANDARD_DEVIATION = 1.0
 WALKER_STEP_SIZE = 0.2
-N_WALKERS = 4000
+N_WALKERS = 16000
 N_DIMENSIONS = 3
 N_EQUILIBRIUM_STEPS = 20
 N_STEPS = 20
 N_VOID_STEPS = 200
-N_OPTIMIZATION_STEPS = 1
+N_OPTIMIZATION_STEPS = 2000
 key = random.PRNGKey(SEED)
 particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
     N_PROTON, N_NEUTRON)
 
-psi_vector /= jnp.vdot(psi_vector, psi_vector)
-
-psi_params = jnp.array([1.0])
+psi_params = jnp.array([0.40])
 
 for n_opt in range(N_OPTIMIZATION_STEPS):
     key, r_coord_samples = sample(
@@ -53,5 +51,5 @@ for n_opt in range(N_OPTIMIZATION_STEPS):
                                                                                            , particle_pairs
                                                                                            , particle_triplets
                                                                                            , spin_exchange_indices)
-    print(psi_params, r_coords.shape, local_energy.mean())  # , wave_function.params)
-    psi_params += 0.005
+    print(psi_params[0], local_energy.mean())  # , wave_function.params)
+    psi_params += 0.01
