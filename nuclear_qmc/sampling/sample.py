@@ -4,10 +4,6 @@ from jax import random, jit, vmap
 from jax.ops import index, index_update
 from jax.lax import fori_loop
 
-def center_walkers(walkers):
-    cm = walkers.mean(axis=1)
-    walkers -= cm[:, None, :]
-    return walkers
 
 def center_walkers(walkers):
     """
