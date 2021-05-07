@@ -28,14 +28,14 @@ class TestOperators:
     def test_kinetic_energy_base_wfc(self):
         spin = jnp.array([1, 0])
         params = jnp.array([1.])
-        psi = lambda p, x: x.reshape(-1).sum() ** 2 * spin
+        psi = lambda p, x: x.reshape(-1).sum() ** 2
         r_coords = jnp.array([[1., 0., 0.], [0., 0., 0.]])
         grad_psi = 2.0 * spin
         n_particles = 2
         n_dims = 3
         ke_psi = - H_BAR_SQRD_OVER_2_M * grad_psi * n_particles * n_dims
-        psi_r = psi(r_coords, params)
+        psi_r = psi(r_coords, params)*spin
         expected = jnp.dot(psi_r, ke_psi)
-        computed = kinetic_energy_psi(psi, params, r_coords)
+        computed = kinetic_energy_psi(psi, params, r_coords)*spin
         computed = jnp.dot(psi_r, computed)
         assert expected == computed
