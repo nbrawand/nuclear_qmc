@@ -1,9 +1,7 @@
 import jax.numpy as jnp
 
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
-from nuclear_qmc.optimize.optimize import partial_full_psi_parameters, partial_psi_prefactor_parameters
 from nuclear_qmc.operators.operators import _tau_or_sigma, kinetic_energy_psi
-from nuclear_qmc.wave_function.wave_function import WaveFunction
 
 
 class TestOperators:
@@ -28,38 +26,16 @@ class TestOperators:
         assert jnp.array_equal(expected, computed)
 
     def test_kinetic_energy_base_wfc(self):
-        wfc = WaveFunction(1, 1)
-        wfc.spin = jnp.array([1, 0])
-        wfc.psi = lambda x: x.reshape(-1).sum() ** 2 * wfc.spin
+        spin = jnp.array([1, 0])
+        params = jnp.array([1.])
+        psi = lambda p, x: x.reshape(-1).sum() ** 2
         r_coords = jnp.array([[1., 0., 0.], [0., 0., 0.]])
-        grad_psi = 2.0 * wfc.spin
+        grad_psi = 2.0 * spin
         n_particles = 2
         n_dims = 3
         ke_psi = - H_BAR_SQRD_OVER_2_M * grad_psi * n_particles * n_dims
-        psi_r = wfc.psi(r_coords)
+        psi_r = psi(r_coords, params)*spin
         expected = jnp.dot(psi_r, ke_psi)
-        computed = kinetic_energy_psi(wfc, r_coords)
+        computed = kinetic_energy_psi(psi, params, r_coords)*spin
         computed = jnp.dot(psi_r, computed)
         assert expected == computed
-
-    def test_partial_psi_prefactor_parameters(self):
-        wfc = WaveFunction(1, 1)
-        wfc.params = jnp.array([1., 1.])
-        wfc.psi_prefactor = lambda x, p: jnp.vdot(p, p)
-        r_coords = jnp.array([[1., 0., 0.], [0., 0., 0.]])
-        computed = partial_psi_prefactor_parameters(wfc, r_coords)
-        expected = jnp.array([2., 2.])
-        assert jnp.array_equal(expected, computed)
-
-    def test_partial_full_psi_parameters(self):
-        wfc = WaveFunction(1, 1)
-        wfc.params = jnp.array([1., 1.])
-        wfc.psi_prefactor = lambda x, p: jnp.vdot(p, p)
-        wfc.psi_vector = lambda x, p, s: jnp.array([[1., 0.], [0., 2.]])
-        r_coords = jnp.array([[1., 0., 0.], [0., 0., 0.]])
-        computed = partial_full_psi_parameters(wfc, r_coords)
-        expected = jnp.array([
-            [[2., 2.], [0., 0.]]
-            , [[0., 0.], [4., 4.]]
-        ])
-        assert jnp.array_equal(expected, computed)

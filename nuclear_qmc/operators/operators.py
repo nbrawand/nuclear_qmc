@@ -4,35 +4,28 @@ import jax.numpy as jnp
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
 
 
-def laplacian(wave_function, r_coords):
-    d2_psi = jax.hessian(wave_function.psi, argnums=0)(r_coords)
+def laplacian(psi, psi_params, r_coords):
+    d2_psi = jax.hessian(psi, argnums=1)(psi_params, r_coords)
     dim = r_coords.shape[0] * r_coords.shape[1]
-    d2_psi = d2_psi.reshape(*wave_function.spin.shape, dim, dim)
+    d2_psi = d2_psi.reshape(dim, dim)
     d2_psi = jnp.trace(d2_psi, axis1=-1, axis2=-2)
     return d2_psi
 
 
-def kinetic_energy_psi(wave_function, r_coords):
-    d2_psi = laplacian(wave_function, r_coords)
+def kinetic_energy_psi(psi, psi_params, r_coords):
+    d2_psi = laplacian(psi, psi_params, r_coords)
     ke = - H_BAR_SQRD_OVER_2_M * d2_psi
     return ke
 
 
-def grad(wave_function, r_coords):
-    psi = lambda r, p, s: wave_function.psi_prefactor(r, p) * wave_function.psi_vector(r, p, s)
-    return jax.jacfwd(psi, argnums=(1,))(r_coords, wave_function.params, wave_function.spin)
+def tau(psi, psi_params, psi_vector, r_coords, iso_spin_exchange_indices, pair_coefficients):
+    psi_r = psi(psi_params, r_coords) * psi_vector
+    return _tau_or_sigma(psi_r.T, iso_spin_exchange_indices, pair_coefficients).T
 
 
-def grad_only_radial(wave_function, r_coords):
-    return jax.jacfwd(wave_function.psi_prefactor, argnums=(1,))(r_coords, wave_function.params)
-
-
-def tau(wave_function, r_coords, pair_coefficients):
-    return _tau_or_sigma(wave_function.psi(r_coords).T, wave_function.iso_spin_exchange_indices, pair_coefficients).T
-
-
-def sigma(wave_function, r_coords, pair_coefficients):
-    return _tau_or_sigma(wave_function.psi(r_coords), wave_function.spin_exchange_indices, pair_coefficients)
+def sigma(psi, psi_params, psi_vector, r_coords, spin_exchange_indices, pair_coefficients):
+    psi_r = psi(psi_params, r_coords) * psi_vector
+    return _tau_or_sigma(psi_r, spin_exchange_indices, pair_coefficients)
 
 
 def _tau_or_sigma(psi_r, exchange_indices, pair_coefficients):
