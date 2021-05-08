@@ -43,50 +43,25 @@ def get_new_wave_function_parameters(
     d_psi_h_psi = vmap(lambda x, y: vmap(jnp.vdot, in_axes=(0, 0))(x, y), in_axes=(1, None))(d_psi, h_psi)
     d_psi_psi = vmap(lambda x, y: vmap(jnp.vdot, in_axes=(0, 0))(x, y), in_axes=(1, None))(d_psi, psi_r)
     psi_h_psi = vmap(jnp.vdot, in_axes=(0, 0))(psi_r, h_psi)
-    d_energy = 2.0 * (d_psi_h_psi / psi_psi).mean() - 2.0 * (psi_h_psi / psi_psi).mean() * (d_psi_psi / psi_psi).mean()
-    return - learning_rate * d_energy
-#
-#
-# """Condition S+Lambda
-#     # return wave_function.params -learning_rate * d_energy
-#
-#     # quantum fisher information
-#     def vdot_nested(in_d_psi):
-#         return vmap(jnp.vdot, in_axes=(2, None))(d_psi, in_d_psi)
-#
-#     d_psi_d_psi = vmap(vdot_nested, in_axes=(2,))(d_psi)  # [n_params, n_params]
-#     fisher_information = d_psi_d_psi / psi_psi
-#     fisher_information -= jnp.tensordot(d_psi_psi, d_psi_psi, axes=0) / psi_psi ** 2
-#
-#     max_eps = 0.1
-#     min_eps = 0.0000001
-#     energy_change_min = 1.0
-#     out_params = wave_function.params
-#     for n in range(4):
-#         eps = (max_eps + min_eps) / 2.0
-#         small_diag_matrix = eps * jnp.identity(fisher_information.shape[0])
-#         fisher_information = small_diag_matrix + fisher_information
-#         cho_factor_solution = cho_factor(fisher_information)
-#         delta_p = cho_solve(cho_factor_solution, -learning_rate * d_energy)
-#
-#         original_local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coords)
-#         original_local_energy_mean = original_local_energy.mean()
-#         original_local_energy_std = original_local_energy.std()
-#
-#         wave_function.params += delta_p
-#         new_local_energy = vmap(get_local_energy, in_axes=(None, 0))(wave_function, r_coords)
-#         new_local_energy_mean = new_local_energy.mean()
-#         new_local_energy_std = new_local_energy.std()
-#         wave_function.params -= delta_p
-#
-#         energy_change = new_local_energy_mean - original_local_energy_mean
-#         energy_std_change = new_local_energy_std - original_local_energy_std
-#         if energy_change < energy_change_min and energy_std_change < 1.:
-#             energy_change_min = energy_change
-#             out_params = wave_function.params + delta_p
-#             max_eps = eps
-#         else:
-#             min_eps = eps
-#
-#     return out_params
-# """
+    d_psi_psi_avg = (d_psi_psi / psi_psi).mean(axis=1)
+    d_energy = 2.0 * (d_psi_h_psi / psi_psi).mean(axis=1) - 2.0 * (psi_h_psi / psi_psi).mean(axis=0) * d_psi_psi_avg
+    # return - learning_rate * d_energy
+
+    d_psi_d_psi = \
+        vmap(
+            vmap(
+                vmap(
+                    jnp.vdot
+                    , in_axes=(None, 0))
+                , in_axes=(0, None))
+            , in_axes=(0, 0))(d_psi, d_psi)  # walkers, params, spin-isospin
+    d_psi_d_psi_avg = (d_psi_d_psi / jnp.expand_dims(psi_psi, axis=(1, 2))).mean(axis=0)
+    psi_d_psi_avg = (jnp.conj(d_psi_psi) / psi_psi).mean(axis=1)
+    d_psi_psi_avg_psi_d_psi_avg = jnp.tensordot(d_psi_psi_avg, psi_d_psi_avg, axes=0)
+    S_ij = d_psi_d_psi_avg - d_psi_psi_avg_psi_d_psi_avg
+
+    eps = 0.0001
+    S_ij += eps * jnp.identity(S_ij.shape[0])
+    cho_factor_solution = cho_factor(S_ij)
+    delta_p = cho_solve(cho_factor_solution, -learning_rate * d_energy)
+    return delta_p

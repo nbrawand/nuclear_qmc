@@ -16,17 +16,17 @@ N_NEUTRON = 1
 SEED = 0
 INITIAL_WALKER_STANDARD_DEVIATION = 1.0
 WALKER_STEP_SIZE = 0.2
-N_WALKERS = 16000
+N_WALKERS = 4000
 N_DIMENSIONS = 3
 N_EQUILIBRIUM_STEPS = 20
-N_STEPS = 20
+N_STEPS = 5
 N_VOID_STEPS = 200
-N_OPTIMIZATION_STEPS = 2000
+N_OPTIMIZATION_STEPS = 20000
 key = random.PRNGKey(SEED)
-_, psi_prefactor, psi_params = build_test_nn_wfc()
+_, psi_prefactor, psi_params = build_test_nn_wfc(params_file=None)
 particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
     N_PROTON, N_NEUTRON)
-learning_rate = 0.001
+learning_rate = 0.0001
 
 for n_opt in range(N_OPTIMIZATION_STEPS):
     key, r_coord_samples = sample(
@@ -43,7 +43,6 @@ for n_opt in range(N_OPTIMIZATION_STEPS):
         , key
         , INITIAL_WALKER_STANDARD_DEVIATION
     )
-
     r_coords = r_coord_samples.reshape(-1, 2, 3)
     local_energy = vmap(get_local_energy, in_axes=(None, None, None, 0, None, None, None))(psi_prefactor
                                                                                            , psi_params
@@ -62,4 +61,5 @@ for n_opt in range(N_OPTIMIZATION_STEPS):
         , spin_exchange_indices
         , learning_rate)
     psi_params += delta_params
-    print(n_opt, local_energy.mean())  # , wave_function.params)
+    print(n_opt, local_energy.mean(), local_energy.std() ** 2)  # , wave_function.params)
+    jnp.save('wfc.model', psi_params)
