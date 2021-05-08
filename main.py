@@ -3,8 +3,9 @@ import jax
 import jax.numpy as jnp
 from jax import random, vmap
 from nuclear_qmc.operators.hamiltonian import get_local_energy
+from nuclear_qmc.optimize.optimize import get_new_wave_function_parameters
 from nuclear_qmc.sampling.sample import sample
-from nuclear_qmc.wave_function.exp_network import psi_prefactor
+from nuclear_qmc.wave_function.test_neural_network import build_test_nn_wfc
 from nuclear_qmc.wave_function.wave_function import get_wave_function_system
 
 config.update("jax_enable_x64", True)
@@ -22,10 +23,10 @@ N_STEPS = 20
 N_VOID_STEPS = 200
 N_OPTIMIZATION_STEPS = 2000
 key = random.PRNGKey(SEED)
+_, psi_prefactor, psi_params = build_test_nn_wfc()
 particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
     N_PROTON, N_NEUTRON)
-
-psi_params = jnp.array([0.40])
+learning_rate = 0.001
 
 for n_opt in range(N_OPTIMIZATION_STEPS):
     key, r_coord_samples = sample(
@@ -51,5 +52,14 @@ for n_opt in range(N_OPTIMIZATION_STEPS):
                                                                                            , particle_pairs
                                                                                            , particle_triplets
                                                                                            , spin_exchange_indices)
-    print(psi_params[0], local_energy.mean())  # , wave_function.params)
-    psi_params += 0.01
+    delta_params = get_new_wave_function_parameters(
+        psi_prefactor
+        , psi_params
+        , psi_vector
+        , r_coords
+        , particle_pairs
+        , particle_triplets
+        , spin_exchange_indices
+        , learning_rate)
+    psi_params += delta_params
+    print(n_opt, local_energy.mean())  # , wave_function.params)

@@ -4,46 +4,47 @@ from jax.scipy.linalg import cho_factor, cho_solve
 from nuclear_qmc.operators.hamiltonian import hamiltonian_psi, get_local_energy
 from nuclear_qmc.operators.operators import kinetic_energy_psi
 
-# def get_new_wave_function_parameters(wave_function: WaveFunction
-#                                      , r_coords
-#                                      , learning_rate
-#                                      , partial_function
-#                                      , kinetic_energy_operator=kinetic_energy_psi):
-#     """
-#
-#     Parameters
-#     ----------
-#     learning_rate: float
-#     wave_function: WaveFunction
-#     energy: ndarray[n_walkers]
-#     r_coords: ndarray[n_walkers, n_particles, n_dimensions]
-#
-#     Returns
-#     -------
-#
-#     """
-#
-#     #  calculate necessary components and average over walkers
-#     d_psi = vmap(partial_function, in_axes=(None, 0))(wave_function, r_coords)
-#     h_psi = vmap(hamiltonian_psi, in_axes=(None, 0, None))(wave_function, r_coords, kinetic_energy_operator)
-#     psi_r = vmap(wave_function.psi, in_axes=(0,))(r_coords)
-#
-#     # energy derivative
-#     psi_psi = vmap(jnp.vdot, in_axes=(0, 0))(psi_r, psi_r)
-#
-#     def nested_vdot_with_h_psi(a_vec):
-#         return vmap(jnp.vdot, in_axes=(0, 0))(a_vec, h_psi)
-#
-#     d_psi_h_psi = vmap(nested_vdot_with_h_psi, in_axes=(-1,))(d_psi)
-#
-#     def nested_vdot_with_psi_r(a_vec):
-#         return vmap(jnp.vdot, in_axes=(0, 0))(a_vec, psi_r)
-#
-#     d_psi_psi = vmap(nested_vdot_with_psi_r, in_axes=(-1,))(d_psi)
-#
-#     psi_h_psi = vmap(jnp.vdot, in_axes=(0, 0))(psi_r, h_psi)
-#     d_energy = 2.0 * (d_psi_h_psi - psi_h_psi * d_psi_psi) / psi_psi
-#     return wave_function.params - learning_rate * d_energy.mean(axis=1)
+
+def d_psi_d_params(psi, psi_params, r_coord):
+    return jax.grad(psi, argnums=0)(psi_params, r_coord)
+
+
+def get_new_wave_function_parameters(
+        psi
+        , psi_params
+        , psi_vector
+        , r_coords
+        , particle_pairs
+        , particle_triplets
+        , spin_exchange_indices
+        , learning_rate):
+    """
+
+    Parameters
+    ----------
+    learning_rate: float
+    wave_function: WaveFunction
+    energy: ndarray[n_walkers]
+    r_coords: ndarray[n_walkers, n_particles, n_dimensions]
+
+    Returns
+    -------
+
+    """
+
+    d_psi = vmap(d_psi_d_params, in_axes=(None, None, 0))(psi, psi_params, r_coords)
+    d_psi = jnp.tensordot(d_psi, psi_vector, axes=0)  # walkers, params, spin-isospin
+    h_psi = vmap(hamiltonian_psi, in_axes=(None, None, None, 0, None, None, None))(
+        psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets, spin_exchange_indices)
+    psi_r = vmap(psi, in_axes=(None, 0))(psi_params, r_coords)
+    psi_r = jnp.tensordot(psi_r, psi_vector, axes=0)
+
+    psi_psi = vmap(jnp.vdot, in_axes=(0, 0))(psi_r, psi_r)
+    d_psi_h_psi = vmap(lambda x, y: vmap(jnp.vdot, in_axes=(0, 0))(x, y), in_axes=(1, None))(d_psi, h_psi)
+    d_psi_psi = vmap(lambda x, y: vmap(jnp.vdot, in_axes=(0, 0))(x, y), in_axes=(1, None))(d_psi, psi_r)
+    psi_h_psi = vmap(jnp.vdot, in_axes=(0, 0))(psi_r, h_psi)
+    d_energy = 2.0 * (d_psi_h_psi / psi_psi).mean() - 2.0 * (psi_h_psi / psi_psi).mean() * (d_psi_psi / psi_psi).mean()
+    return - learning_rate * d_energy
 #
 #
 # """Condition S+Lambda
