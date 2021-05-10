@@ -44,7 +44,6 @@ class TestHamiltonian:
         _, psi, psi_params = build_test_nn_wfc()
         particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
             1, 1,
-            include_isospin=True,
             dtype=jnp.float64,
             as_jax_array=True)
         computed = get_local_energy(psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets,
@@ -56,7 +55,6 @@ class TestHamiltonian:
         _, psi, psi_params = build_test_nn_wfc()
         particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
             1, 1,
-            include_isospin=True,
             dtype=jnp.float64,
             as_jax_array=True)
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
@@ -74,7 +72,6 @@ class TestHamiltonian:
         _, psi, psi_params = build_test_nn_wfc()
         particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
             1, 1,
-            include_isospin=True,
             dtype=jnp.float64,
             as_jax_array=True)
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])

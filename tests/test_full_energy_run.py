@@ -22,7 +22,6 @@ def test_full_energy_run():
     _, psi_prefactor, psi_params = build_test_nn_wfc()
     particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
         N_PROTON, N_NEUTRON,
-        include_isospin=True,
         dtype=jnp.float64,
         as_jax_array=True)
     key = random.PRNGKey(0)
