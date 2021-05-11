@@ -3,6 +3,7 @@ from nuclear_qmc.operators.hamiltonian import get_r_ij_sqrd, get_r_ik_r_ij_cycle
 import jax.numpy as jnp
 from nuclear_qmc.operators.operators import kinetic_energy_psi
 from jax.config import config
+from nuclear_qmc.wave_function.exp_network import psi_prefactor as exp_psi
 
 from nuclear_qmc.wave_function.test_neural_network import build_test_nn_wfc
 from nuclear_qmc.wave_function.wave_function import get_wave_function_system
@@ -38,6 +39,28 @@ class TestHamiltonian:
         expected = jnp.array([2, 1, 1])
         computed = get_r_ik_r_ij_cycles(r_coords, trips)
         assert jnp.array_equal(computed, expected)
+
+    def test_get_potential_energy_A3(self):
+        r_coords = jnp.array(
+            [
+                [-0.36651218, - 0.28230912, 0.72319306],
+                [-1.11298546, 0.61603241, 0.8157153],
+                [0.26104348, - 0.38107508, 0.07886705],
+            ]
+        )
+        psi = exp_psi
+        psi_params = jnp.array([1.])
+        particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+            1, 2,
+            dtype=jnp.float64,
+            as_jax_array=True)
+        v_psi = potential_energy_psi(psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets,
+                                     spin_exchange_indices)
+        wfc_r = psi(psi_params, r_coords) * psi_vector
+        psi_v_psi = jnp.vdot(wfc_r, v_psi)
+        computed = psi_v_psi / jnp.vdot(wfc_r, wfc_r)
+        expected = jnp.array(-21.08232587)
+        # assert jnp.array_equal(computed, expected)
 
     def test_get_local_energy(self):
         r_coords = jnp.array([[0.43, 0, 0], [0, 0, 0]])
