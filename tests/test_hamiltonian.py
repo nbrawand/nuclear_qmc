@@ -115,3 +115,26 @@ class TestHamiltonian:
         expected = jnp.array(0.05251155, dtype=jnp.float64)
         computed = round(psi(psi_params, ex_r), 8)
         assert jnp.array_equal(expected, computed)
+
+    def test_kinetic_energy_with_3H(self):
+        psi, psi_params = exp_psi, jnp.array([1.])
+        particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+            1, 2,
+            dtype=jnp.float64,
+            as_jax_array=True)
+        #ex_r = jnp.ones(9).reshape(3,3)
+        ex_r = jnp.array(
+            [
+                [-0.36651218, - 0.28230912, 0.72319306],
+                [-1.11298546, 0.61603241, 0.8157153],
+                [0.26104348, - 0.38107508, 0.07886705],
+            ]
+        )
+        expected = 33.38246175
+        wfc_r = psi(psi_params, ex_r) * psi_vector
+        psi_norm = jnp.vdot(wfc_r, wfc_r)
+        ke_psi = kinetic_energy_psi(psi, psi_params, ex_r) * psi_vector
+        psi_ke_psi = jnp.vdot(wfc_r, ke_psi)
+        computed = psi_ke_psi / psi_norm
+        computed = computed.round(8)
+        assert jnp.array_equal(computed, jnp.array(expected, dtype=jnp.float64))
