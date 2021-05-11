@@ -7,7 +7,7 @@ from functools import partial
 # potential enregy coefficients from arXiv:2007.14282v2 [nucl-th] 13 Apr 2021
 C_1 = -487.6128
 C_2 = -17.5515
-D_0 = jnp.sqrt(677.79890)
+D_0 = 677.79890
 ultraviolet_cutoff = 4
 
 

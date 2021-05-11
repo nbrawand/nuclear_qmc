@@ -59,8 +59,10 @@ class TestHamiltonian:
         wfc_r = psi(psi_params, r_coords) * psi_vector
         psi_v_psi = jnp.vdot(wfc_r, v_psi)
         computed = psi_v_psi / jnp.vdot(wfc_r, wfc_r)
-        expected = jnp.array(-21.08232587)
-        # assert jnp.array_equal(computed, expected)
+        computed -= 0.73616035 # remove spin dependent PE term
+        expected = jnp.array(-20.937521470679798)+0.59135578 # remove spin dependent term AFDMC should only agree on average
+        assert jnp.array_equal(computed.round(7), expected.round(7))
+
 
     def test_get_local_energy(self):
         r_coords = jnp.array([[0.43, 0, 0], [0, 0, 0]])
