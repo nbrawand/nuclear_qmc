@@ -16,7 +16,7 @@ N_NEUTRON = 1
 SEED = 0
 INITIAL_WALKER_STANDARD_DEVIATION = 1.0
 WALKER_STEP_SIZE = 0.2
-N_WALKERS = 16000
+N_WALKERS = 8000
 N_DIMENSIONS = 3
 N_EQUILIBRIUM_STEPS = 20
 N_STEPS = 20
@@ -26,9 +26,9 @@ key = random.PRNGKey(SEED)
 particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
     N_PROTON, N_NEUTRON)
 psi_prefactor = build_jastro_wave_function_with_spin_correlations(particle_pairs, spin, spin_exchange_indices)
-psi_vector = jnp.array([1])
-psi_params = jnp.ones(2 * len(particle_pairs))
-learning_rate = 0.0001
+psi_vector = 1
+psi_params = jnp.array([0.79612855, -0.46947377])
+learning_rate = 0.00001
 
 for n_opt in range(N_OPTIMIZATION_STEPS):
     key, r_coord_samples = sample(
