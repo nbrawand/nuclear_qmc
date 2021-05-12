@@ -6,6 +6,7 @@ from nuclear_qmc.operators.hamiltonian import get_local_energy
 from nuclear_qmc.optimize.optimize import get_delta_params
 from nuclear_qmc.sampling.sample import sample
 from nuclear_qmc.wave_function.jastro import build_jastro_wave_function_with_spin_correlations
+from nuclear_qmc.wave_function.test_neural_network import build_test_nn_wfc
 from nuclear_qmc.wave_function.wave_function import get_wave_function_system
 
 config.update("jax_enable_x64", True)
@@ -25,10 +26,21 @@ N_OPTIMIZATION_STEPS = 20000
 key = random.PRNGKey(SEED)
 particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
     N_PROTON, N_NEUTRON)
-psi_prefactor = build_jastro_wave_function_with_spin_correlations(particle_pairs, spin, spin_exchange_indices)
+_, nn_psi_prefactor, nn_flat_params = build_test_nn_wfc()
+jastro_psi = build_jastro_wave_function_with_spin_correlations(particle_pairs, spin, spin_exchange_indices)
+jastro_psi_params = jnp.array([0.79297601, -0.48151447])  # exponential
+n_jastro_params = len(jastro_psi_params)
 psi_vector = 1
-psi_params = jnp.array([0.79612855, -0.46947377])
-learning_rate = 0.00001
+psi_params = jnp.concatenate((jastro_psi_params, nn_flat_params))
+
+
+def psi_prefactor(params, r):
+    nn = nn_psi_prefactor(params[n_jastro_params:], r)
+    jastro = jastro_psi(params[:n_jastro_params], r)
+    return nn * jastro
+
+
+learning_rate = 0.0001
 
 for n_opt in range(N_OPTIMIZATION_STEPS):
     key, r_coord_samples = sample(

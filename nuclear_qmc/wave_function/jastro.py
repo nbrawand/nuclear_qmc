@@ -33,7 +33,7 @@ def build_jastro_wave_function_with_spin_correlations(particle_pairs, spin, spin
         spin_correlation_params = in_params[n_particle_pairs:2 * n_particle_pairs]
         f_spin_ij = get_exp_rij(spin_correlation_params, r_coords, particle_pairs)
         f_central_product = jnp.prod(f_central_ij)
-        f_ratios = f_central_ij / f_spin_ij
+        f_ratios = f_spin_ij / f_central_ij
         # \sum_ij f_sigma_ij / f_central_ij * sigma_ij
         sum_ij_sigma = sigma(lambda a, b: 1., None, spin, r_coords, spin_exchange_indices, f_ratios)
         psi = f_central_product * (spin + sum_ij_sigma)
