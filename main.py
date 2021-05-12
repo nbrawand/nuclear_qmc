@@ -5,40 +5,34 @@ from jax import random, vmap
 from nuclear_qmc.operators.hamiltonian import get_local_energy
 from nuclear_qmc.optimize.optimize import get_delta_params
 from nuclear_qmc.sampling.sample import sample
-from nuclear_qmc.wave_function.jastro import build_jastro_wave_function_with_spin_correlations
-from nuclear_qmc.wave_function.test_neural_network import build_test_nn_wfc
+from nuclear_qmc.wave_function.jastro_neural_network import build_jastro_wave_function_with_spin_correlations
 from nuclear_qmc.wave_function.wave_function import get_wave_function_system
 
 config.update("jax_enable_x64", True)
 # config.update('jax_platform_name', 'cpu')
 
 N_PROTON = 1
-N_NEUTRON = 1
+N_NEUTRON = 2
 SEED = 0
 INITIAL_WALKER_STANDARD_DEVIATION = 1.0
 WALKER_STEP_SIZE = 0.2
-N_WALKERS = 8000
+N_WALKERS = 1000
 N_DIMENSIONS = 3
 N_EQUILIBRIUM_STEPS = 20
-N_STEPS = 20
+N_STEPS = 5
 N_VOID_STEPS = 200
 N_OPTIMIZATION_STEPS = 20000
 key = random.PRNGKey(SEED)
 particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
     N_PROTON, N_NEUTRON)
-_, nn_psi_prefactor, nn_flat_params = build_test_nn_wfc()
-jastro_psi = build_jastro_wave_function_with_spin_correlations(particle_pairs, spin, spin_exchange_indices)
-jastro_psi_params = jnp.array([0.79297601, -0.48151447])  # exponential
-n_jastro_params = len(jastro_psi_params)
+param_file = '3H_jastro_nn_wfc.model'
+ndense = 4
 psi_vector = 1
-psi_params = jnp.concatenate((jastro_psi_params, nn_flat_params))
-
-
-def psi_prefactor(params, r):
-    nn = nn_psi_prefactor(params[n_jastro_params:], r)
-    jastro = jastro_psi(params[:n_jastro_params], r)
-    return nn * jastro
-
+psi_prefactor, _ = build_jastro_wave_function_with_spin_correlations(ndense
+                                                                     , particle_pairs
+                                                                     , spin
+                                                                     , spin_exchange_indices)
+psi_params = jnp.load(param_file+'.npy')
 
 learning_rate = 0.0001
 
@@ -75,5 +69,5 @@ for n_opt in range(N_OPTIMIZATION_STEPS):
         , spin_exchange_indices
         , learning_rate)
     psi_params += delta_params
-    print(n_opt, local_energy.mean(), local_energy.std() ** 2, psi_params)  # , wave_function.params)
-    jnp.save('jastro_wfc.model', psi_params)
+    print(n_opt, local_energy.mean(), local_energy.std() ** 2)  # , psi_params)  # , wave_function.params)
+    jnp.save(param_file, psi_params)
