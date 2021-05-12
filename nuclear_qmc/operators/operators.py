@@ -6,8 +6,10 @@ from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
 
 def laplacian(psi, psi_params, r_coords):
     d2_psi = jax.hessian(psi, argnums=1)(psi_params, r_coords)
-    dim = r_coords.shape[0] * r_coords.shape[1]
-    d2_psi = d2_psi.reshape(dim, dim)
+    dim1 = d2_psi.shape[-2] * d2_psi.shape[-1]
+    dim2 = d2_psi.shape[-4] * d2_psi.shape[-3]
+    new_dims = (*d2_psi.shape[:-4], dim1, dim2)
+    d2_psi = d2_psi.reshape(*new_dims)
     d2_psi = jnp.trace(d2_psi, axis1=-1, axis2=-2)
     return d2_psi
 
