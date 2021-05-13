@@ -23,6 +23,49 @@ def get_d_psi_psi(psi, psi_params, psi_vector, r_coords):
     return vmap(jnp.vdot, in_axes=(0, None))(d_psi, psi_r)  # [n_params]
 
 
+def get_d_psi_psi_avg(psi, psi_params, psi_vector, r_coords):
+    def sum_func(i, value):
+        a = get_d_psi_psi(psi, psi_params, psi_vector, r_coords[i])
+        psi_psi = get_psi_psi(psi, psi_params, psi_vector, r_coords[i])
+        value += a / psi_psi
+        return value
+
+    value = jnp.zeros(shape=len(psi_params))
+    value = fori_loop(0, len(r_coords), sum_func, value)
+    value /= len(r_coords)
+    return value
+
+
+def get_d_psi_h_psi_avg(psi
+                        , psi_params
+                        , psi_vector
+                        , r_coords
+                        ,
+                        particle_pairs
+                        ,
+                        particle_triplets
+                        ,
+                        spin_exchange_indices
+                        , hamiltonian):
+    def sum_func(i, value):
+        a = get_d_psi_h_psi(psi
+                            , psi_params
+                            , psi_vector
+                            , r_coords[i]
+                            , particle_pairs
+                            , particle_triplets
+                            , spin_exchange_indices
+                            , hamiltonian)
+        psi_psi = get_psi_psi(psi, psi_params, psi_vector, r_coords[i])
+        value += a / psi_psi
+        return value
+
+    value = jnp.zeros(shape=len(psi_params))
+    value = fori_loop(0, len(r_coords), sum_func, value)
+    value /= len(r_coords)
+    return value
+
+
 def get_psi_psi(psi, psi_params, psi_vector, r_coords):
     """
 
@@ -94,6 +137,51 @@ def get_psi_h_psi(psi
     psi_r = psi(psi_params, r_coords) * psi_vector
     psi_h_psi = jnp.vdot(psi_r, h_psi)
     return psi_h_psi
+
+
+def get_psi_h_psi_avg(psi
+                      , psi_params
+                      , psi_vector
+                      , r_coords
+                      , particle_pairs
+                      , particle_triplets
+                      , spin_exchange_indices
+                      , hamiltonian):
+    """
+
+    Parameters
+    ----------
+    psi
+    psi_params
+    psi_vector
+    r_coords: ndarray [n_particles, n_dimensions]
+    particle_pairs
+    particle_triplets
+    spin_exchange_indices
+
+    Returns
+    -------
+    \\sum_s \\Psi_s(R) H \\Psi_s(R)
+
+    """
+
+    def sum_psi_h_psi(i, value):
+        psi_h_psi = get_psi_h_psi(psi
+                                  , psi_params
+                                  , psi_vector
+                                  , r_coords[i]
+                                  , particle_pairs
+                                  , particle_triplets
+                                  , spin_exchange_indices
+                                  , hamiltonian)
+        psi_psi = get_psi_psi(psi, psi_params, psi_vector, r_coords[i])
+        value += psi_h_psi / psi_psi
+        return value
+
+    value = 0.0
+    value = fori_loop(0, len(r_coords), sum_psi_h_psi, value)
+    value /= len(r_coords)
+    return value
 
 
 def get_d_psi_h_psi(psi
@@ -216,43 +304,31 @@ def get_delta_params(
     -------
 
     """
-    walker_axis = 0
-    psi_psi = vmap(get_psi_psi, in_axes=(None, None, None, walker_axis))(psi
-                                                                         , psi_params
-                                                                         , psi_vector
-                                                                         , r_coords)  # [n_walkers]
-    psi_h_psi = vmap(get_psi_h_psi, in_axes=(None, None, None, walker_axis, None, None, None, None))(psi
-                                                                                                     , psi_params
-                                                                                                     , psi_vector
-                                                                                                     , r_coords
-                                                                                                     , particle_pairs
-                                                                                                     , particle_triplets
-                                                                                                     ,
-                                                                                                     spin_exchange_indices
-                                                                                                     ,
-                                                                                                     hamiltonian)  # [n_walkers]
-    psi_h_psi_avg = (psi_h_psi / psi_psi).mean(axis=walker_axis)
-    del psi_h_psi
-    d_psi_psi = vmap(get_d_psi_psi, in_axes=(None, None, None, walker_axis))(psi
-                                                                             , psi_params
-                                                                             , psi_vector
-                                                                             , r_coords)  # [n_walkers, params]
-    d_psi_psi_avg = (d_psi_psi / psi_psi[:, None]).mean(axis=walker_axis)
-    del d_psi_psi
-    d_psi_h_psi = vmap(get_d_psi_h_psi, in_axes=(None, None, None, walker_axis, None, None, None, None))(psi
-                                                                                                         , psi_params
-                                                                                                         , psi_vector
-                                                                                                         , r_coords
-                                                                                                         ,
-                                                                                                         particle_pairs
-                                                                                                         ,
-                                                                                                         particle_triplets
-                                                                                                         ,
-                                                                                                         spin_exchange_indices
-                                                                                                         , hamiltonian)
-    d_psi_h_psi_avg = (d_psi_h_psi / psi_psi[:, None]).mean(axis=walker_axis)
-    del d_psi_h_psi
-    del psi_psi
+    psi_h_psi_avg = get_psi_h_psi_avg(psi
+                                      , psi_params
+                                      , psi_vector
+                                      , r_coords
+                                      , particle_pairs
+                                      , particle_triplets
+                                      ,
+                                      spin_exchange_indices
+                                      ,
+                                      hamiltonian)  # scalar
+    d_psi_psi_avg = get_d_psi_psi_avg(psi
+                                      , psi_params
+                                      , psi_vector
+                                      , r_coords)  # n_params
+    d_psi_h_psi_avg = get_d_psi_h_psi_avg(psi
+                                          , psi_params
+                                          , psi_vector
+                                          , r_coords
+                                          ,
+                                          particle_pairs
+                                          ,
+                                          particle_triplets
+                                          ,
+                                          spin_exchange_indices
+                                          , hamiltonian)  # n_params
     d_energy = 2.0 * d_psi_h_psi_avg - 2.0 * psi_h_psi_avg * d_psi_psi_avg
     delta_p = - learning_rate * d_energy
 
