@@ -1,4 +1,5 @@
 import jax
+from jax.lax import fori_loop
 from jax import vmap, numpy as jnp
 from jax.scipy.linalg import cho_factor, cho_solve
 from nuclear_qmc.operators.hamiltonian import hamiltonian_psi
@@ -176,6 +177,20 @@ def get_d_psi_d_psi(psi, psi_params, psi_vector, r_coords):
     return d_psi_d_psi  # [n_params, n_params]
 
 
+def get_d_psi_d_psi_avg(psi, psi_params, psi_vector, r_coords):
+    def sum_d_psi_d_psi(i, d_psi_d_psi_avg):
+        d_psi_d_psi = get_d_psi_d_psi(psi, psi_params, psi_vector, r_coords[i])  # [n_param, n_param]
+        psi_psi = get_psi_psi(psi, psi_params, psi_vector, r_coords[i])  # [scalar]
+        d_psi_d_psi_avg += d_psi_d_psi / psi_psi
+        return d_psi_d_psi_avg
+
+    dim = len(psi_params)
+    d_psi_d_psi_avg = jnp.zeros(shape=(dim, dim))
+    d_psi_d_psi_avg = fori_loop(0, len(r_coords), sum_d_psi_d_psi, d_psi_d_psi_avg)
+    d_psi_d_psi_avg /= len(r_coords)
+    return d_psi_d_psi_avg
+
+
 def get_delta_params(
         psi
         , psi_params
@@ -237,18 +252,12 @@ def get_delta_params(
                                                                                                          , hamiltonian)
     d_psi_h_psi_avg = (d_psi_h_psi / psi_psi[:, None]).mean(axis=walker_axis)
     del d_psi_h_psi
+    del psi_psi
     d_energy = 2.0 * d_psi_h_psi_avg - 2.0 * psi_h_psi_avg * d_psi_psi_avg
     delta_p = - learning_rate * d_energy
 
     if include_sr_equations:
-        d_psi_d_psi = vmap(get_d_psi_d_psi, in_axes=(None, None, None, walker_axis))(psi
-                                                                                     , psi_params
-                                                                                     , psi_vector
-                                                                                     ,
-                                                                                     r_coords)  # walkers, params, params
-        d_psi_d_psi_avg = (d_psi_d_psi / psi_psi[:, None, None]).mean(axis=walker_axis)
-        del d_psi_d_psi
-        del psi_psi
+        d_psi_d_psi_avg = get_d_psi_d_psi_avg(psi, psi_params, psi_vector, r_coords)  # params, params
         psi_d_psi_avg = jnp.conj(d_psi_psi_avg)
         d_psi_psi_avg_psi_d_psi_avg = jnp.tensordot(d_psi_psi_avg, psi_d_psi_avg, axes=0)  # params, params
         S_ij = d_psi_d_psi_avg - d_psi_psi_avg_psi_d_psi_avg
