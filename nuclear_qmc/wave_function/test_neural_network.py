@@ -7,6 +7,8 @@ from jax.experimental.stax import Dense, Tanh
 import pickle
 import os
 
+from nuclear_qmc.wave_function.utility import apply_confining_potential
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -18,22 +20,6 @@ def load_params(params_file_name):
 def save(params, file_name):
     with open(file_name, 'wb') as file:
         pickle.dump(params, file)
-
-
-def phi(r):
-    """ Boundary condition imposed on multiple particles
-    """
-    rcm = jnp.mean(r, axis=0)
-    r = r - rcm[None, :]
-    return jnp.prod(jax.vmap(sp_boundary, in_axes=(0,))(r))
-
-
-def sp_boundary(r):
-    """ Boundary condition imposed on single particle
-    """
-    sp_conf = jnp.exp(- 0.1 * jnp.sum(r ** 2))
-
-    return sp_conf
 
 
 def build_test_nn_wfc(key=None, params_file=os.path.join(dir_path, 'test_neural_network.model')):
@@ -64,7 +50,7 @@ def build_test_nn_wfc(key=None, params_file=os.path.join(dir_path, 'test_neural_
         phi_a_out = phi_a_apply(unflat_params, delta_r)
         phi_a_out = jnp.mean(phi_a_out)
         psi = jnp.exp(phi_a_out)
-        psi *= phi(r)
+        psi *= apply_confining_potential(r)
         return jnp.reshape(psi, ())
 
     return key, psi_prefactor, flat_params

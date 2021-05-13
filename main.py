@@ -5,7 +5,7 @@ from jax import random, vmap
 from nuclear_qmc.operators.hamiltonian import get_local_energy
 from nuclear_qmc.optimize.optimize import get_delta_params
 from nuclear_qmc.sampling.sample import sample
-from nuclear_qmc.wave_function.jastro_neural_network import build_jastro_wave_function_with_spin_correlations
+from nuclear_qmc.wave_function.jastro_neural_network import build_jastro_wave_function_no_spin_correlations
 from nuclear_qmc.wave_function.wave_function import get_wave_function_system
 
 config.update("jax_enable_x64", True)
@@ -26,13 +26,12 @@ key = random.PRNGKey(SEED)
 particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
     N_PROTON, N_NEUTRON)
 param_file = '3H_jastro_nn_wfc.model'
-ndense = 4
-psi_vector = 1
-psi_prefactor, _ = build_jastro_wave_function_with_spin_correlations(ndense
-                                                                     , particle_pairs
-                                                                     , spin
-                                                                     , spin_exchange_indices)
-psi_params = jnp.load(param_file+'.npy')
+ndense = 12
+psi_vector = spin
+psi_prefactor, psi_params = build_jastro_wave_function_no_spin_correlations(ndense
+                                                                   , particle_pairs
+                                                                   )
+# psi_params = jnp.load(param_file + '.npy')
 
 learning_rate = 0.0001
 
