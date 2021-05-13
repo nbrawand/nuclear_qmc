@@ -235,8 +235,9 @@ def get_d_psi(psi, psi_params, psi_vector, r_coords):
 
     """
     d_psi = jax.jacfwd(psi, argnums=0)(psi_params, r_coords)  # [psi_output_dimensions, n_params]
-    d_psi = jnp.moveaxis(d_psi, 0,
-                         -1)  # [n_params, si_output_dimensions]  This is necessary if psi has the spin or if psi_vector has the spin
+    if d_psi.shape[0] != len(psi_params):
+        d_psi = jnp.moveaxis(d_psi, 0,
+                             -1)  # [n_params, si_output_dimensions]  This is necessary if psi has the spin or if psi_vector has the spin
     d_psi = jnp.tensordot(d_psi, psi_vector, axes=0)  # [n_params, n_spin_isospin]
     return d_psi
 
