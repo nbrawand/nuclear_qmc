@@ -201,7 +201,7 @@ def get_delta_params(
         , learning_rate
         , hamiltonian=hamiltonian_psi
         , include_sr_equations=True
-        , return_loss=False):
+        , return_loss=False, eps=0.0001):
     """
 
     Parameters
@@ -261,7 +261,6 @@ def get_delta_params(
         d_psi_psi_avg_psi_d_psi_avg = jnp.tensordot(d_psi_psi_avg, psi_d_psi_avg, axes=0)  # params, params
         S_ij = d_psi_d_psi_avg - d_psi_psi_avg_psi_d_psi_avg
 
-        eps = 0.0001
         S_ij += eps * jnp.identity(S_ij.shape[0])
         cho_factor_solution = cho_factor(S_ij)
         delta_p = cho_solve(cho_factor_solution, -learning_rate * d_energy)
