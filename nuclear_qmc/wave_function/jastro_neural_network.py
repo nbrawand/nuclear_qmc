@@ -1,6 +1,8 @@
 import jax.numpy as jnp
+from jax import vmap
 from nuclear_qmc.operators.operators import sigma
 from nuclear_qmc.utils.center_particles import center_particles
+from nuclear_qmc.utils.get_dr_ij import get_dr_ij
 from nuclear_qmc.wave_function.neural_network import build_nn_wfc
 from nuclear_qmc.wave_function.utility import apply_confining_potential
 
@@ -14,6 +16,7 @@ def get_exp_rij(params, r, particle_pairs):
 
 
 def build_jastro_wave_function_with_spin_correlations(ndense, particle_pairs, spin, spin_exchange_indices):
+    RuntimeError('This needs an exponential')
     """return the following wave function:
     \prod f_c_ij * (1.+\sum_ij f_sigma_ij / f_central_ij * sigma_ij) * spin"""
     n_particle_pairs = len(particle_pairs)
@@ -47,7 +50,8 @@ def build_jastro_wave_function_with_spin_correlations(ndense, particle_pairs, sp
     return psi_function, neural_network_flat_params
 
 
-def build_jastro_wave_function_no_spin_correlations(ndense, particle_pairs):
+def build_jastro_wave_function_no_spin_correlations_multiple_networks(ndense, particle_pairs):
+    RuntimeError('This needs an exponential')
     """return the following wave function:
     \prod f_c_ij """
     n_particle_pairs = len(particle_pairs)
@@ -72,3 +76,18 @@ def build_jastro_wave_function_no_spin_correlations(ndense, particle_pairs):
         return psi
 
     return psi_function, neural_network_flat_params
+
+
+def build_jastro_wave_function_no_spin_correlations_single_network(ndense, particle_pairs):
+    _, nn_func, params = build_nn_wfc(ndense=ndense)
+
+    def psi_function(in_params, r_coords):
+        r_coords = center_particles(r_coords)
+        dr_ij = get_dr_ij(r_coords, particle_pairs)
+        nn_dr_ij = vmap(nn_func)(in_params, dr_ij)
+        f_c_ij = jnp.exp(nn_dr_ij)
+        f_c_product = jnp.prod(f_c_ij)
+        psi = f_c_product * apply_confining_potential(r_coords)
+        return psi
+
+    return psi_function, params
