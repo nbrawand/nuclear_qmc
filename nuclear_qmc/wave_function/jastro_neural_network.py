@@ -85,9 +85,33 @@ def build_jastro_wave_function_no_spin_correlations_single_network(key, ndense, 
         r_coords = center_particles(r_coords)
         dr_ij = get_r_ij(r_coords, particle_pairs)
         nn_dr_ij = vmap(nn_func, in_axes=(None, 0))(in_params, dr_ij)
-        f_c_ij = jnp.exp(nn_dr_ij)
-        f_c_product = jnp.prod(f_c_ij)
-        psi = f_c_product * apply_confining_potential(r_coords)
+        f_c_ij = jnp.exp(nn_dr_ij.sum())
+        psi = f_c_ij * apply_confining_potential(r_coords)
+        return psi
+
+    return key, psi_function, params
+
+
+def build_jastro_wave_function_no_spin_correlations_single_network_2(key, ndense, particle_pairs, spin,
+                                                                     spin_exchange_indices):
+    key, f_c_nn_func, f_c_params = build_nn_wfc(ndense=ndense, key=key)
+    n_fc_parmas = len(f_c_params)
+    key, f_s_nn_func, f_s_params = build_nn_wfc(ndense=ndense, key=key)
+    params = jnp.concatenate((f_c_params, f_s_params))
+
+    def psi_function(in_params, r_coords):
+        f_c_params = in_params[:n_fc_parmas]
+        f_s_params = in_params[n_fc_parmas:]
+        r_coords = center_particles(r_coords)
+        r_ij = get_r_ij(r_coords, particle_pairs)
+        f_c_r_ij = vmap(f_c_nn_func, in_axes=(None, 0))(f_c_params, r_ij)
+        f_c_exp = jnp.exp(f_c_r_ij)
+        f_s_r_ij = vmap(f_s_nn_func, in_axes=(None, 0))(f_s_params, r_ij)
+        f_s_exp = jnp.exp(f_s_r_ij)
+        f_s_over_f_c = f_s_exp / f_c_exp
+        sum_ij_sigma = sigma(lambda a, b: 1., None, spin, r_coords, spin_exchange_indices, f_s_over_f_c)
+        psi = jnp.prod(f_c_exp) * (spin + sum_ij_sigma)
+        psi *= apply_confining_potential(r_coords)
         return psi
 
     return key, psi_function, params
