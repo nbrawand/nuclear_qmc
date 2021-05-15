@@ -2,7 +2,7 @@ import jax.numpy as jnp
 from jax import vmap
 from nuclear_qmc.operators.operators import sigma
 from nuclear_qmc.utils.center_particles import center_particles
-from nuclear_qmc.utils.get_dr_ij import get_dr_ij
+from nuclear_qmc.utils.get_dr_ij import get_r_ij
 from nuclear_qmc.wave_function.neural_network import build_nn_wfc
 from nuclear_qmc.wave_function.utility import apply_confining_potential
 
@@ -78,16 +78,16 @@ def build_jastro_wave_function_no_spin_correlations_multiple_networks(ndense, pa
     return psi_function, neural_network_flat_params
 
 
-def build_jastro_wave_function_no_spin_correlations_single_network(ndense, particle_pairs):
-    _, nn_func, params = build_nn_wfc(ndense=ndense)
+def build_jastro_wave_function_no_spin_correlations_single_network(key, ndense, particle_pairs):
+    key, nn_func, params = build_nn_wfc(ndense=ndense, key=key)
 
     def psi_function(in_params, r_coords):
         r_coords = center_particles(r_coords)
-        dr_ij = get_dr_ij(r_coords, particle_pairs)
-        nn_dr_ij = vmap(nn_func)(in_params, dr_ij)
+        dr_ij = get_r_ij(r_coords, particle_pairs)
+        nn_dr_ij = vmap(nn_func, in_axes=(None, 0))(in_params, dr_ij)
         f_c_ij = jnp.exp(nn_dr_ij)
         f_c_product = jnp.prod(f_c_ij)
         psi = f_c_product * apply_confining_potential(r_coords)
         return psi
 
-    return psi_function, params
+    return key, psi_function, params

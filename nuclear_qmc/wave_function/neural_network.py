@@ -1,13 +1,9 @@
 import jax
 from jax import random
 from jax.flatten_util import ravel_pytree
-import jax.numpy as jnp
 from jax.experimental import stax
 from jax.experimental.stax import Dense, Tanh
 import pickle
-import os
-
-dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 def load_params(params_file_name):
@@ -15,28 +11,7 @@ def load_params(params_file_name):
         return pickle.load(fil)
 
 
-def save(params, file_name):
-    with open(file_name, 'wb') as file:
-        pickle.dump(params, file)
-
-
-def phi(r):
-    """ Boundary condition imposed on multiple particles
-    """
-    rcm = jnp.mean(r, axis=0)
-    r = r - rcm[None, :]
-    return jnp.prod(jax.vmap(sp_boundary, in_axes=(0,))(r))
-
-
-def sp_boundary(r):
-    """ Boundary condition imposed on single particle
-    """
-    sp_conf = jnp.exp(- 0.1 * jnp.sum(r ** 2))
-
-    return sp_conf
-
-
-def build_nn_wfc(ndense=4, key=None, params_file=None):
+def build_nn_wfc(ndense=4, key=None, params_file=None, in_shape=(1,)):
     if key is None:
         key = random.PRNGKey(0)
 
@@ -46,7 +21,6 @@ def build_nn_wfc(ndense=4, key=None, params_file=None):
         Dense(ndense), Tanh,
         Dense(1),
     )
-    in_shape = (1,)
 
     if params_file is not None:
         unflattened_params = load_params(params_file)
@@ -56,15 +30,9 @@ def build_nn_wfc(ndense=4, key=None, params_file=None):
 
     flat_params, unflatten_params_function = ravel_pytree(unflattened_params)
 
-    def psi_prefactor(flat_params_in, r_coords):
-        rcm = jnp.mean(r_coords, axis=0)
-        r = r_coords - rcm[None, :]
-        delta_r = jnp.linalg.norm(r[0, :] - r[1, :])
+    def psi_prefactor(flat_params_in, nn_input):
         unflat_params = unflatten_params_function(flat_params_in)
-        phi_a_out = phi_a_apply(unflat_params, delta_r)
-        phi_a_out = jnp.mean(phi_a_out)
-        psi = jnp.exp(phi_a_out)
-        psi *= phi(r)
-        return jnp.reshape(psi, ())
+        psi_out = phi_a_apply(unflat_params, nn_input)
+        return psi_out
 
     return key, psi_prefactor, flat_params
