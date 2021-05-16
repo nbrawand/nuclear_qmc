@@ -6,9 +6,8 @@ from nuclear_qmc.operators.hamiltonian import get_local_energy
 from nuclear_qmc.optimize.low_memory_optimize import get_delta_params
 from nuclear_qmc.sampling.sample import sample
 from nuclear_qmc.utils.debug.wave_function_plot import get_wave_function_plot
-from nuclear_qmc.wave_function.jastro_neural_network import \
-    build_jastro_wave_function_no_spin_correlations_single_network
 from nuclear_qmc.wave_function.wave_function import get_wave_function_system
+from nuclear_qmc.wave_function.deep_set_wave_function import build_deep_set
 
 config.update("jax_enable_x64", True)
 # config.update('jax_platform_name', 'cpu')
@@ -27,14 +26,13 @@ N_OPTIMIZATION_STEPS = 20000
 key = random.PRNGKey(SEED)
 particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
     N_PROTON, N_NEUTRON)
-param_file = '3H_jastro_nn_wfc.model'
-ndense = 12
+param_file = '3H_deep_set_nn_n_dense8_ladent_6_wfc.model'
+n_dense = 8
 psi_vector = spin
-key, psi_prefactor, psi_params = build_jastro_wave_function_no_spin_correlations_single_network(key, ndense
-                                                                                                , particle_pairs)
+key, psi_prefactor, psi_params = build_deep_set(key, n_dense, n_latent=6, n_dimensions=N_DIMENSIONS)
 # , spin
 # , spin_exchange_indices)
-psi_params = jnp.load(param_file + '.npy')
+# psi_params = jnp.load(param_file + '.npy')
 
 learning_rate = 0.0001
 epsilon_sr = 0.00001

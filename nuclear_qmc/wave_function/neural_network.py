@@ -11,7 +11,7 @@ def load_params(params_file_name):
         return pickle.load(fil)
 
 
-def build_nn_wfc(ndense=4, key=None, params_file=None, in_shape=(1,)):
+def build_nn_wfc(ndense=4, key=None, params_file=None, in_shape=(1,), out_shape=1):
     if key is None:
         key = random.PRNGKey(0)
 
@@ -19,7 +19,7 @@ def build_nn_wfc(ndense=4, key=None, params_file=None, in_shape=(1,)):
     phi_a_init, phi_a_apply = stax.serial(
         Dense(ndense), activation,
         Dense(ndense), Tanh,
-        Dense(1),
+        Dense(out_shape),
     )
 
     if params_file is not None:
