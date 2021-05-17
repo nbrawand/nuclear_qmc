@@ -2,6 +2,7 @@ import jax.numpy as jnp
 from jax import vmap
 from nuclear_qmc.operators.operators import sigma
 from nuclear_qmc.utils.center_particles import center_particles
+from nuclear_qmc.utils.get_cyclic_permutations import get_cyclic_permutations
 from nuclear_qmc.utils.get_dr_ij import get_r_ij
 from nuclear_qmc.wave_function.neural_network import build_nn_wfc
 from nuclear_qmc.wave_function.utility import apply_confining_potential
@@ -15,70 +16,7 @@ def get_exp_rij(params, r, particle_pairs):
     return jnp.exp(-params * dr)
 
 
-def build_jastro_wave_function_with_spin_correlations(ndense, particle_pairs, spin, spin_exchange_indices):
-    RuntimeError('This needs an exponential')
-    """return the following wave function:
-    \prod f_c_ij * (1.+\sum_ij f_sigma_ij / f_central_ij * sigma_ij) * spin"""
-    n_particle_pairs = len(particle_pairs)
-
-    # key, psi_prefactor, flat_params
-    neural_network_psis = []
-    neural_network_flat_params = []
-    for i in range(2 * n_particle_pairs):
-        _, psi, params = build_nn_wfc(ndense=ndense)
-        n_params_per_network = len(params)
-        neural_network_flat_params.append(params)
-        neural_network_psis.append(psi)
-    neural_network_flat_params = jnp.array(neural_network_flat_params).reshape(-1)
-
-    def psi_function(in_params, r_coords):
-        r_coords = center_particles(r_coords)
-        f_central_ij = jnp.array(
-            [neural_network_psis[i](in_params[i * n_params_per_network:(1 + i) * n_params_per_network], r_coords)
-             for i in range(n_particle_pairs)])
-        f_spin_ij = jnp.array(
-            [neural_network_psis[i](in_params[i * n_params_per_network:(1 + i) * n_params_per_network], r_coords)
-             for i in range(n_particle_pairs, 2 * n_particle_pairs)])
-        f_central_product = jnp.prod(f_central_ij)
-        f_ratios = f_spin_ij / f_central_ij
-        # \sum_ij f_sigma_ij / f_central_ij * sigma_ij
-        sum_ij_sigma = sigma(lambda a, b: 1., None, spin, r_coords, spin_exchange_indices, f_ratios)
-        psi = f_central_product * (spin + sum_ij_sigma)
-        psi *= apply_confining_potential(r_coords)
-        return psi
-
-    return psi_function, neural_network_flat_params
-
-
-def build_jastro_wave_function_no_spin_correlations_multiple_networks(ndense, particle_pairs):
-    RuntimeError('This needs an exponential')
-    """return the following wave function:
-    \prod f_c_ij """
-    n_particle_pairs = len(particle_pairs)
-
-    # key, psi_prefactor, flat_params
-    neural_network_psis = []
-    neural_network_flat_params = []
-    for i in range(n_particle_pairs):
-        _, psi, params = build_nn_wfc(ndense=ndense)
-        n_params_per_network = len(params)
-        neural_network_flat_params.append(params)
-        neural_network_psis.append(psi)
-    neural_network_flat_params = jnp.array(neural_network_flat_params).reshape(-1)
-
-    def psi_function(in_params, r_coords):
-        r_coords = center_particles(r_coords)
-        f_central_ij = jnp.array(
-            [neural_network_psis[i](in_params[i * n_params_per_network:(1 + i) * n_params_per_network], r_coords)
-             for i in range(n_particle_pairs)])
-        f_central_product = jnp.prod(f_central_ij)
-        psi = f_central_product * apply_confining_potential(r_coords)
-        return psi
-
-    return psi_function, neural_network_flat_params
-
-
-def build_jastro_wave_function_no_spin_correlations_single_network(key, n_dense, particle_pairs, n_hidden_layers=2):
+def build_jastro_nn_2_body(key, n_dense, particle_pairs, n_hidden_layers=2):
     key, nn_func, params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
 
     def psi_function(in_params, r_coords):
@@ -92,26 +30,36 @@ def build_jastro_wave_function_no_spin_correlations_single_network(key, n_dense,
     return key, psi_function, params
 
 
-def build_jastro_wave_function_no_spin_correlations_single_network_2(key, ndense, particle_pairs, spin,
-                                                                     spin_exchange_indices):
-    key, f_c_nn_func, f_c_params = build_nn_wfc(ndense=ndense, key=key)
-    n_fc_parmas = len(f_c_params)
-    key, f_s_nn_func, f_s_params = build_nn_wfc(ndense=ndense, key=key)
-    params = jnp.concatenate((f_c_params, f_s_params))
+def build_jastro_nn_2_and_3_body(key, n_dense, particle_pairs, particle_triplets, n_particles, n_hidden_layers=2):
+    key, b2_func, b2_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
+    key, b3_func, b3_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
+    n_b2_params = b2_params.size[0]
+    triplet_cyclic_3_indices = vmap(get_cyclic_permutations)(particle_triplets)  # dims = [n_particle_triplets, 4, 3]
+
+    def u_ij_u_jk(indices, r_coords):
+        i, j, k = indices
+        r_ij = jnp.linalg.norm(r_coords[i] - r_coords[j])
+        r_jk = jnp.linalg.norm(r_coords[j] - r_coords[k])
+        return jnp.exp(b3_func(r_ij) + b3_func(r_jk))
+
+    def sum_uus(cycle_indices, r_coords):
+        uus = vmap(u_ij_u_jk, in_axes=(0, None))(cycle_indices, r_coords)
+        return jnp.sum(uus)
 
     def psi_function(in_params, r_coords):
-        f_c_params = in_params[:n_fc_parmas]
-        f_s_params = in_params[n_fc_parmas:]
         r_coords = center_particles(r_coords)
-        r_ij = get_r_ij(r_coords, particle_pairs)
-        f_c_r_ij = vmap(f_c_nn_func, in_axes=(None, 0))(f_c_params, r_ij)
-        f_c_exp = jnp.exp(f_c_r_ij)
-        f_s_r_ij = vmap(f_s_nn_func, in_axes=(None, 0))(f_s_params, r_ij)
-        f_s_exp = jnp.exp(f_s_r_ij)
-        f_s_over_f_c = f_s_exp / f_c_exp
-        sum_ij_sigma = sigma(lambda a, b: 1., None, spin, r_coords, spin_exchange_indices, f_s_over_f_c)
-        psi = jnp.prod(f_c_exp) * (spin + sum_ij_sigma)
-        psi *= apply_confining_potential(r_coords)
+        dr_ij = get_r_ij(r_coords, particle_pairs)
+
+        # b2
+        b2_ij = vmap(b2_func, in_axes=(None, 0))(in_params[:n_b2_params], dr_ij)
+        b2_ij = jnp.exp(b2_ij.sum())
+
+        # b3
+        b3_ij = vmap(lambda cycles: 1.0 - sum_uus(cycles, r_coords))(triplet_cyclic_3_indices)
+        b3_ij = jnp.prod(b3_ij)
+
+        psi = b2_ij * b3_ij * apply_confining_potential(r_coords)
         return psi
 
+    params = jnp.concatenate((b2_params, b3_params))
     return key, psi_function, params

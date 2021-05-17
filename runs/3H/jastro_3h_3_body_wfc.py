@@ -9,8 +9,6 @@ from nuclear_qmc.sampling.sample import sample
 from nuclear_qmc.utils.center_particles import center_particles
 from nuclear_qmc.utils.debug.wave_function_plot import get_wave_function_plot
 from nuclear_qmc.utils.get_dr_ij import get_r_ij
-from nuclear_qmc.wave_function.jastro_neural_network import \
-    build_jastro_wave_function_no_spin_correlations_single_network
 from nuclear_qmc.wave_function.neural_network import build_nn_wfc
 from nuclear_qmc.wave_function.utility import apply_confining_potential
 from nuclear_qmc.wave_function.wave_function import get_wave_function_system
@@ -23,9 +21,9 @@ N_NEUTRON = 2
 SEED = 0
 INITIAL_WALKER_STANDARD_DEVIATION = 1.0
 WALKER_STEP_SIZE = 0.2
-N_WALKERS = 4000
+N_WALKERS = 7000
 N_DIMENSIONS = 3
-N_EQUILIBRIUM_STEPS = 20
+N_EQUILIBRIUM_STEPS = 24
 N_STEPS = 1
 N_VOID_STEPS = 200
 N_OPTIMIZATION_STEPS = 20000
@@ -75,7 +73,7 @@ def psi_prefactor(in_params, r_coords):
 #                                                                                                , n_hidden_layers)
 # , spin
 # , spin_exchange_indices)
-# psi_params = jnp.load(param_file + '.npy')
+psi_params = jnp.load(param_file + '.npy')
 
 learning_rate = 0.0001
 epsilon_sr = 0.00001
