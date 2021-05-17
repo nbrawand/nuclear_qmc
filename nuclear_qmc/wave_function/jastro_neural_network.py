@@ -30,20 +30,20 @@ def build_jastro_nn_2_body(key, n_dense, particle_pairs, n_hidden_layers=2):
     return key, psi_function, params
 
 
-def build_jastro_nn_2_and_3_body(key, n_dense, particle_pairs, particle_triplets, n_particles, n_hidden_layers=2):
+def build_jastro_nn_2_and_3_body(key, n_dense, particle_pairs, particle_triplets, n_hidden_layers=2):
     key, b2_func, b2_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
     key, b3_func, b3_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
-    n_b2_params = b2_params.size[0]
+    n_b2_params = b2_params.shape[0]
     triplet_cyclic_3_indices = vmap(get_cyclic_permutations)(particle_triplets)  # dims = [n_particle_triplets, 4, 3]
 
-    def u_ij_u_jk(indices, r_coords):
+    def u_ij_u_jk(indices, params, r_coords):
         i, j, k = indices
         r_ij = jnp.linalg.norm(r_coords[i] - r_coords[j])
         r_jk = jnp.linalg.norm(r_coords[j] - r_coords[k])
-        return jnp.exp(b3_func(r_ij) + b3_func(r_jk))
+        return jnp.exp(b3_func(params, r_ij) + b3_func(params, r_jk))
 
-    def sum_uus(cycle_indices, r_coords):
-        uus = vmap(u_ij_u_jk, in_axes=(0, None))(cycle_indices, r_coords)
+    def sum_uus(cycle_indices, params, r_coords):
+        uus = vmap(u_ij_u_jk, in_axes=(0, None, None))(cycle_indices, params, r_coords)
         return jnp.sum(uus)
 
     def psi_function(in_params, r_coords):
@@ -55,7 +55,8 @@ def build_jastro_nn_2_and_3_body(key, n_dense, particle_pairs, particle_triplets
         b2_ij = jnp.exp(b2_ij.sum())
 
         # b3
-        b3_ij = vmap(lambda cycles: 1.0 - sum_uus(cycles, r_coords))(triplet_cyclic_3_indices)
+        b3_ij = vmap(lambda c, p, r: 1.0 - sum_uus(c, p, r), in_axes=(0, None, None))(triplet_cyclic_3_indices,
+                                                                                      in_params[n_b2_params:], r_coords)
         b3_ij = jnp.prod(b3_ij)
 
         psi = b2_ij * b3_ij * apply_confining_potential(r_coords)
