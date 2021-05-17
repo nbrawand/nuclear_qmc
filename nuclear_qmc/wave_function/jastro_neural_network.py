@@ -78,8 +78,8 @@ def build_jastro_wave_function_no_spin_correlations_multiple_networks(ndense, pa
     return psi_function, neural_network_flat_params
 
 
-def build_jastro_wave_function_no_spin_correlations_single_network(key, ndense, particle_pairs):
-    key, nn_func, params = build_nn_wfc(ndense=ndense, key=key)
+def build_jastro_wave_function_no_spin_correlations_single_network(key, n_dense, particle_pairs, n_hidden_layers=2):
+    key, nn_func, params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
 
     def psi_function(in_params, r_coords):
         r_coords = center_particles(r_coords)

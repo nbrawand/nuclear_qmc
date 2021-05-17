@@ -1,4 +1,5 @@
 import jax
+import jax.numpy as jnp
 from jax import random
 from jax.flatten_util import ravel_pytree
 from jax.experimental import stax
@@ -11,14 +12,14 @@ def load_params(params_file_name):
         return pickle.load(fil)
 
 
-def build_nn_wfc(ndense=4, key=None, params_file=None, in_shape=(1,), out_shape=1):
+def build_nn_wfc(ndense=4, key=None, params_file=None, in_shape=(1,), out_shape=1, n_hidden_layers=2,
+                 dtype=jnp.float64):
     if key is None:
         key = random.PRNGKey(0)
 
-    activation = Tanh
+    hidden_layers = n_hidden_layers * [Dense(ndense), Tanh, ]
     phi_a_init, phi_a_apply = stax.serial(
-        Dense(ndense), activation,
-        Dense(ndense), Tanh,
+        *hidden_layers,
         Dense(out_shape),
     )
 
@@ -29,6 +30,7 @@ def build_nn_wfc(ndense=4, key=None, params_file=None, in_shape=(1,), out_shape=
         _, unflattened_params = phi_a_init(key_input, in_shape)
 
     flat_params, unflatten_params_function = ravel_pytree(unflattened_params)
+    flat_params = flat_params.astype(dtype)
 
     def psi_prefactor(flat_params_in, nn_input):
         unflat_params = unflatten_params_function(flat_params_in)
