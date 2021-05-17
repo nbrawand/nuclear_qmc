@@ -28,9 +28,9 @@ def build_nn_wfc(ndense=4, key=None, params_file=None, in_shape=(1,), out_shape=
     else:
         key, key_input = jax.random.split(key)
         _, unflattened_params = phi_a_init(key_input, in_shape)
+        unflattened_params = jax.tree_multimap(lambda params: params.astype(jnp.float64), unflattened_params)
 
     flat_params, unflatten_params_function = ravel_pytree(unflattened_params)
-    flat_params = flat_params.astype(dtype)
 
     def psi_prefactor(flat_params_in, nn_input):
         unflat_params = unflatten_params_function(flat_params_in)
