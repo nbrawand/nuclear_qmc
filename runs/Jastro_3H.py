@@ -38,7 +38,7 @@ key, psi_prefactor, psi_params = build_jastro_wave_function_no_spin_correlations
                                                                                                 , n_hidden_layers)
 # , spin
 # , spin_exchange_indices)
-# psi_params = jnp.load(param_file + '.npy')
+psi_params = jnp.load(param_file + '.npy')
 
 learning_rate = 0.0001
 epsilon_sr = 0.00001
