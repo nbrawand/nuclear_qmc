@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+from jax import jit
 from jax import vmap
 from nuclear_qmc.operators.operators import sigma
 from nuclear_qmc.utils.center_particles import center_particles
@@ -46,6 +47,7 @@ def build_jastro_nn_2_and_3_body(key, n_dense, particle_pairs, particle_triplets
         uus = vmap(u_ij_u_jk, in_axes=(0, None, None))(cycle_indices, params, r_coords)
         return jnp.sum(uus)
 
+    @jit
     def psi_function(in_params, r_coords):
         r_coords = center_particles(r_coords)
         dr_ij = get_r_ij(r_coords, particle_pairs)
