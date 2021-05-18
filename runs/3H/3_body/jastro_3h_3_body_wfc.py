@@ -23,9 +23,9 @@ N_NEUTRON = 2
 SEED = 0
 INITIAL_WALKER_STANDARD_DEVIATION = 1.0
 WALKER_STEP_SIZE = 0.2
-N_WALKERS = 4000
+N_WALKERS = 9000
 N_DIMENSIONS = 3
-N_EQUILIBRIUM_STEPS = 20
+N_EQUILIBRIUM_STEPS = 25
 N_STEPS = 1
 N_VOID_STEPS = 200
 N_OPTIMIZATION_STEPS = 20000
@@ -41,8 +41,8 @@ key, psi_prefactor, psi_params = build_jastro_nn_2_and_3_body(key
                                                               , particle_pairs
                                                               , particle_triplets, n_hidden_layers=n_hidden_layers)
 param_file = os.path.join(script_dir, 'wfc_parameters')
-# psi_params = jnp.load(param_file + '.npy')
-learning_rate = 0.0001
+psi_params = jnp.load(param_file + '.npy')
+learning_rate = 0.00001
 epsilon_sr = 0.00001
 plot_iter = 0
 
