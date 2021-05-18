@@ -1,9 +1,10 @@
 import jax
 import jax.numpy as jnp
-
+from functools import partial
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
 
 
+@partial(jax.jit, static_argnums=(0,))
 def laplacian(psi, psi_params, r_coords):
     d2_psi = jax.hessian(psi, argnums=1)(psi_params, r_coords)
     dim1 = d2_psi.shape[-2] * d2_psi.shape[-1]
