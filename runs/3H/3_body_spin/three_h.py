@@ -30,7 +30,7 @@ key, psi_prefactor, psi_params = build_jastro_nn_2_and_3_body_with_spin(
     , n_hidden_layers=n_hidden_layers
 )
 psi_vector = 1.
-# psi_params = jnp.load(psi_param_file)
+psi_params = jnp.load(psi_param_file)
 _, params = optimize_wave_function(
     n_proton
     , n_neutron
@@ -43,10 +43,10 @@ _, params = optimize_wave_function(
     , seed=0
     , n_dimensions=3
     , psi_param_file=psi_param_file
-    , n_blocks=20
-    , n_equilibrium_blocks=10
-    , n_walkers=1000
-    , n_void_steps=200
+    , n_blocks=5
+    , n_equilibrium_blocks=5
+    , n_walkers=1500
+    , n_void_steps=100
     , walker_step_size=0.2
     , initial_walker_standard_deviation=1.0
     , n_optimization_steps=400
