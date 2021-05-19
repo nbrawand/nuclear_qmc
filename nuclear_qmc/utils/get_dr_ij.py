@@ -2,16 +2,19 @@ import jax.numpy as jnp
 
 
 def get_dr_ij(r_coords, particle_pairs):
-    """
+    """Get coordinate differences between each particle pair.
 
     Parameters
     ----------
-    r_coords: ndarray [n_particles, n_coords]
-    particle_pairs: ndarray [n_pairs, 2]
+    r_coords: ndarray
+        [n_particles, n_coords] particle coordinates.
+    particle_pairs: ndarray
+        [n_pairs, 2] particle pair indices.
 
     Returns
     -------
-    \\delta r for each particle pair
+    ndarray
+        [n_dimensions]:math:`\\delta r` for each particle pair.
 
     """
     return r_coords[particle_pairs[:, 0]] - r_coords[particle_pairs[:, 1]]

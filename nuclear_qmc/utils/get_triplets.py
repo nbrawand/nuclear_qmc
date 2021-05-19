@@ -3,16 +3,17 @@ import jax.numpy as jnp
 
 
 def get_triplets(int_arr):
-    """
-    Get an array of all triplet combinations (ijk) of elements in int_arr such that (i<j<k)
+    """Get an array of all triplet combinations (ijk) of elements in int_arr such that (i<j<k).
 
     Parameters
     ----------
-    int_arr: ndarray 1D array of reals
+    int_arr: ndarray
+        1D array of ints.
 
     Returns
     -------
-    ndarray[n_combindations, 3]
+    ndarray
+        [n_combindations, 3] all triplet combinations (ijk) of elements in int_arr such that (i<j<k).
     """
     if int_arr.shape[0] < 3:
         return jnp.array([])
