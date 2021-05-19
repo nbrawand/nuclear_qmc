@@ -1,19 +1,35 @@
-import jax
+from nuclear_qmc.constants.constants import C_1, C_2, D_0, ultraviolet_cutoff
 from nuclear_qmc.operators.operators import kinetic_energy_psi, sigma
 import jax.numpy as jnp
-from jax import jit
-from functools import partial
-
-# potential enregy coefficients from arXiv:2007.14282v2 [nucl-th] 13 Apr 2021
-C_1 = -487.6128
-C_2 = -17.5515
-D_0 = 677.79890
-ultraviolet_cutoff = 4
 
 
 def potential_energy_psi(psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets,
                          spin_exchange_indices):
-    """Potential from arXiv:2007.14282v2 [nucl-th] 13 Apr 2021"""
+    """Potential from arXiv:2007.14282v2 [nucl-th] 13 Apr 2021
+
+    Parameters
+    ----------
+    psi: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords: ndarray
+        [n_particles, n_dimensions] particle coordinates.
+    particle_pairs: ndarray
+        [n_pairs, 2] particle indices for each pair.
+    particle_triplets: ndarray
+        [n_triplets, 3] particle indices for each pair.
+    spin_exchange_indices:
+        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
+
+    Returns
+    -------
+    float
+        Potential energy.
+
+    """
 
     r_ij_sqrd = get_r_ij_sqrd(r_coords, particle_pairs)
     exp_neg_r_lambda_4 = jnp.exp(-r_ij_sqrd * ultraviolet_cutoff ** 2 / 4.)
@@ -38,13 +54,15 @@ def get_r_ij_sqrd(r_coords, particle_pairs):
 
     Parameters
     ----------
-    r_coords: ndarray[n_particles, n_dimensions]
-    particle_pairs: ndarray[n_pairs, 2] the index of each particle in r_coords
+    r_coords: ndarray
+        [n_particles, n_dimensions] particle coordinates.
+    particle_pairs: ndarray
+        [n_pairs, 2] particle indices for each pair.
 
     Returns
     -------
-    ndarray[n_pairs]
-        (r_i-r_j)^2 for each combo i<j, j in order of particle_pairs
+    ndarray
+        [n_pairs] :math:`(r_i-r_j)^2` for each combo i<j, j in order of particle_pairs.
     """
     r_ij_sqrd = r_coords[particle_pairs[:, 0]] - r_coords[particle_pairs[:, 1]]
     r_ij_sqrd = (r_ij_sqrd ** 2).sum(axis=-1)
@@ -53,15 +71,24 @@ def get_r_ij_sqrd(r_coords, particle_pairs):
 
 def get_r_ik_r_ij_sqrd(r_coords, particle_triplets, i, j, k):
     """
+
     Parameters
     ----------
-    r_coords: ndarray[n_particles, n_dimensions]
-    particle_triplets: ndarray[n_particle_triplets, 3] the index of each particle in r_coords
+    r_coords: ndarray
+        [n_particles, n_dimensions] particle coordinates.
+    particle_triplets: ndarray
+        [n_triplets, 3] particle indices for each pair.
+    k: int
+        Particle index.
+    j: int
+        Particle index.
+    i: int
+        Particle index.
 
     Returns
     -------
-    ndarray[n_triplets]
-        (r_i-r_k)^2+(r_i-r_j)^2 in particle_triplets
+    ndarray
+        [n_triplets] :math:`(r_i-r_k)^2+(r_i-r_j)^2` in particle_triplets.
     """
     r_ik = r_coords[particle_triplets[:, i]] - r_coords[particle_triplets[:, k]]
     r_ij = r_coords[particle_triplets[:, i]] - r_coords[particle_triplets[:, j]]
@@ -74,13 +101,15 @@ def get_r_ik_r_ij_cycles(r_coords, particle_triplets):
 
     Parameters
     ----------
-    r_coords: ndarray[n_particles, n_dimensions]
-    particle_triplets: ndarray[n_particle_triplets, 3] the index of each particle in r_coords
+    r_coords: ndarray
+        [n_particles, n_dimensions] particle coordinates.
+    particle_triplets: ndarray
+        [n_triplets, 3] particle indices for each pair.
 
     Returns
     -------
-    ndarray[n_triplets]
-        cyclic combinations of ijk of terms: (r_i-r_k)^2+(r_i-r_j)^2 in particle_triplets
+    ndarray
+        [n_triplets] cyclic combinations of ijk of terms: :math:`(r_i-r_k)^2+(r_i-r_j)^2` in particle_triplets
     """
     cycles = get_r_ik_r_ij_sqrd(r_coords, particle_triplets, 0, 1, 2)
     cycles = jnp.append(cycles, get_r_ik_r_ij_sqrd(r_coords, particle_triplets, 2, 0, 1))
@@ -93,12 +122,25 @@ def hamiltonian_psi(psi, psi_params, psi_vector, r_coords, particle_pairs, parti
 
     Parameters
     ----------
-    wave_function: WaveFunction
-    r_coords: ndarray[n_particles, n_dimensions]
+    psi: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords: ndarray
+        [n_particles, n_dimensions] particle coordinates.
+    particle_pairs: ndarray
+        [n_pairs, 2] particle indices for each pair.
+    particle_triplets: ndarray
+        [n_triplets, 3] particle indices for each pair.
+    spin_exchange_indices:
+        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
 
     Returns
     -------
-    float
+    ndarray
+        [n_spin_isospin] :math:`\\hat{H}|\\Psi\rangle`.
 
     """
     ke_psi = kinetic_energy_psi(psi, psi_params, r_coords) * psi_vector
@@ -113,12 +155,25 @@ def get_local_energy(psi, psi_params, psi_vector, r_coords, particle_pairs, part
 
     Parameters
     ----------
-    wave_function: WaveFunction
-    r_coords: ndarray[n_particles, n_dimensions]
+    psi: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords: ndarray
+        [n_particles, n_dimensions] particle coordinates.
+    particle_pairs: ndarray
+        [n_pairs, 2] particle indices for each pair.
+    particle_triplets: ndarray
+        [n_triplets, 3] particle indices for each pair.
+    spin_exchange_indices:
+        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
 
     Returns
     -------
     float
+        The local energy evaluated at `r_coords`.
 
     """
     h_psi = hamiltonian_psi(psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets,
