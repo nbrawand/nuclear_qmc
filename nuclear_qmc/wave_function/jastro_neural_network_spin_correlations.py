@@ -25,13 +25,27 @@ def build_jastro_nn_2_and_3_body_with_spin(
         , spin
         , spin_exchange_indices
         , n_hidden_layers=2
+        , spin_hidden_layers=2
+        , spin_n_dense=4
 ):
+    # build b2 and b3 networks
     key, b2_func, b2_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
     key, b3_func, b3_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
-    key, s_func, s_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
     n_b2_params = b2_params.shape[0]
     n_b3_params = b3_params.shape[0]
     triplet_cyclic_3_indices = vmap(get_cyclic_permutations)(particle_triplets)  # dims = [n_particle_triplets, 4, 3]
+
+    # build spin networks
+    n_pairs = particle_pairs.shape[0]
+    s_funcs_list = []
+    s_params_list = []
+    n_s_params_list = []
+    for pair in range(n_pairs):
+        key, s_function, s_params = build_nn_wfc(ndense=spin_n_dense, key=key, n_hidden_layers=spin_hidden_layers)
+        s_funcs_list.append(s_function)
+        s_params_list.append(s_params)
+        n_s_params_list.append(len(s_params))
+    s_params_arr = jnp.array(s_params_list, dtype=jnp.float64).reshape(-1)
 
     def u_ij_u_jk(indices, params, r_coords):
         i, j, k = indices
@@ -60,14 +74,19 @@ def build_jastro_nn_2_and_3_body_with_spin(
 
         # spin
         _s_params = in_params[n_b2_params + n_b3_params:]
-        s_ij = vmap(s_func, in_axes=(None, 0))(_s_params, dr_ij)
-        s_ij = jnp.exp(s_ij)
-        f_ratios = s_ij / b2_ij
-        sum_ij_sigma = sigma(lambda a, b: 1., None, spin, r_coords, spin_exchange_indices, f_ratios)
+        start_indx = 0
+        sum_ij_sigma = jnp.zeros_like(spin)
+        for i in range(n_pairs):
+            s_func = s_funcs_list[i]
+            stop_indx = start_indx + n_s_params_list[i]
+            s_ij = vmap(s_func, in_axes=(None, 0))(_s_params[start_indx:stop_indx], dr_ij)
+            s_ij = jnp.exp(s_ij)
+            sum_ij_sigma += sigma(lambda a, b: 1., None, spin, r_coords, spin_exchange_indices, s_ij)
+            start_indx = stop_indx
 
         psi = jnp.prod(b2_ij) * jnp.prod(b3_ij) * (spin + sum_ij_sigma)
         psi *= apply_confining_potential(r_coords)
         return psi
 
-    params = jnp.concatenate((b2_params, b3_params, s_params))
+    params = jnp.concatenate((b2_params, b3_params, s_params_arr))
     return key, psi_function, params
