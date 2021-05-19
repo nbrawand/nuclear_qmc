@@ -1,4 +1,4 @@
-from nuclear_qmc.optimize.optimize import get_delta_params
+from nuclear_qmc.optimize.archive.optimize import get_delta_params
 import jax.numpy as jnp
 
 
