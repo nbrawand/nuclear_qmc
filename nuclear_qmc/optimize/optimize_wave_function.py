@@ -10,6 +10,21 @@ from nuclear_qmc.optimize.low_memory_optimize import get_delta_params
 
 
 def get_new_param_file_name(file_name, postfix_int):
+    """Return a new file name that doesn't exist in current directory.
+
+    Parameters
+    ----------
+    file_name: str
+        Proposed file name. If exists already then append `postfix_int` and check again. Return if doesn't exist.
+    postfix_int: int
+        Append to end of `file_name` if file already exists.
+
+    Returns
+    -------
+    file_name: str
+        A new file name that doesn't exist.
+
+    """
     if os.path.isfile(file_name):
         new_int = postfix_int + 1
         file_name = file_name.replace(str(postfix_int), str(new_int))
@@ -27,20 +42,29 @@ def get_local_energy_for_block(
         , particle_triplets
         , spin_exchange_indices
 ):
-    """
+    """Calculate the average local energy.
 
     Parameters
     ----------
-    psi_prefactor
-    psi_params
-    psi_vector
-    r_coords_for_block: ndarray [n_walkers, n_particles, n_dimensions]
-    particle_pairs
-    particle_triplets
-    spin_exchange_indices
+    psi_prefactor: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords_for_block: ndarray
+        [n_walkers, n_particles, n_dimensions]
+    particle_pairs: ndarray
+        [n_pairs, 2] particle indices for each pair.
+    particle_triplets: ndarray
+        [n_triplets, 3] particle indices for each pair.
+    spin_exchange_indices:
+        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
 
     Returns
     -------
+    local_energy: float
+        The local energy.
 
     """
     local_energy_values = vmap(get_local_energy, in_axes=(None, None, None, 0, None, None, None))(psi_prefactor
@@ -79,6 +103,62 @@ def optimize_wave_function(
         , print_local_energy=True
 
 ):
+    """
+    Optimizes psi_parameters.
+
+    Parameters
+    ----------
+    n_proton: int
+        Number of protons.
+    n_neutron: int
+        Number of neutrons.
+    psi_prefactor: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    particle_pairs: ndarray
+        [n_pairs, 2] particle indices for each pair.
+    particle_triplets: ndarray
+        [n_triplets, 3] particle indices for each pair.
+    spin_exchange_indices:
+        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
+    seed: int
+        Seed for sampling algorithm.
+    n_dimensions: int
+        Number of dimensions to sample.
+    psi_param_file: str, optional
+        File to save `psi_params` to. If None a file will be created.
+    n_blocks: int, optional
+        Number of blocks to calculate statistics over. Each block has `n_walkers`.
+    n_equilibrium_blocks: int, optional
+        Number of equilibrium blocks to compute before sampling. Generated arrays are not stored.
+    n_walkers: int, optional
+        Number of walkers to sample for each block.
+    n_void_steps: int, optional
+        Number of steps to take before saving a walker during sampling.
+    walker_step_size: float, optional
+        Standard deviation of gaussian to sample from for each walker at each step.
+    initial_walker_standard_deviation: float
+        Standard deviation of gaussian to sample initial walker positions during sampling.
+    n_optimization_steps: int, optional
+       Number of optimization steps to take.
+    learning_rate: float, optional
+        Size of learning rate for updating `psi_params`.
+    epsilon_sr: float, optional
+        Size of diagonal for stabilizing the stochastic reconfiguration equations. Reasonable values are between 10^4
+        and 10^6.
+    print_local_energy: bool, optional
+        If True compute and print local energy during optimization loop.
+
+    Returns
+    -------
+    key, psi_params
+        `key` is split during sampling. `psi_params` are updated using the stochastic reconfiguration equations and
+        saved to `psi_param_file`.
+
+    """
     # create new wave function parameter file if needed
     if psi_param_file is None:
         psi_param_file = 'wave_function_parameters_0.npy'
