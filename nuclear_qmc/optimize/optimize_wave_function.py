@@ -197,7 +197,7 @@ def optimize_wave_function(
             local_energy = local_energy_per_block.mean()
             ddof = 1 if n_blocks > 1 else 0
             local_energy_error = jnp.std(local_energy_per_block, ddof=ddof)
-            local_energy_error = jnp.sqrt(local_energy_error)
+            local_energy_error = local_energy_error / jnp.sqrt(n_blocks)
             logging.info(f'optimization step, local energy, error: {n_opt}, {local_energy}, {local_energy_error}')
 
         # compute average wave function parameter update over each block
