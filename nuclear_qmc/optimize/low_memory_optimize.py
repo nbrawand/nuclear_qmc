@@ -10,12 +10,19 @@ def get_d_psi_psi(psi, psi_params, psi_vector, r_coords):
 
     Parameters
     ----------
-    psi
-    psi_params
-    r_coord: ndarray [n_particles, n_dimensions]
+    psi: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords: ndarray
+        [n_particles, n_dimensions] coordinates of the particles.
 
     Returns
     -------
+    ndarray
+        [n_params] :math:`\\sum_s (\\partial_i \\Psi_s^*(R))\\Psi_s(R)`.
 
     """
     d_psi = get_d_psi(psi, psi_params, psi_vector, r_coords)  # [n_params, spin_isospin]
@@ -28,13 +35,19 @@ def get_psi_psi(psi, psi_params, psi_vector, r_coords):
 
     Parameters
     ----------
-    psi
-    psi_params
-    psi_vector
-    r_coords: ndarray [n_particles, n_dimensions]
+    psi: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords: ndarray
+        [n_particles, n_dimensions] coordinates of the particles.
 
     Returns
     -------
+    float
+        :math:`\\sum_s \\Psi_s^*(R) \\Psi_s(R).
 
     """
     psi_r = get_psi_r(psi, psi_params, psi_vector, r_coords)
@@ -46,13 +59,19 @@ def get_psi_r(psi, psi_params, psi_vector, r_coords):
 
     Parameters
     ----------
-    psi
-    psi_params
-    psi_vector
-    r_coords: ndarray [n_particles, n_dimensions]
+    psi: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords: ndarray
+        [n_particles, n_dimensions] coordinates of the particles.
 
     Returns
     -------
+    ndarray
+        [spin_isospin] psi evaluated at `r_coords`.
 
     """
     psi_r = psi(psi_params, r_coords) * psi_vector
@@ -71,17 +90,25 @@ def get_psi_h_psi(psi
 
     Parameters
     ----------
-    psi
-    psi_params
-    psi_vector
-    r_coords: ndarray [n_particles, n_dimensions]
-    particle_pairs
-    particle_triplets
-    spin_exchange_indices
+    psi: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords: ndarray
+        [n_particles, n_dimensions] coordinates of the particles.
+    particle_pairs: ndarray
+        [n_pairs, 2] particle indices for each pair.
+    particle_triplets: ndarray
+        [n_triplets, 3] particle indices for each pair.
+    spin_exchange_indices:
+        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
 
     Returns
     -------
-    \\sum_s \\Psi_s(R) H \\Psi_s(R)
+    float
+        :math:`\\sum_s \\Psi_s(R) H \\Psi_s(R)`
 
     """
     h_psi = hamiltonian(psi
@@ -108,17 +135,25 @@ def get_d_psi_h_psi(psi
 
     Parameters
     ----------
-    psi
-    psi_params
-    psi_vector
-    r_coords: ndarray [n_particles, n_dimensions]
-    particle_pairs
-    particle_triplets
-    spin_exchange_indices
+    psi: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords: ndarray
+        [n_particles, n_dimensions] coordinates of the particles.
+    particle_pairs: ndarray
+        [n_pairs, 2] particle indices for each pair.
+    particle_triplets: ndarray
+        [n_triplets, 3] particle indices for each pair.
+    spin_exchange_indices:
+        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
 
     Returns
     -------
-    \\sum_s \\Psi_s(R) H \\Psi_s(R)
+    ndarray
+        [n_params] :math:`\\sum_s (\\partial_i\\Psi_s(R)) H \\Psi_s(R)`
 
     """
     h_psi = hamiltonian(psi
@@ -135,15 +170,19 @@ def get_d_psi_h_psi(psi
 def get_d_psi(psi, psi_params, psi_vector, r_coords):
     """
 
-    Parameters
-    ----------
-    psi
-    psi_params
-    psi_vector
-    r_coords: ndarray [n_particles, n_dimensions]
+    psi: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords: ndarray
+        [n_particles, n_dimensions] coordinates of the particles.
 
     Returns
     -------
+    ndarray
+        [n_params, n_spin_isospin] :math:`\\partial_i \\psi`
 
     """
     d_psi = jax.jacfwd(psi, argnums=0)(psi_params, r_coords)  # [psi_output_dimensions, n_params]
@@ -157,13 +196,19 @@ def get_d_psi_d_psi(psi, psi_params, psi_vector, r_coords):
 
     Parameters
     ----------
-    psi
-    psi_params
-    psi_vector
-    r_coords: ndarray [n_particles, n_dimensions]
+    psi: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords: ndarray
+        [n_particles, n_dimensions] coordinates of the particles.
 
     Returns
     -------
+    ndarray
+        [n_params, n_params] :math:`\\partial_i \\psi \\partial_j \\psi`
 
     """
     d_psi = get_d_psi(psi, psi_params, psi_vector, r_coords)  # [n_params, spin_isospin]
@@ -177,6 +222,26 @@ def get_d_psi_d_psi(psi, psi_params, psi_vector, r_coords):
 
 
 def get_d_psi_d_psi_avg(psi, psi_params, psi_vector, r_coords):
+    """
+
+    Parameters
+    ----------
+    psi: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords: ndarray
+        [n_walkers, n_particles, n_dimensions] coordinates of the walkers.
+
+    Returns
+    -------
+    ndarray
+        [n_params, n_params] :math:`\\langle \\partial_i \\psi | \\partial_j \\psi \\rangle`.
+
+    """
+
     def sum_d_psi_d_psi(i, d_psi_d_psi_avg):
         d_psi_d_psi = get_d_psi_d_psi(psi, psi_params, psi_vector, r_coords[i])  # [n_param, n_param]
         psi_psi = get_psi_psi(psi, psi_params, psi_vector, r_coords[i])  # [scalar]
@@ -202,17 +267,40 @@ def get_delta_params(
         , hamiltonian=hamiltonian_psi
         , include_sr_equations=True
         , return_loss=False, eps=0.0001):
-    """
+    """Calculate `psi_params` update by solving stochastic reconfiguration equations.
 
     Parameters
     ----------
-    learning_rate: float
-    wave_function: WaveFunction
-    energy: ndarray[n_walkers]
-    r_coords: ndarray[n_walkers, n_particles, n_dimensions]
+    psi: function
+        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
+    psi_params: ndarray
+        1D array containing wave function parameters.
+    psi_vector: ndarray
+        2D array containing wave function spin isospin components.
+    r_coords: ndarray
+        [n_walkers, n_particles, n_dimensions] coordinates of the walkers.
+    particle_pairs: ndarray
+        [n_pairs, 2] particle indices for each pair.
+    particle_triplets: ndarray
+        [n_triplets, 3] particle indices for each pair.
+    spin_exchange_indices:
+        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
+    learning_rate: float, optional
+        Size of learning rate for updating `psi_params`.
+    hamiltonian: function, optional
+        The hamiltonian function to apply to the wave function.
+    include_sr_equations: bool
+        If True solve stochastic reconfiguration equations else just to stochastic gradient descent.
+    return_loss: bool
+        Return total energy at end of calculation with parameter update.
+    eps: float, optional
+        Size of diagonal for stabilizing the stochastic reconfiguration equations. Reasonable values are between 10^4
+        and 10^6.
 
     Returns
     -------
+    delta_p: ndarray
+        1D array same size as `psi_params`. Add `delta_p` to `psi_params` to get updated parameters.
 
     """
     walker_axis = 0
