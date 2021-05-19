@@ -50,17 +50,17 @@ def build_jastro_nn_2_and_3_body_with_spin(
 
         # b2
         _b2_params = in_params[:n_b2_params]
-        b2_ij = vmap(b2_func, in_axes=(None, 0))(_b2_params, dr_ij)
+        b2_ij = vmap(b2_func, in_axes=(None, 0))(_b2_params, dr_ij).reshape(-1)
         b2_ij = jnp.exp(b2_ij)
 
         # b3
         _b3_params = in_params[n_b2_params:n_b2_params + n_b3_params]
         b3_ij = vmap(lambda c, p, r: 1.0 - sum_uus(c, p, r), in_axes=(0, None, None))(triplet_cyclic_3_indices,
-                                                                                      _b3_params, r_coords)
+                                                                                      _b3_params, r_coords).reshape(-1)
 
         # spin
         _s_params = in_params[n_b2_params + n_b3_params:]
-        s_ij = vmap(s_func, in_axes=(None, 0))(_s_params, dr_ij)
+        s_ij = vmap(s_func, in_axes=(None, 0))(_s_params, dr_ij).reshape(-1)
         s_ij = jnp.tanh(s_ij)
         f_ratios = s_ij / b2_ij
         sum_ij_sigma = sigma(lambda a, b: 1., None, spin, r_coords, spin_exchange_indices, f_ratios)
