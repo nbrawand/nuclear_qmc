@@ -89,7 +89,6 @@ def optimize_wave_function(
     key = random.PRNGKey(seed)
     n_particles = n_proton + n_neutron
     for n_opt in range(n_optimization_steps):
-        # sample
         key, r_coord_samples = sample(
             psi_prefactor
             , psi_params
