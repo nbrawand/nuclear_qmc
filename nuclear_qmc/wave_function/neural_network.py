@@ -12,7 +12,7 @@ def load_params(params_file_name):
         return pickle.load(fil)
 
 
-def build_nn_wfc(ndense=4, key=None, params_file=None, in_shape=(1,), out_shape=1, n_hidden_layers=2,
+def build_nn_wfc(ndense=4, key=None, params_file=None, in_shape=(1,), n_hidden_layers=2,
                  dtype=jnp.float64):
     if key is None:
         key = random.PRNGKey(0)
@@ -20,7 +20,7 @@ def build_nn_wfc(ndense=4, key=None, params_file=None, in_shape=(1,), out_shape=
     hidden_layers = n_hidden_layers * [Dense(ndense), Tanh, ]
     phi_a_init, phi_a_apply = stax.serial(
         *hidden_layers,
-        Dense(out_shape),
+        Dense(1),
     )
 
     if params_file is not None:
@@ -35,6 +35,6 @@ def build_nn_wfc(ndense=4, key=None, params_file=None, in_shape=(1,), out_shape=
     def psi_prefactor(flat_params_in, nn_input):
         unflat_params = unflatten_params_function(flat_params_in)
         psi_out = phi_a_apply(unflat_params, nn_input)
-        return psi_out
+        return psi_out.reshape(-1)
 
     return key, psi_prefactor, flat_params
