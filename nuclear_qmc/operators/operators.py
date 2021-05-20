@@ -80,7 +80,7 @@ def tau(psi, psi_params, psi_vector, r_coords, iso_spin_exchange_indices, pair_c
 
     """
     psi_r = psi(psi_params, r_coords) * psi_vector
-    return _tau_or_sigma(psi_r.T, iso_spin_exchange_indices, pair_coefficients).T
+    return tau_or_sigma(psi_r.T, iso_spin_exchange_indices, pair_coefficients).T
 
 
 def sigma(psi, psi_params, psi_vector, r_coords, spin_exchange_indices, pair_coefficients):
@@ -108,10 +108,10 @@ def sigma(psi, psi_params, psi_vector, r_coords, spin_exchange_indices, pair_coe
 
     """
     psi_r = psi(psi_params, r_coords) * psi_vector
-    return _tau_or_sigma(psi_r, spin_exchange_indices, pair_coefficients)
+    return tau_or_sigma(psi_r, spin_exchange_indices, pair_coefficients)
 
 
-def _tau_or_sigma(psi_r, exchange_indices, pair_coefficients):
+def tau_or_sigma(psi_r, exchange_indices, pair_coefficients):
     """
 
     Parameters

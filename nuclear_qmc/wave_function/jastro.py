@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from nuclear_qmc.utils.get_cyclic_permutations import get_cyclic_permutations
 from jax import vmap
-from nuclear_qmc.operators.operators import sigma
+from nuclear_qmc.operators.operators import sigma, tau_or_sigma
 from nuclear_qmc.utils.center_particles import center_particles
 from nuclear_qmc.utils.get_dr_ij import get_r_ij
 from nuclear_qmc.utils.get_particle_pairs_index import get_particle_pairs_index
@@ -36,6 +36,36 @@ def build_3b_jastro(func_3b, particle_pairs, particle_triplets):
         f_3b_ij = vmap(func_3b, in_axes=(None, 0))(in_params, r_ij)
         three_b_factors = vmap(one_minus_sum_f_ij_f_jk, in_axes=(None, 0))(f_3b_ij, triplet_cycles_for_all_triplets)
         psi = jnp.prod(three_b_factors)
+        return psi
+
+    return psi_function
+
+
+def build_spin_jastro(func_s, particle_pairs, spin, spin_exchange_indices, func_2b=None):
+    """Returns the spin-isospin vector. Set psi_vector for calculation to 1.0.
+
+    Parameters
+    ----------
+    func_s
+    particle_pairs
+    spin
+    spin_exchange_indices
+    func_2b
+
+    Returns
+    -------
+
+    """
+    if func_2b is None:
+        func_2b = lambda p, r: 1.0
+
+    def psi_function(in_params, in_r_coords):
+        r_ij = get_r_ij(in_r_coords, particle_pairs)
+        f_2b_ij = vmap(func_2b, in_axes=(None, 0))(in_params, r_ij)
+        f_s_ij = vmap(func_s, in_axes=(None, 0))(in_params, r_ij)
+        f_ratios = f_s_ij / f_2b_ij
+        sum_ij_sigma = tau_or_sigma(spin, spin_exchange_indices, f_ratios)
+        psi = (spin + sum_ij_sigma)
         return psi
 
     return psi_function
