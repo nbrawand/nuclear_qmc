@@ -1,42 +1,41 @@
 import jax.numpy as jnp
+from nuclear_qmc.utils.get_cyclic_permutations import get_cyclic_permutations
+from jax import vmap
 from nuclear_qmc.operators.operators import sigma
 from nuclear_qmc.utils.center_particles import center_particles
+from nuclear_qmc.utils.get_dr_ij import get_r_ij
+from nuclear_qmc.utils.get_particle_pairs_index import get_particle_pairs_index
 
 
-def get_exp_rij(params, r, particle_pairs):
-    r1 = r[particle_pairs[:, 0]]
-    r2 = r[particle_pairs[:, 1]]
-    dr = r1 - r2
-    dr = jnp.linalg.norm(dr, axis=1)
-    return jnp.exp(-params * dr)
-
-
-def build_jastro_wave_function(particle_pairs):
-    def psi_function(in_params, r_coords):
-        r_coords = center_particles(r_coords)
-        exp_rij = get_exp_rij(in_params, r_coords, particle_pairs)
-        psi = jnp.prod(exp_rij)
+def build_2b_jastro(func_2b, particle_pairs):
+    def psi_function(in_params, in_r_coords):
+        r_ij = get_r_ij(in_r_coords, particle_pairs)
+        f_2b_ij = vmap(func_2b, in_axes=(None, 0))(in_params, r_ij)
+        psi = jnp.prod(f_2b_ij)
         return psi
 
     return psi_function
 
 
-def build_jastro_wave_function_with_spin_correlations(particle_pairs, spin, spin_exchange_indices):
-    """return the following wave function:
-    \prod f_c_ij * (1.+\sum_ij f_sigma_ij / f_central_ij * sigma_ij) * spin"""
-    n_particle_pairs = len(particle_pairs)
+def build_3b_jastro(func_3b, particle_pairs, particle_triplets):
+    triplet_cycles_for_all_triplets = vmap(get_cyclic_permutations)(
+        particle_triplets)  # dims = [n_particle_triplets, 4, 3]
+    pairs_index = get_particle_pairs_index(particle_pairs)
 
-    def psi_function(in_params, r_coords):
-        r_coords = center_particles(r_coords)
-        central_params = in_params[:n_particle_pairs]
-        f_central_ij = get_exp_rij(central_params, r_coords, particle_pairs)
-        spin_correlation_params = in_params[n_particle_pairs:2 * n_particle_pairs]
-        f_spin_ij = get_exp_rij(spin_correlation_params, r_coords, particle_pairs)
-        f_central_product = jnp.prod(f_central_ij)
-        f_ratios = f_spin_ij / f_central_ij
-        # \sum_ij f_sigma_ij / f_central_ij * sigma_ij
-        sum_ij_sigma = sigma(lambda a, b: 1., None, spin, r_coords, spin_exchange_indices, f_ratios)
-        psi = f_central_product * (spin + sum_ij_sigma)
+    def f_ij_f_jk(f, triplet):
+        i, j, k = triplet
+        return f[pairs_index[i, j]] * f[pairs_index[j, k]]
+
+    def one_minus_sum_f_ij_f_jk(f, triplet_cycles):
+        terms = vmap(lambda triplet: f_ij_f_jk(f, triplet))(triplet_cycles)
+        result = jnp.sum(terms)
+        return 1.0 - result
+
+    def psi_function(in_params, in_r_coords):
+        r_ij = get_r_ij(in_r_coords, particle_pairs)
+        f_3b_ij = vmap(func_3b, in_axes=(None, 0))(in_params, r_ij)
+        three_b_factors = vmap(one_minus_sum_f_ij_f_jk, in_axes=(None, 0))(f_3b_ij, triplet_cycles_for_all_triplets)
+        psi = jnp.prod(three_b_factors)
         return psi
 
     return psi_function
