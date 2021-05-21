@@ -67,7 +67,7 @@ else:
         # create new file with name from input
         logging.info(f'creating wave function parameters file: {input_json["wave_function"]["wave_function_file"]}')
 
-logging.info('## VMC')
+logging.info('## Optimization')
 optimize_wave_function(
     input_json['n_proton']
     , input_json['n_neutron']
