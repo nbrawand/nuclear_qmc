@@ -1,0 +1,25 @@
+{
+  "n_proton": 1,
+  "n_neutron": 2,
+  "wave_function": {
+    "seed": 0,
+    "n_dense": 6,
+    "n_hidden_layers": 2,
+    "jastro_string": "2b+3b+spin",
+    "wave_function_file": "wave_function_parameters_0.npy"
+  },
+  "optimization": {
+    "seed": 0,
+    "n_dimensions": 3,
+    "n_blocks": 5,
+    "n_equilibrium_blocks": 5,
+    "n_walkers": 1800,
+    "n_void_steps": 200,
+    "walker_step_size": 0.2,
+    "initial_walker_standard_deviation": 1.0,
+    "n_optimization_steps": 1000000,
+    "learning_rate": 0.0001,
+    "epsilon_sr": 0.0001,
+    "print_local_energy": true
+  }
+}

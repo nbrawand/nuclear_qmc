@@ -2,35 +2,10 @@ from nuclear_qmc.operators.hamiltonian import get_local_energy
 import logging
 from jax import random
 from jax.lax import fori_loop
-import os
 import jax.numpy as jnp
 from jax import vmap
 from nuclear_qmc.sampling.sample import sample
 from nuclear_qmc.optimize.low_memory_optimize import get_delta_params
-
-
-def get_new_param_file_name(file_name, postfix_int):
-    """Return a new file name that doesn't exist in current directory.
-
-    Parameters
-    ----------
-    file_name: str
-        Proposed file name. If exists already then append `postfix_int` and check again. Return if doesn't exist.
-    postfix_int: int
-        Append to end of `file_name` if file already exists.
-
-    Returns
-    -------
-    file_name: str
-        A new file name that doesn't exist.
-
-    """
-    if os.path.isfile(file_name):
-        new_int = postfix_int + 1
-        file_name = file_name.replace(str(postfix_int), str(new_int))
-        return get_new_param_file_name(file_name, new_int)
-    else:
-        return file_name
 
 
 def get_local_energy_for_block(
@@ -88,9 +63,9 @@ def optimize_wave_function(
         , particle_pairs
         , particle_triplets
         , spin_exchange_indices
+        , psi_param_file
         , seed=0
         , n_dimensions=3
-        , psi_param_file=None
         , n_blocks=10
         , n_equilibrium_blocks=10
         , n_walkers=4000
@@ -159,12 +134,6 @@ def optimize_wave_function(
         saved to `psi_param_file`.
 
     """
-    # create new wave function parameter file if needed
-    if psi_param_file is None:
-        psi_param_file = 'wave_function_parameters_0.npy'
-        psi_param_file = get_new_param_file_name(psi_param_file, 0)
-        logging.info(f'saving wave function parameters to: {psi_param_file}')
-
     # begin optimization loop
     key = random.PRNGKey(seed)
     n_particles = n_proton + n_neutron
