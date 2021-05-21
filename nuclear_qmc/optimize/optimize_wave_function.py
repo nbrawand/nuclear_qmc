@@ -134,6 +134,8 @@ def optimize_wave_function(
         saved to `psi_param_file`.
 
     """
+    logging.info("Search String | Step | Energy | Error")
+    logging.info("------------- | ---- | ------ | -----")
     # begin optimization loop
     key = random.PRNGKey(seed)
     n_particles = n_proton + n_neutron
@@ -167,7 +169,7 @@ def optimize_wave_function(
             ddof = 1 if n_blocks > 1 else 0
             local_energy_error = jnp.std(local_energy_per_block, ddof=ddof)
             local_energy_error = local_energy_error / jnp.sqrt(n_blocks)
-            logging.info(f'optimization step, local energy, error: {n_opt}, {local_energy}, {local_energy_error}')
+            logging.info(f'optimization step | {n_opt} | {local_energy} | {local_energy_error}')
 
         # compute average wave function parameter update over each block
         def sum_delta_params(i, args):

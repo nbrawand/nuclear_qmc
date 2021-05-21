@@ -28,7 +28,9 @@ logging.info('# Nuclear QMC Run')
 logging.info('## Log File')
 logging.info(log_file)
 logging.info('## Input File')
+logging.info("```json")
 logging.info(json.dumps(input_json, indent=4, sort_keys=True))
+logging.info("```")
 
 logging.info('## Building Wave Function System')
 particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
