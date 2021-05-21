@@ -1,13 +1,13 @@
 import jax.numpy as jnp
 
 
-def combine_wave_functions(func_1, params_1, func_2, params_2):
+def combine_wave_functions(func_1, params_1, func_2, params_2, operator):
     split_index = len(params_1)
 
     def combined_psi_prefactor(combined_params, r_coords):
         f_1_r = func_1(combined_params[:split_index], r_coords)
         f_2_r = func_2(combined_params[split_index:], r_coords)
-        return f_1_r * f_2_r
+        return operator(f_1_r, f_2_r)
 
     combined_parameters = jnp.concatenate((params_1, params_2))
     return combined_psi_prefactor, combined_parameters

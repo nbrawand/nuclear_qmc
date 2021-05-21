@@ -1,4 +1,7 @@
 import jax
+from copy import deepcopy
+from operator import add, mul
+from collections import OrderedDict
 import jax.numpy as jnp
 from jax import random
 from jax.flatten_util import ravel_pytree
@@ -7,7 +10,7 @@ from jax.experimental.stax import Dense, Tanh
 import pickle
 
 from nuclear_qmc.wave_function.combine_wave_functions import combine_wave_functions
-from nuclear_qmc.wave_function.jastro import build_spin_jastro, build_3b_jastro, build_2b_jastro
+from nuclear_qmc.wave_function.jastro import build_sigma_jastro, build_3b_jastro, build_2b_jastro, build_tau_jastro
 from nuclear_qmc.wave_function.utility import apply_confining_potential
 
 
@@ -50,43 +53,74 @@ def build_jastro_nn(
         , particle_pairs
         , particle_triplets=None
         , spin_exchange_indices=None
+        , isospin_exchange_indices=None
         , n_dense=6
         , n_hidden_layers=2
         , jastro_string='2b+3b+spin'
 ):
+    jastro_string = jastro_string.replace('spin', 'sigma')
+
     # check for bad jastro type
     for s in jastro_string.split('+'):
-        if s not in ['2b', '3b', 'spin']:
+        if s not in ['2b', '3b', 'sigma', 'tau']:
             raise RuntimeError(s + ' not in supported jastro types')
 
     # default psi_vector
-    psi_vector = spin
+    if 'sigma' in jastro_string or 'tau' in jastro_string:
+        psi_vector = 1.0
+    else:
+        psi_vector = spin
 
     # build all functions and parameters
-    functions = []
-    params = []
+    functions = OrderedDict()
+    params = OrderedDict()
     if '2b' in jastro_string:
         key, nn_2b, b2_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
         func_2b = lambda p, r_ij: jnp.exp(nn_2b(p, r_ij))
-        params.append(b2_params)
-        functions.append(build_2b_jastro(func_2b, particle_pairs))
+        params['2b'] = b2_params
+        functions['2b'] = build_2b_jastro(func_2b, particle_pairs)
+
     if '3b' in jastro_string:
         key, nn_3b, b3_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
         func_3b = lambda p, r_ij: jnp.exp(nn_3b(p, r_ij))
-        params.append(b3_params)
-        functions.append(build_3b_jastro(func_3b, particle_pairs, particle_triplets))
-    if 'spin' in jastro_string:
+        params['3b'] = b3_params
+        functions['3b'] = build_3b_jastro(func_3b, particle_pairs, particle_triplets)
+
+    if 'sigma' in jastro_string and 'tau' in jastro_string:
+        # sigma
         key, nn_s, s_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
         func_s = lambda p, r_ij: jnp.tanh(nn_s(p, r_ij))
-        functions.append(build_spin_jastro(func_s, particle_pairs, spin, spin_exchange_indices))
-        params.append(s_params)
-        psi_vector = 1.0
+        jastro_s_func = build_sigma_jastro(func_s, particle_pairs, spin, spin_exchange_indices)
 
-    # combine functions and params
-    psi = functions.pop(0)
-    psi_parameters = params.pop(0)
-    for func, param in zip(functions, params):
-        psi, psi_parameters = combine_wave_functions(psi, psi_parameters, func, param)
+        # tau
+        key, nn_t, t_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
+        func_t = lambda p, r_ij: jnp.tanh(nn_t(p, r_ij))
+        jastro_t_func = build_tau_jastro(func_t, particle_pairs, spin, isospin_exchange_indices)
+
+        # combine
+        sigma_tau_func, sigma_tau_params = combine_wave_functions(jastro_s_func, s_params, jastro_t_func, t_params, add)
+        functions['spin_sigma_tau'] = lambda p, r: spin + sigma_tau_func(p, r)
+        params['spin_sigma_tau'] = sigma_tau_params
+    elif 'sigma' in jastro_string:
+        key, nn_s, s_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
+        func_s = lambda p, r_ij: jnp.tanh(nn_s(p, r_ij))
+        jastro_s_func = build_sigma_jastro(func_s, particle_pairs, spin, spin_exchange_indices)
+        fun = lambda p, r: spin + jastro_s_func(p, r)
+        functions['sigma'] = fun
+        params['sigma'] = s_params
+    elif 'tau' in jastro_string:
+        key, nn_t, t_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
+        func_t = lambda p, r_ij: jnp.tanh(nn_t(p, r_ij))
+        jastro_t_func = build_tau_jastro(func_t, particle_pairs, spin, isospin_exchange_indices)
+        fun = lambda p, r: spin + jastro_t_func(p, r)
+        functions['tau'] = fun
+        params['tau'] = t_params
+
+    # combine functions using product
+    _, psi = functions.popitem(last=False)
+    _, psi_parameters = params.popitem(last=False)
+    for func, param in zip(functions.values(), params.values()):
+        psi, psi_parameters = combine_wave_functions(psi, psi_parameters, func, param, mul)
 
     confined_psi = lambda p, r: psi(p, r) * apply_confining_potential(r)
 
