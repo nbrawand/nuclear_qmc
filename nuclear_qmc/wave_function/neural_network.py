@@ -8,6 +8,7 @@ import pickle
 
 from nuclear_qmc.wave_function.combine_wave_functions import combine_wave_functions
 from nuclear_qmc.wave_function.jastro import build_spin_jastro, build_3b_jastro, build_2b_jastro
+from nuclear_qmc.wave_function.utility import apply_confining_potential
 
 
 def load_params(params_file_name):
@@ -87,4 +88,6 @@ def build_jastro_nn(
     for func, param in zip(functions, params):
         psi, psi_parameters = combine_wave_functions(psi, psi_parameters, func, param)
 
-    return key, psi, psi_parameters, psi_vector
+    confined_psi = lambda p, r: psi(p, r) * apply_confining_potential(r)
+
+    return key, confined_psi, psi_parameters, psi_vector
