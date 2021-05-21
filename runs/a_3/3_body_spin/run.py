@@ -1,7 +1,7 @@
 from jax.config import config
 import jax.numpy as jnp
 from nuclear_qmc.optimize.optimize_wave_function import optimize_wave_function
-from nuclear_qmc.wave_function.jastro_neural_network_spin_correlations import build_jastro_nn_2_and_3_body_with_spin
+from nuclear_qmc.wave_function.neural_network import build_jastro_nn
 from nuclear_qmc.wave_function.wave_function import get_wave_function_system
 import os
 from jax import random
@@ -16,21 +16,19 @@ particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange
     n_proton
     , n_neutron)
 key = random.PRNGKey(0)
-n_dense = 6
+key, psi_prefactor, psi_params, psi_vector = build_jastro_nn(
+    key
+    , spin
+    , particle_pairs
+    , particle_triplets=particle_triplets
+    , spin_exchange_indices=spin_exchange_indices
+    , n_dense=6
+    , n_hidden_layers=2
+    , jastro_string='2b+3b+spin'
+)
 script_dir = os.path.dirname(os.path.realpath(__file__))
 psi_param_file = os.path.join(script_dir, 'wave_function_parameters_0.npy')
-n_hidden_layers = 2
-key, psi_prefactor, psi_params = build_jastro_nn_2_and_3_body_with_spin(
-    key
-    , n_dense
-    , particle_pairs
-    , particle_triplets
-    , spin
-    , spin_exchange_indices
-    , n_hidden_layers=n_hidden_layers
-)
-psi_vector = 1.
-psi_params = jnp.load(psi_param_file)
+# psi_params = jnp.load(psi_param_file)
 _, params = optimize_wave_function(
     n_proton
     , n_neutron
@@ -43,8 +41,8 @@ _, params = optimize_wave_function(
     , seed=0
     , n_dimensions=3
     , psi_param_file=psi_param_file
-    , n_blocks=10
-    , n_equilibrium_blocks=15
+    , n_blocks=5
+    , n_equilibrium_blocks=5
     , n_walkers=1800
     , n_void_steps=200
     , walker_step_size=0.2

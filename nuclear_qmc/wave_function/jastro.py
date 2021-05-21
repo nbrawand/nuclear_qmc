@@ -41,7 +41,7 @@ def build_3b_jastro(func_3b, particle_pairs, particle_triplets):
     return psi_function
 
 
-def build_spin_jastro(func_s, particle_pairs, spin, spin_exchange_indices, func_2b=None):
+def build_spin_jastro(func_s, particle_pairs, spin, spin_exchange_indices):
     """Returns the spin-isospin vector. Set psi_vector for calculation to 1.0.
 
     Parameters
@@ -56,15 +56,11 @@ def build_spin_jastro(func_s, particle_pairs, spin, spin_exchange_indices, func_
     -------
 
     """
-    if func_2b is None:
-        func_2b = lambda p, r: 1.0
 
     def psi_function(in_params, in_r_coords):
         r_ij = get_r_ij(in_r_coords, particle_pairs)
-        f_2b_ij = vmap(func_2b, in_axes=(None, 0))(in_params, r_ij)
         f_s_ij = vmap(func_s, in_axes=(None, 0))(in_params, r_ij)
-        f_ratios = f_s_ij / f_2b_ij
-        sum_ij_sigma = tau_or_sigma(spin, spin_exchange_indices, f_ratios)
+        sum_ij_sigma = tau_or_sigma(spin, spin_exchange_indices, f_s_ij)
         psi = (spin + sum_ij_sigma)
         return psi
 
