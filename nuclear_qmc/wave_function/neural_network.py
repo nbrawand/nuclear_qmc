@@ -65,18 +65,18 @@ def build_jastro_nn(
     functions = []
     params = []
     if '2b' in jastro_string:
-        key, func_2b, b2_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
-        func_2b = lambda p, r_ij: jnp.exp(func_2b(p, r_ij))
+        key, nn_2b, b2_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
+        func_2b = lambda p, r_ij: jnp.exp(nn_2b(p, r_ij))
         params.append(b2_params)
         functions.append(build_2b_jastro(func_2b, particle_pairs))
     if '3b' in jastro_string:
-        key, func_3b, b3_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
-        func_3b = lambda p, r_ij: jnp.exp(func_3b(p, r_ij))
+        key, nn_3b, b3_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
+        func_3b = lambda p, r_ij: jnp.exp(nn_3b(p, r_ij))
         params.append(b3_params)
         functions.append(build_3b_jastro(func_3b, particle_pairs, particle_triplets))
     if 'spin' in jastro_string:
-        key, func_s, s_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
-        func_s = lambda p, r_ij: jnp.tanh(func_s(p, r_ij))
+        key, nn_s, s_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
+        func_s = lambda p, r_ij: jnp.tanh(nn_s(p, r_ij))
         functions.append(build_spin_jastro(func_s, particle_pairs, spin, spin_exchange_indices))
         params.append(s_params)
         psi_vector = 1.0
