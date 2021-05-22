@@ -5,7 +5,7 @@
     "seed": 0,
     "n_dense": 6,
     "n_hidden_layers": 2,
-    "jastro_string": "2b+3b+spin+tau",
+    "jastro_string": "2b+3b+tau",
     "wave_function_file": "wave_function_parameters_0.npy"
   },
   "optimization": {

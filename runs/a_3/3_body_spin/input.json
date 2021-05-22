@@ -13,7 +13,7 @@
     "n_dimensions": 3,
     "n_blocks": 5,
     "n_equilibrium_blocks": 5,
-    "n_walkers": 1800,
+    "n_walkers": 2000,
     "n_void_steps": 200,
     "walker_step_size": 0.2,
     "initial_walker_standard_deviation": 1.0,
