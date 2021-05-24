@@ -1,7 +1,8 @@
 import jax.numpy as jnp
+from nuclear_qmc.wave_function.wave_function import get_wave_function_system
 
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
-from nuclear_qmc.operators.operators import tau_or_sigma, kinetic_energy_psi
+from nuclear_qmc.operators.operators import tau_or_sigma, kinetic_energy_psi, tau_psi_r
 
 
 class TestOperators:
@@ -34,8 +35,18 @@ class TestOperators:
         n_particles = 2
         n_dims = 3
         ke_psi = - H_BAR_SQRD_OVER_2_M * grad_psi * n_particles * n_dims
-        psi_r = psi(r_coords, params)*spin
+        psi_r = psi(r_coords, params) * spin
         expected = jnp.dot(psi_r, ke_psi)
-        computed = kinetic_energy_psi(psi, params, r_coords)*spin
+        computed = kinetic_energy_psi(psi, params, r_coords) * spin
         computed = jnp.dot(psi_r, computed)
         assert expected == computed
+
+    def test_tau_single_exchange(self):
+        particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+            1, 2)
+        pairs = jnp.array([0, 1, 2])
+        computed = tau_psi_r(spin, isospin_exchange_indices, pairs)
+        expected = jnp.array([[0., -2., 1., 0., 1., 0., 0., 0.],
+                              [0., -5., 4., 0., 1., 0., 0., 0.],
+                              [0., 7., -5., 0., -2., 0., 0., 0.]], dtype=jnp.float64)
+        assert jnp.array_equal(expected, computed)

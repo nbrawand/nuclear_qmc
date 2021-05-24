@@ -136,3 +136,31 @@ def tau_or_sigma(psi_r, exchange_indices, pair_coefficients):
     psi_r_prime *= pair_coefficients
     psi_r_prime = psi_r_prime.sum(-1)
     return psi_r_prime
+
+
+def tau_psi_r(psi_r, exchange_indices, pair_coefficients):
+    """
+
+    Parameters
+    ----------
+    psi_r: ndarray
+        The wave function evaluated at R.
+    exchange_indices: ndarray
+        2D array containing the indices after applying :math:`\\sigma_{ij}` or :math:`\\tau_{ij}`
+        denoted :math:`O_{ij}` to the wave function.
+    pair_coefficients: ndarray
+        Coefficients :math:`c_{ij}` for each exchange operator.
+
+    Returns
+    -------
+    ndarray
+        [spin_isospin] :math:`\\sum_{i<j} c_{ij} \\O_{ij} |\\Psi(R)\\rangle.
+
+    """
+    exchanged_psi_r = psi_r[exchange_indices]  # [n_isospin, n_spin, n_pair_exchanges]
+    psi_r = jnp.expand_dims(psi_r, 1)  # [n_isospin, n_spin, 1]
+    psi_r_prime = 2.0 * exchanged_psi_r - psi_r
+    pair_coefficients = pair_coefficients.reshape(-1, 1)
+    psi_r_prime *= pair_coefficients
+    psi_r_prime = psi_r_prime.sum(1)
+    return psi_r_prime
