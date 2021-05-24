@@ -2,7 +2,7 @@ import jax.numpy as jnp
 from nuclear_qmc.wave_function.wave_function import get_wave_function_system
 
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
-from nuclear_qmc.operators.operators import tau_or_sigma, kinetic_energy_psi, tau_psi_r
+from nuclear_qmc.operators.operators import sigma_psi_r, kinetic_energy_psi, tau_psi_r
 
 
 class TestOperators:
@@ -13,7 +13,7 @@ class TestOperators:
         expected = jnp.array([[6., 1., 2., -3.],
                               [10., 5., 6., 1.],
                               [14., 9., 10., 5.]])
-        computed = tau_or_sigma(wfc, xi, pair_coefs)
+        computed = sigma_psi_r(wfc, xi, pair_coefs)
         assert jnp.array_equal(expected, computed)
 
     def test_tau_sigma_single_exchange(self):
@@ -23,7 +23,7 @@ class TestOperators:
         expected = jnp.array([[0., 3., 0., 3.],
                               [4., 7., 4., 7.],
                               [8., 11., 8., 11.]])
-        computed = tau_or_sigma(wfc, xi, pair_coefs)
+        computed = sigma_psi_r(wfc, xi, pair_coefs)
         assert jnp.array_equal(expected, computed)
 
     def test_kinetic_energy_base_wfc(self):

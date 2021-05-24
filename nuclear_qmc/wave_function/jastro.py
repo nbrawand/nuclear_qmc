@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from nuclear_qmc.utils.get_cyclic_permutations import get_cyclic_permutations
 from jax import vmap
-from nuclear_qmc.operators.operators import sigma, tau_or_sigma
+from nuclear_qmc.operators.operators import sigma, sigma_psi_r, tau_psi_r
 from nuclear_qmc.utils.center_particles import center_particles
 from nuclear_qmc.utils.get_dr_ij import get_r_ij
 from nuclear_qmc.utils.get_particle_pairs_index import get_particle_pairs_index
@@ -60,7 +60,7 @@ def build_sigma_jastro(func_s, particle_pairs, spin, spin_exchange_indices):
     def psi_function(in_params, in_r_coords):
         r_ij = get_r_ij(in_r_coords, particle_pairs)
         f_s_ij = vmap(func_s, in_axes=(None, 0))(in_params, r_ij)
-        sum_ij_sigma = tau_or_sigma(spin, spin_exchange_indices, f_s_ij)
+        sum_ij_sigma = sigma_psi_r(spin, spin_exchange_indices, f_s_ij)
         return sum_ij_sigma
 
     return psi_function
@@ -85,7 +85,7 @@ def build_tau_jastro(func_tau, particle_pairs, spin, isospin_exchange_indices):
     def psi_function(in_params, in_r_coords):
         r_ij = get_r_ij(in_r_coords, particle_pairs)
         f_tau_ij = vmap(func_tau, in_axes=(None, 0))(in_params, r_ij)
-        sum_ij_tau = tau_or_sigma(spin.T, isospin_exchange_indices, f_tau_ij).T
+        sum_ij_tau = tau_psi_r(spin, isospin_exchange_indices, f_tau_ij)
         return sum_ij_tau
 
     return psi_function

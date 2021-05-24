@@ -56,7 +56,7 @@ def kinetic_energy_psi(psi, psi_params, r_coords):
 
 
 def tau(psi, psi_params, psi_vector, r_coords, iso_spin_exchange_indices, pair_coefficients):
-    """
+    """Evaluate sum_ij tau_ij on psi_r first evaluate psi_r using vector and psi
 
     Parameters
     ----------
@@ -80,11 +80,11 @@ def tau(psi, psi_params, psi_vector, r_coords, iso_spin_exchange_indices, pair_c
 
     """
     psi_r = psi(psi_params, r_coords) * psi_vector
-    return tau_or_sigma(psi_r.T, iso_spin_exchange_indices, pair_coefficients).T
+    return tau_psi_r(psi_r, iso_spin_exchange_indices, pair_coefficients)
 
 
 def sigma(psi, psi_params, psi_vector, r_coords, spin_exchange_indices, pair_coefficients):
-    """
+    """Evaluate sum_ij sigma_ij on psi_r first evaluate psi_r using vector and psi
 
     Parameters
     ----------
@@ -108,11 +108,11 @@ def sigma(psi, psi_params, psi_vector, r_coords, spin_exchange_indices, pair_coe
 
     """
     psi_r = psi(psi_params, r_coords) * psi_vector
-    return tau_or_sigma(psi_r, spin_exchange_indices, pair_coefficients)
+    return sigma_psi_r(psi_r, spin_exchange_indices, pair_coefficients)
 
 
-def tau_or_sigma(psi_r, exchange_indices, pair_coefficients):
-    """
+def sigma_psi_r(psi_r, exchange_indices, pair_coefficients):
+    """Evaluate sum_ij sigma_ij on psi_r
 
     Parameters
     ----------
@@ -139,7 +139,7 @@ def tau_or_sigma(psi_r, exchange_indices, pair_coefficients):
 
 
 def tau_psi_r(psi_r, exchange_indices, pair_coefficients):
-    """
+    """Evaluate sum_ij tau_ij on psi_r
 
     Parameters
     ----------
