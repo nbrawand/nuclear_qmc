@@ -14,6 +14,14 @@ from nuclear_qmc.wave_function.jastro import build_sigma_jastro, build_3b_jastro
 from nuclear_qmc.wave_function.utility import apply_confining_potential
 
 
+def build_nn_spin_or_isospin_correlation(key, n_dense, n_hidden_layers, particle_pairs, spin, exchange_indices,
+                                         build_function):
+    key, nn, params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
+    func = lambda p, r_ij: jnp.tanh(nn(p, r_ij))
+    jastro_s_func = build_function(func, particle_pairs, spin, exchange_indices)
+    return key, jastro_s_func, params
+
+
 def load_params(params_file_name):
     with open(params_file_name, 'rb') as fil:
         return pickle.load(fil)
@@ -56,12 +64,13 @@ def build_jastro_nn(
         , isospin_exchange_indices=None
         , n_dense=6
         , n_hidden_layers=2
-        , jastro_string='2b+3b+spin'
+        , jastro_string='2b'
 ):
     jastro_string = jastro_string.replace('spin', 'sigma')
 
     # check for bad jastro type
-    for s in jastro_string.split('+'):
+    jastro_string = jastro_string.split('+')
+    for s in jastro_string:
         if s not in ['2b', '3b', 'sigma', 'tau']:
             raise RuntimeError(s + ' not in supported jastro types')
 
@@ -93,32 +102,48 @@ def build_jastro_nn(
         params['3b'] = b3_params
         functions['3b'] = build_3b_jastro(func_3b, particle_pairs, particle_triplets)
 
+    if 'sigma_tau' in jastro_string:
+        key, jastro_s_func, s_params = build_nn_spin_or_isospin_correlation(key, n_dense, n_hidden_layers,
+                                                                            particle_pairs, spin,
+                                                                            spin_exchange_indices,
+                                                                            build_sigma_jastro)
+        key, jastro_t_func, t_params = build_nn_spin_or_isospin_correlation(key, n_dense, n_hidden_layers,
+                                                                            particle_pairs, spin,
+                                                                            isospin_exchange_indices,
+                                                                            build_tau_jastro)
+        split_indx = len(s_params)
+        functions['spin_sigma_tau'] = lambda p, r: spin + jastro_s_func(p[:split_indx]
+                                                                        , jastro_t_func(p[split_indx:], r))
+        params['spin_sigma_tau'] = jnp.concatenate((s_params, t_params))
+
     if 'sigma' in jastro_string and 'tau' in jastro_string:
         # sigma
-        key, nn_s, s_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
-        func_s = lambda p, r_ij: jnp.tanh(nn_s(p, r_ij))
-        jastro_s_func = build_sigma_jastro(func_s, particle_pairs, spin, spin_exchange_indices)
-
+        key, jastro_s_func, s_params = build_nn_spin_or_isospin_correlation(key, n_dense, n_hidden_layers,
+                                                                            particle_pairs, spin,
+                                                                            spin_exchange_indices,
+                                                                            build_sigma_jastro)
         # tau
-        key, nn_t, t_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
-        func_t = lambda p, r_ij: jnp.tanh(nn_t(p, r_ij))
-        jastro_t_func = build_tau_jastro(func_t, particle_pairs, spin, isospin_exchange_indices)
-
+        key, jastro_t_func, t_params = build_nn_spin_or_isospin_correlation(key, n_dense, n_hidden_layers,
+                                                                            particle_pairs, spin,
+                                                                            isospin_exchange_indices,
+                                                                            build_tau_jastro)
         # combine
         sigma_tau_func, sigma_tau_params = combine_wave_functions(jastro_s_func, s_params, jastro_t_func, t_params, add)
-        functions['spin_sigma_tau'] = lambda p, r: spin + sigma_tau_func(p, r)
-        params['spin_sigma_tau'] = sigma_tau_params
+        functions['spin_sigma_plus_tau'] = lambda p, r: spin + sigma_tau_func(p, r)
+        params['spin_sigma_plus_tau'] = sigma_tau_params
     elif 'sigma' in jastro_string:
-        key, nn_s, s_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
-        func_s = lambda p, r_ij: jnp.tanh(nn_s(p, r_ij))
-        jastro_s_func = build_sigma_jastro(func_s, particle_pairs, spin, spin_exchange_indices)
+        key, jastro_s_func, s_params = build_nn_spin_or_isospin_correlation(key, n_dense, n_hidden_layers,
+                                                                            particle_pairs, spin,
+                                                                            spin_exchange_indices,
+                                                                            build_sigma_jastro)
         fun = lambda p, r: spin + jastro_s_func(p, r)
         functions['sigma'] = fun
         params['sigma'] = s_params
     elif 'tau' in jastro_string:
-        key, nn_t, t_params = build_nn_wfc(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
-        func_t = lambda p, r_ij: jnp.tanh(nn_t(p, r_ij))
-        jastro_t_func = build_tau_jastro(func_t, particle_pairs, spin, isospin_exchange_indices)
+        key, jastro_t_func, t_params = build_nn_spin_or_isospin_correlation(key, n_dense, n_hidden_layers,
+                                                                            particle_pairs, spin,
+                                                                            isospin_exchange_indices,
+                                                                            build_tau_jastro)
         fun = lambda p, r: spin + jastro_t_func(p, r)
         functions['tau'] = fun
         params['tau'] = t_params
