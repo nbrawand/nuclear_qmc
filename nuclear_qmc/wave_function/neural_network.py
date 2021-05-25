@@ -71,7 +71,7 @@ def build_jastro_nn(
     # check for bad jastro type
     jastro_string = jastro_string.split('+')
     for s in jastro_string:
-        if s not in ['2b', '3b', 'sigma', 'tau']:
+        if s not in ['2b', '3b', 'sigma', 'tau', 'sigma_tau']:
             raise RuntimeError(s + ' not in supported jastro types')
 
     if 'tau' in jastro_string and isospin_exchange_indices is None:
