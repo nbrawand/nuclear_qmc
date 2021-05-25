@@ -65,6 +65,13 @@ def build_jastro_nn(
         if s not in ['2b', '3b', 'sigma', 'tau']:
             raise RuntimeError(s + ' not in supported jastro types')
 
+    if 'tau' in jastro_string and isospin_exchange_indices is None:
+        raise RuntimeError(f'{jastro_string} requires isospin exchange indices not None.')
+    if '3b' in jastro_string and particle_triplets is None:
+        raise RuntimeError(f'{jastro_string} requires particle triplets not None.')
+    if 'sigma' in jastro_string and spin_exchange_indices is None:
+        raise RuntimeError(f'{jastro_string} requires spin exchange indices not None.')
+
     # default psi_vector
     if 'sigma' in jastro_string or 'tau' in jastro_string:
         psi_vector = 1.0
