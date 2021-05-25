@@ -42,6 +42,7 @@ key, psi_prefactor, psi_params, psi_vector = build_jastro_nn(
     , particle_pairs
     , particle_triplets=particle_triplets
     , spin_exchange_indices=spin_exchange_indices
+    , isospin_exchange_indices=isospin_exchange_indices
     , n_dense=input_json['wave_function']['n_dense']
     , n_hidden_layers=input_json['wave_function']['n_hidden_layers']
     , jastro_string=input_json['wave_function']['jastro_string']
