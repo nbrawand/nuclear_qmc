@@ -82,7 +82,7 @@ def build_jastro_nn(
         raise RuntimeError(f'{jastro_string} requires spin exchange indices not None.')
 
     # default psi_vector
-    if 'sigma' in jastro_string or 'tau' in jastro_string:
+    if 'sigma' in jastro_string or 'tau' in jastro_string or 'sigma_tau' in jastro_string:
         psi_vector = 1.0
     else:
         psi_vector = spin
