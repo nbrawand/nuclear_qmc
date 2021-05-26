@@ -6,7 +6,7 @@ from nuclear_qmc.operators.operators import sigma_psi_r, kinetic_energy_psi, tau
 
 
 class TestOperators:
-    def test_tau_sigma(self):
+    def test_sigma_r(self):
         wfc = jnp.array([[0., 1., 2., 3], [4., 5, 6, 7], [8, 9, 10, 11]])  # 4 spin states, 3 isospin states
         xi = jnp.array([[0, 2, 1, 3], [3, 1, 2, 0]]).T  # 2 pair exchanges
         pair_coefs = jnp.array([0, 1])
@@ -16,7 +16,7 @@ class TestOperators:
         computed = sigma_psi_r(wfc, xi, pair_coefs)
         assert jnp.array_equal(expected, computed)
 
-    def test_tau_sigma_single_exchange(self):
+    def test_sigma_r_single_exchange(self):
         wfc = jnp.array([[0., 1., 2., 3], [4., 5, 6, 7], [8, 9, 10, 11]])  # 4 spin states, 3 isospin states
         xi = jnp.array([[0, 2, 1, 3]]).T  # 1 pair exchange
         pair_coefs = 1
@@ -41,7 +41,7 @@ class TestOperators:
         computed = jnp.dot(psi_r, computed)
         assert expected == computed
 
-    def test_tau_single_exchange(self):
+    def test_tau_r(self):
         particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
             1, 2)
         pairs = jnp.array([0, 1, 2])
@@ -52,8 +52,10 @@ class TestOperators:
         assert jnp.array_equal(expected, computed)
 
     def test_sigma_tau_psi_r(self):
-        particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+        particle_pairs, particle_triplets, spin, spin_xi, iso_xi = get_wave_function_system(
             1, 2)
         pairs = jnp.array([0, 1, 2])
-        computed = sigma_tau_psi_r(spin, spin_exchange_indices, isospin_exchange_indices, pairs)
-        print(computed)
+        computed = sigma_tau_psi_r(spin, spin_xi, iso_xi, pairs)
+        tau_ij = jnp.array([tau_psi_r(spin, iso_xi[:, i], pairs[i]) for i in range(3)])
+        expected = jnp.array([sigma_psi_r(tau_ij[i], spin_xi[:, i].reshape(-1, 1), 1) for i in range(3)]).sum(axis=0)
+        assert jnp.array_equal(computed, expected)
