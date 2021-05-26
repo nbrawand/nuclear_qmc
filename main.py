@@ -3,7 +3,7 @@ import jax.numpy as jnp
 import json
 from nuclear_qmc.optimize.optimize_wave_function import optimize_wave_function
 from nuclear_qmc.utils.get_new_file_name import get_new_file_name
-from nuclear_qmc.wave_function.neural_network import build_jastro_nn
+from nuclear_qmc.wave_function.jastro_neural_network_builder.neural_network import build_jastro_nn
 from nuclear_qmc.wave_function.utility import get_wave_function_system
 import os
 from jax import random
@@ -36,7 +36,7 @@ logging.info('## Building Wave Function System')
 particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
     input_json['n_proton'], input_json['n_neutron'])
 key = random.PRNGKey(input_json['wave_function']['seed'])
-key, psi_prefactor, psi_params, psi_vector = build_jastro_nn(
+key, psi_prefactor, psi_params, psi_vector, psi_expression = build_jastro_nn(
     key
     , spin
     , particle_pairs
@@ -45,8 +45,9 @@ key, psi_prefactor, psi_params, psi_vector = build_jastro_nn(
     , isospin_exchange_indices=isospin_exchange_indices
     , n_dense=input_json['wave_function']['n_dense']
     , n_hidden_layers=input_json['wave_function']['n_hidden_layers']
-    , jastro_string=input_json['wave_function']['jastro_string']
+    , jastro_list=input_json['wave_function']['jastro_list']
 )
+logging.info(f'Wave Function Expression: {psi_expression}')
 
 logging.info('## Wave Function Parameters')
 if 'wave_function_file' not in input_json['wave_function']:
