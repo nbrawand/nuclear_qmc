@@ -1,6 +1,6 @@
 import jax
 from jax import vmap
-from nuclear_qmc.wave_function.wave_function import get_psi_r
+from nuclear_qmc.wave_function.utility import get_psi_r
 import jax.numpy as jnp
 from functools import partial
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M

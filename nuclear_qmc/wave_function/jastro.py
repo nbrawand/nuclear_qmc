@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 from nuclear_qmc.utils.get_cyclic_permutations import get_cyclic_permutations
-from jax import vmap
+from jax import vmap, numpy as jnp
 from nuclear_qmc.operators.operators import sigma, sigma_psi_r, tau_psi_r, sigma_tau_psi_r
 from nuclear_qmc.utils.center_particles import center_particles
 from nuclear_qmc.utils.get_dr_ij import get_r_ij
@@ -114,3 +114,14 @@ def build_sigma_tau_jastro(func_sigma_tau, particle_pairs, spin, spin_exchange_i
         return sum_ij_tau
 
     return psi_function
+
+
+def exponential_jastro(params, r_coords):
+    rcm = jnp.mean(r_coords, axis=0)
+    r = r_coords - rcm[None, :]
+    n_particles = r.shape[0]
+    delta_r = 0
+    for i in range(n_particles):
+        for j in range(i):
+            delta_r += jnp.linalg.norm(r[i, :] - r[j, :])
+    return jnp.exp(- delta_r / params[0])

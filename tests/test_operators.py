@@ -1,5 +1,5 @@
 import jax.numpy as jnp
-from nuclear_qmc.wave_function.wave_function import get_wave_function_system
+from nuclear_qmc.wave_function.utility import get_wave_function_system
 
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
 from nuclear_qmc.operators.operators import sigma_psi_r, kinetic_energy_psi, tau_psi_r, sigma_tau_psi_r

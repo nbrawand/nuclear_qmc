@@ -2,9 +2,9 @@ from jax.config import config
 import jax.numpy as jnp
 from jax import random, vmap
 from nuclear_qmc.operators.hamiltonian import get_local_energy
-from nuclear_qmc.wave_function.test_neural_network import build_test_nn_wfc
+from nuclear_qmc.wave_function.legacy_wave_function_for_testing.test_neural_network import build_test_nn_wfc
 from nuclear_qmc.sampling.sample import sample
-from nuclear_qmc.wave_function.wave_function import get_wave_function_system
+from nuclear_qmc.wave_function.utility import get_wave_function_system
 
 config.update("jax_enable_x64", True)
 

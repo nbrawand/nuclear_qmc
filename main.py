@@ -4,7 +4,7 @@ import json
 from nuclear_qmc.optimize.optimize_wave_function import optimize_wave_function
 from nuclear_qmc.utils.get_new_file_name import get_new_file_name
 from nuclear_qmc.wave_function.neural_network import build_jastro_nn
-from nuclear_qmc.wave_function.wave_function import get_wave_function_system
+from nuclear_qmc.wave_function.utility import get_wave_function_system
 import os
 from jax import random
 import logging
