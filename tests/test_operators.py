@@ -2,7 +2,7 @@ import jax.numpy as jnp
 from nuclear_qmc.wave_function.wave_function import get_wave_function_system
 
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
-from nuclear_qmc.operators.operators import sigma_psi_r, kinetic_energy_psi, tau_psi_r
+from nuclear_qmc.operators.operators import sigma_psi_r, kinetic_energy_psi, tau_psi_r, sigma_tau_psi_r
 
 
 class TestOperators:
@@ -50,3 +50,10 @@ class TestOperators:
                               [0., -5., 4., 0., 1., 0., 0., 0.],
                               [0., 7., -5., 0., -2., 0., 0., 0.]], dtype=jnp.float64)
         assert jnp.array_equal(expected, computed)
+
+    def test_sigma_tau_psi_r(self):
+        particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+            1, 2)
+        pairs = jnp.array([0, 1, 2])
+        computed = sigma_tau_psi_r(spin, spin_exchange_indices, isospin_exchange_indices, pairs)
+        print(computed)

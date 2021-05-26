@@ -1,4 +1,6 @@
 import jax
+from jax import vmap
+from nuclear_qmc.wave_function.wave_function import get_psi_r
 import jax.numpy as jnp
 from functools import partial
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
@@ -79,7 +81,7 @@ def tau(psi, psi_params, psi_vector, r_coords, iso_spin_exchange_indices, pair_c
         [spin_isospin] :math:`\\sum_{i<j} c_{ij} \\tau_{ij} |\\Psi(R)\\rangle.
 
     """
-    psi_r = psi(psi_params, r_coords) * psi_vector
+    psi_r = get_psi_r(psi, psi_params, r_coords, psi_vector)
     return tau_psi_r(psi_r, iso_spin_exchange_indices, pair_coefficients)
 
 
@@ -107,7 +109,7 @@ def sigma(psi, psi_params, psi_vector, r_coords, spin_exchange_indices, pair_coe
         [spin_isospin] :math:`\\sum_{i<j} c_{ij} \\simga_{ij} |\\Psi(R)\\rangle.
 
     """
-    psi_r = psi(psi_params, r_coords) * psi_vector
+    psi_r = get_psi_r(psi, psi_params, r_coords, psi_vector)
     return sigma_psi_r(psi_r, spin_exchange_indices, pair_coefficients)
 
 
@@ -164,3 +166,10 @@ def tau_psi_r(psi_r, exchange_indices, pair_coefficients):
     psi_r_prime *= pair_coefficients
     psi_r_prime = psi_r_prime.sum(1)
     return psi_r_prime
+
+
+def sigma_tau_psi_r(psi_r, spin_exchange_indices, isospin_exchange_indices, pair_coefficients):
+    tau_ij = vmap(tau_psi_r, in_axes=(None, 1, 0))(psi_r, isospin_exchange_indices, pair_coefficients)
+    sigma_tau_ij = vmap(sigma_psi_r, in_axes=(0, 1, None))(tau_ij, jnp.expand_dims(spin_exchange_indices, -1), 1)
+    sum_sigma_tau_ij = sigma_tau_ij.sum(axis=0)
+    return sum_sigma_tau_ij

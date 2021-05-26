@@ -19,3 +19,9 @@ def get_wave_function_system(n_protons, n_neutrons, dtype=jnp.float64, as_jax_ar
                                                           , as_jax_array
                                                           , also_return_binary_representation=False)
     return particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices
+
+
+def get_psi_r(psi_prefactor, psi_parameters, r_coords, psi_vector):
+    psi_r = psi_prefactor(psi_parameters, r_coords)
+    psi_r *= psi_vector
+    return psi_r
