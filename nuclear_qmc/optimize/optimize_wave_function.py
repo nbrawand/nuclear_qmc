@@ -1,4 +1,4 @@
-from nuclear_qmc.operators.hamiltonian import get_local_energy
+from nuclear_qmc.operators.hamiltonian.get_local_energy import get_local_energy
 import logging
 from jax import random
 from jax.lax import fori_loop
@@ -13,9 +13,7 @@ def get_local_energy_for_block(
         , psi_params
         , psi_vector
         , r_coords_for_block
-        , particle_pairs
-        , particle_triplets
-        , spin_exchange_indices
+        , hamiltonian
 ):
     """Calculate the average local energy.
 
@@ -42,14 +40,11 @@ def get_local_energy_for_block(
         The local energy.
 
     """
-    local_energy_values = vmap(get_local_energy, in_axes=(None, None, None, 0, None, None, None))(psi_prefactor
-                                                                                                  , psi_params
-                                                                                                  , psi_vector
-                                                                                                  , r_coords_for_block
-                                                                                                  , particle_pairs
-                                                                                                  , particle_triplets
-                                                                                                  ,
-                                                                                                  spin_exchange_indices)
+    local_energy_values = vmap(get_local_energy, in_axes=(None, None, None, 0, None))(psi_prefactor
+                                                                                      , psi_params
+                                                                                      , psi_vector
+                                                                                      , r_coords_for_block
+                                                                                      , hamiltonian)
     local_energy = local_energy_values.mean()
     return local_energy
 
@@ -60,10 +55,8 @@ def optimize_wave_function(
         , psi_prefactor
         , psi_params
         , psi_vector
-        , particle_pairs
-        , particle_triplets
-        , spin_exchange_indices
         , psi_param_file
+        , hamiltonian
         , seed=0
         , n_dimensions=3
         , n_blocks=10
@@ -93,12 +86,8 @@ def optimize_wave_function(
         1D array containing wave function parameters.
     psi_vector: ndarray
         2D array containing wave function spin isospin components.
-    particle_pairs: ndarray
-        [n_pairs, 2] particle indices for each pair.
-    particle_triplets: ndarray
-        [n_triplets, 3] particle indices for each pair.
-    spin_exchange_indices:
-        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
+    hamiltonian: function
+        Returns H|psi> given `psi_prefactor`, `psi_params`, `psi_vector`, and r_coords.
     seed: int
         Seed for sampling algorithm.
     n_dimensions: int
@@ -158,13 +147,11 @@ def optimize_wave_function(
         # compute and print the local energy
         if print_local_energy:
             local_energy_per_block = vmap(get_local_energy_for_block
-                                          , in_axes=(None, None, None, 0, None, None, None))(psi_prefactor
-                                                                                             , psi_params
-                                                                                             , psi_vector
-                                                                                             , r_coord_samples
-                                                                                             , particle_pairs
-                                                                                             , particle_triplets
-                                                                                             , spin_exchange_indices)
+                                          , in_axes=(None, None, None, 0, None))(psi_prefactor
+                                                                                 , psi_params
+                                                                                 , psi_vector
+                                                                                 , r_coord_samples
+                                                                                 , hamiltonian)
             local_energy = local_energy_per_block.mean()
             ddof = 1 if n_blocks > 1 else 0
             local_energy_error = jnp.std(local_energy_per_block, ddof=ddof)
@@ -180,10 +167,9 @@ def optimize_wave_function(
                 , _params
                 , psi_vector
                 , r_coord_samples[i]
-                , particle_pairs
-                , particle_triplets
-                , spin_exchange_indices
                 , learning_rate
+                , hamiltonian
+                , return_loss=False
                 , eps=epsilon_sr)
             return _delta_params_sum, _params
 

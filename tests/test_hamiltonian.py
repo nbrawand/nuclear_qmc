@@ -1,8 +1,12 @@
-from nuclear_qmc.operators.hamiltonian import get_r_ij_sqrd, get_r_ik_r_ij_cycles, get_local_energy, \
-    potential_energy_psi
+from nuclear_qmc.operators.hamiltonian.get_local_energy import get_local_energy
+from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonian
 import jax.numpy as jnp
+
+from nuclear_qmc.operators.hamiltonian.arxiv_2007_14282v2.potential_energy import build_arxiv_2007_14282v2
 from nuclear_qmc.operators.operators import kinetic_energy_psi
 from jax.config import config
+
+from nuclear_qmc.utils.get_dr_ij import get_r_ij_sqrd, get_r_ik_r_ij_cycles
 from nuclear_qmc.wave_function.jastro import exponential_jastro as exp_psi
 
 from nuclear_qmc.wave_function.legacy_wave_function_for_testing.test_neural_network import build_test_nn_wfc
@@ -54,8 +58,10 @@ class TestHamiltonian:
             1, 2,
             dtype=jnp.float64,
             as_jax_array=True)
-        v_psi = potential_energy_psi(psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets,
-                                     spin_exchange_indices)
+
+        potential_energy_psi = build_arxiv_2007_14282v2(particle_pairs, particle_triplets,
+                                                        spin_exchange_indices)
+        v_psi = potential_energy_psi(psi, psi_params, psi_vector, r_coords)
         wfc_r = psi(psi_params, r_coords) * psi_vector
         psi_v_psi = jnp.vdot(wfc_r, v_psi)
         computed = psi_v_psi / jnp.vdot(wfc_r, wfc_r)
@@ -71,8 +77,8 @@ class TestHamiltonian:
             1, 1,
             dtype=jnp.float64,
             as_jax_array=True)
-        computed = get_local_energy(psi, psi_params, psi_vector, r_coords, particle_pairs, particle_triplets,
-                                    spin_exchange_indices).round(8)
+        hamiltonian = build_hamiltonian('arxiv_2007_14282v2', particle_pairs, particle_triplets, spin_exchange_indices)
+        computed = get_local_energy(psi, psi_params, psi_vector, r_coords, hamiltonian).round(8)
         expected = jnp.array(-2.42576814)
         assert jnp.array_equal(computed, expected)
 
@@ -85,8 +91,9 @@ class TestHamiltonian:
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
         wfc_r = psi(psi_params, ex_r) * psi_vector
         psi_norm = jnp.vdot(wfc_r, wfc_r)
-        v_psi = potential_energy_psi(psi, psi_params, psi_vector, ex_r, particle_pairs, particle_triplets,
-                                     spin_exchange_indices)
+        potential_energy_psi = build_arxiv_2007_14282v2(particle_pairs, particle_triplets,
+                                                        spin_exchange_indices)
+        v_psi = potential_energy_psi(psi, psi_params, psi_vector, ex_r)
         psi_v_psi = jnp.vdot(wfc_r, v_psi)
         computed = psi_v_psi / psi_norm
         computed = computed.round(8)
@@ -122,7 +129,7 @@ class TestHamiltonian:
             1, 2,
             dtype=jnp.float64,
             as_jax_array=True)
-        #ex_r = jnp.ones(9).reshape(3,3)
+        # ex_r = jnp.ones(9).reshape(3,3)
         ex_r = jnp.array(
             [
                 [-0.36651218, - 0.28230912, 0.72319306],

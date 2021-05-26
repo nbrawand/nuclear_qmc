@@ -1,6 +1,8 @@
 from jax.config import config
 import jax.numpy as jnp
 import json
+
+from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonian
 from nuclear_qmc.optimize.optimize_wave_function import optimize_wave_function
 from nuclear_qmc.utils.get_new_file_name import get_new_file_name
 from nuclear_qmc.wave_function.jastro_neural_network_builder.neural_network import build_jastro_nn
@@ -28,6 +30,9 @@ logging.info('# Nuclear QMC Run')
 logging.info('## Log File')
 logging.info(log_file)
 logging.info('## Input File')
+# add defaults
+if 'potential_energy' not in input_json.keys():
+    input_json['potential_energy'] = 'arxiv_2007_14282v2'
 logging.info("```json")
 logging.info(json.dumps(input_json, indent=4, sort_keys=True))
 logging.info("```")
@@ -69,6 +74,12 @@ else:
         # create new file with name from input
         logging.info(f'creating wave function parameters file: {input_json["wave_function"]["wave_function_file"]}')
 
+logging.info('## Hamiltonian')
+hamiltonian = build_hamiltonian(input_json['potential_energy']
+                                , particle_pairs
+                                , particle_triplets
+                                , spin_exchange_indices)
+
 logging.info('## Optimization')
 optimize_wave_function(
     input_json['n_proton']
@@ -76,10 +87,8 @@ optimize_wave_function(
     , psi_prefactor
     , psi_params
     , psi_vector
-    , particle_pairs
-    , particle_triplets
-    , spin_exchange_indices
     , input_json['wave_function']['wave_function_file']
+    , hamiltonian
     , **input_json['optimization']
 )
 """

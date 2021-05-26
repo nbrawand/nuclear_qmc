@@ -1,7 +1,6 @@
 import jax
 from jax import vmap, numpy as jnp
 from jax.scipy.linalg import cho_factor, cho_solve
-from nuclear_qmc.operators.hamiltonian import hamiltonian_psi
 
 
 def d_psi_d_params(psi, psi_params, r_coord):
@@ -17,7 +16,7 @@ def get_delta_params(
         , particle_triplets
         , spin_exchange_indices
         , learning_rate
-        , hamiltonian=hamiltonian_psi
+        , hamiltonian
         , include_sr_equations=True
         , return_loss=False
         , eps=0.0001

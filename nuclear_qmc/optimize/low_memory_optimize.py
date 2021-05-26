@@ -2,7 +2,6 @@ import jax
 from jax.lax import fori_loop
 from jax import vmap, numpy as jnp
 from jax.scipy.linalg import cho_factor, cho_solve
-from nuclear_qmc.operators.hamiltonian import hamiltonian_psi
 
 
 def get_d_psi_psi(psi, psi_params, psi_vector, r_coords):
@@ -82,9 +81,6 @@ def get_psi_h_psi(psi
                   , psi_params
                   , psi_vector
                   , r_coords
-                  , particle_pairs
-                  , particle_triplets
-                  , spin_exchange_indices
                   , hamiltonian):
     """
 
@@ -114,10 +110,7 @@ def get_psi_h_psi(psi
     h_psi = hamiltonian(psi
                         , psi_params
                         , psi_vector
-                        , r_coords
-                        , particle_pairs
-                        , particle_triplets
-                        , spin_exchange_indices)
+                        , r_coords)
     psi_r = psi(psi_params, r_coords) * psi_vector
     psi_h_psi = jnp.vdot(psi_r, h_psi)
     return psi_h_psi
@@ -127,9 +120,6 @@ def get_d_psi_h_psi(psi
                     , psi_params
                     , psi_vector
                     , r_coords
-                    , particle_pairs
-                    , particle_triplets
-                    , spin_exchange_indices
                     , hamiltonian):
     """
 
@@ -159,10 +149,7 @@ def get_d_psi_h_psi(psi
     h_psi = hamiltonian(psi
                         , psi_params
                         , psi_vector
-                        , r_coords
-                        , particle_pairs
-                        , particle_triplets
-                        , spin_exchange_indices)  # [spin_isospin]
+                        , r_coords)  # [spin_isospin]
     d_psi = get_d_psi(psi, psi_params, psi_vector, r_coords)  # [n_params, spin_isospin]
     return vmap(jnp.vdot, in_axes=(0, None))(d_psi, h_psi)  # [n_params]
 
@@ -260,11 +247,8 @@ def get_delta_params(
         , psi_params
         , psi_vector
         , r_coords
-        , particle_pairs
-        , particle_triplets
-        , spin_exchange_indices
         , learning_rate
-        , hamiltonian=hamiltonian_psi
+        , hamiltonian
         , include_sr_equations=True
         , return_loss=False, eps=0.0001):
     """Calculate `psi_params` update by solving stochastic reconfiguration equations.
@@ -308,16 +292,12 @@ def get_delta_params(
                                                                          , psi_params
                                                                          , psi_vector
                                                                          , r_coords)  # [n_walkers]
-    psi_h_psi = vmap(get_psi_h_psi, in_axes=(None, None, None, walker_axis, None, None, None, None))(psi
-                                                                                                     , psi_params
-                                                                                                     , psi_vector
-                                                                                                     , r_coords
-                                                                                                     , particle_pairs
-                                                                                                     , particle_triplets
-                                                                                                     ,
-                                                                                                     spin_exchange_indices
-                                                                                                     ,
-                                                                                                     hamiltonian)  # [n_walkers]
+    # [n_walkers]
+    psi_h_psi = vmap(get_psi_h_psi, in_axes=(None, None, None, walker_axis, None))(psi
+                                                                                   , psi_params
+                                                                                   , psi_vector
+                                                                                   , r_coords
+                                                                                   , hamiltonian)
     psi_h_psi_avg = (psi_h_psi / psi_psi).mean(axis=walker_axis)
     del psi_h_psi
     d_psi_psi = vmap(get_d_psi_psi, in_axes=(None, None, None, walker_axis))(psi
@@ -326,17 +306,11 @@ def get_delta_params(
                                                                              , r_coords)  # [n_walkers, params]
     d_psi_psi_avg = (d_psi_psi / psi_psi[:, None]).mean(axis=walker_axis)
     del d_psi_psi
-    d_psi_h_psi = vmap(get_d_psi_h_psi, in_axes=(None, None, None, walker_axis, None, None, None, None))(psi
-                                                                                                         , psi_params
-                                                                                                         , psi_vector
-                                                                                                         , r_coords
-                                                                                                         ,
-                                                                                                         particle_pairs
-                                                                                                         ,
-                                                                                                         particle_triplets
-                                                                                                         ,
-                                                                                                         spin_exchange_indices
-                                                                                                         , hamiltonian)
+    d_psi_h_psi = vmap(get_d_psi_h_psi, in_axes=(None, None, None, walker_axis, None))(psi
+                                                                                       , psi_params
+                                                                                       , psi_vector
+                                                                                       , r_coords
+                                                                                       , hamiltonian)
     d_psi_h_psi_avg = (d_psi_h_psi / psi_psi[:, None]).mean(axis=walker_axis)
     del d_psi_h_psi
     del psi_psi
