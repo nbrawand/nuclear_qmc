@@ -32,8 +32,7 @@ def build_arxiv_2007_14282v2(particle_pairs, particle_triplets,
 
     Returns
     -------
-    float
-        Potential energy.
+    function
 
     """
 

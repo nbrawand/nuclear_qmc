@@ -6,6 +6,20 @@ from nuclear_qmc.utils.get_dr_ij import get_r_ij
 
 
 def build_arxiv_2102_02327v1(particle_pairs, spin_exchange_indices, isospin_exchange_indices, model_string='o'):
+    """
+
+    Parameters
+    ----------
+    particle_pairs
+    spin_exchange_indices
+    isospin_exchange_indices
+    model_string
+
+    Returns
+    -------
+    function
+
+    """
     C01 = {'a': -4.38524414, 'b': -5.72220536, 'c': -7.00250932, 'd': -8.22926713, 'o': -5.27518671}[model_string]
     C10 = {'a': -8.00783936, 'b': -93.4392090, 'c': -10.7734100, 'd': -12.2993164, 'o': -7.04040080}[model_string]
     R0 = {'a': 1.7, 'b': 1.9, 'c': 2.1, 'd': 2.3, 'o': 1.54592984}[model_string]

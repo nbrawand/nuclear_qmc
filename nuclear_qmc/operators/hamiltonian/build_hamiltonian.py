@@ -3,8 +3,8 @@ from nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy impor
 from nuclear_qmc.operators.operators import kinetic_energy_psi
 
 
-def build_hamiltonian(potential_energy_expression, particle_pairs, particle_triplets, spin_exchange_indices
-                      , isospin_exchange_indices, potential_kwargs=None):
+def build_hamiltonian(potential_energy_expression, particle_pairs, particle_triplets, spin_exchange_indices,
+                      isospin_exchange_indices, potential_kwargs=None):
     if potential_kwargs is None:
         potential_kwargs = {}
 
