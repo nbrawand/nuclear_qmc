@@ -33,6 +33,8 @@ logging.info('## Input File')
 # add defaults
 if 'potential_energy' not in input_json.keys():
     input_json['potential_energy'] = 'arxiv_2007_14282v2'
+if 'potential_kwargs' not in input_json.keys():
+    input_json['potential_kwargs'] = None
 logging.info("```json")
 logging.info(json.dumps(input_json, indent=4, sort_keys=True))
 logging.info("```")
@@ -78,7 +80,8 @@ logging.info('## Hamiltonian')
 hamiltonian = build_hamiltonian(input_json['potential_energy']
                                 , particle_pairs
                                 , particle_triplets
-                                , spin_exchange_indices)
+                                , spin_exchange_indices, isospin_exchange_indices
+                                , input_json['potential_kwargs'])
 
 logging.info('## Optimization')
 optimize_wave_function(
