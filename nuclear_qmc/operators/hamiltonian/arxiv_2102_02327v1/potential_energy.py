@@ -1,6 +1,7 @@
 from nuclear_qmc.operators.operators import sigma_psi_r, tau_psi_r, sigma_tau_psi_r
 from nuclear_qmc.wave_function.utility import get_psi_r
 import jax.numpy as jnp
+from nuclear_qmc.constants.constants import H_BAR
 
 from nuclear_qmc.utils.get_dr_ij import get_r_ij
 
@@ -21,7 +22,7 @@ def build_arxiv_2102_02327v1(particle_pairs, spin_exchange_indices, isospin_exch
 
     """
     C01 = {'a': -4.38524414, 'b': -5.72220536, 'c': -7.00250932, 'd': -8.22926713, 'o': -5.27518671}[model_string]
-    C10 = {'a': -8.00783936, 'b': -93.4392090, 'c': -10.7734100, 'd': -12.2993164, 'o': -7.04040080}[model_string]
+    C10 = {'a': -8.00783936, 'b': -9.34392090, 'c': -10.7734100, 'd': -12.2993164, 'o': -7.04040080}[model_string]
     R0 = {'a': 1.7, 'b': 1.9, 'c': 2.1, 'd': 2.3, 'o': 1.54592984}[model_string]
     R1 = {'a': 1.5, 'b': 2.0, 'c': 2.5, 'd': 3.0, 'o': 1.83039397}[model_string]
 
@@ -68,6 +69,7 @@ def build_arxiv_2102_02327v1(particle_pairs, spin_exchange_indices, isospin_exch
         out += v_tau_r(r_ij, psi_r)
         out += v_sigma_r(r_ij, psi_r)
         out += v_sigma_tau_r(r_ij, psi_r)
+        out *= H_BAR
         return out
 
     return potential
