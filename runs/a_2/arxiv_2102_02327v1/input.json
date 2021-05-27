@@ -3,8 +3,8 @@
   "n_neutron": 1,
   "wave_function": {
     "seed": 0,
-    "n_dense": 6,
-    "n_hidden_layers": 2,
+    "n_dense": 8,
+    "n_hidden_layers": 3,
     "jastro_list": [
       "2b"
     ],
