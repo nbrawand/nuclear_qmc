@@ -169,8 +169,9 @@ def tau_psi_r(psi_r, exchange_indices, pair_coefficients):
 
 
 def sigma_tau_psi_r(psi_r, spin_exchange_indices, isospin_exchange_indices, pair_coefficients):
-    isospin_exchange_indices = jnp.expand_dims(isospin_exchange_indices, 1)
+    isospin_exchange_indices = jnp.expand_dims(isospin_exchange_indices, -1)
     tau_ij = vmap(tau_psi_r, in_axes=(None, 1, 0))(psi_r, isospin_exchange_indices, pair_coefficients)
-    sigma_tau_ij = vmap(sigma_psi_r, in_axes=(0, 1, None))(tau_ij, jnp.expand_dims(spin_exchange_indices, -1), 1)
+    spin_exchange_indices = jnp.expand_dims(spin_exchange_indices, -1)
+    sigma_tau_ij = vmap(sigma_psi_r, in_axes=(0, 1, None))(tau_ij, spin_exchange_indices, 1)
     sum_sigma_tau_ij = sigma_tau_ij.sum(axis=0)
     return sum_sigma_tau_ij
