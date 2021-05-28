@@ -77,7 +77,8 @@ else:
         logging.info(f'creating wave function parameters file: {input_json["wave_function"]["wave_function_file"]}')
 
 logging.info('## Hamiltonian')
-hamiltonian = build_hamiltonian(input_json['potential_energy']
+hamiltonian = build_hamiltonian(spin
+                                , input_json['potential_energy']
                                 , particle_pairs
                                 , particle_triplets
                                 , spin_exchange_indices, isospin_exchange_indices

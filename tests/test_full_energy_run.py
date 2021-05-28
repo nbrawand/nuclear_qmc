@@ -25,7 +25,7 @@ def test_full_energy_run():
         N_PROTON, N_NEUTRON,
         dtype=jnp.float64,
         as_jax_array=True)
-    hamiltonian = build_hamiltonian('arxiv_2007_14282v2', particle_pairs, particle_triplets, spin_exchange_indices,
+    hamiltonian = build_hamiltonian(psi_vector, 'arxiv_2007_14282v2', particle_pairs, particle_triplets, spin_exchange_indices,
                                     isospin_exchange_indices)
     key = random.PRNGKey(0)
     key, r_coord_samples = sample(psi_prefactor

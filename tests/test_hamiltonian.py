@@ -77,7 +77,8 @@ class TestHamiltonian:
             1, 1,
             dtype=jnp.float64,
             as_jax_array=True)
-        hamiltonian = build_hamiltonian('arxiv_2007_14282v2', particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices)
+        hamiltonian = build_hamiltonian(psi_vector, 'arxiv_2007_14282v2', particle_pairs, particle_triplets,
+                                        spin_exchange_indices, isospin_exchange_indices)
         computed = get_local_energy(psi, psi_params, psi_vector, r_coords, hamiltonian).round(8)
         expected = jnp.array(-2.42576814)
         assert jnp.array_equal(computed, expected)

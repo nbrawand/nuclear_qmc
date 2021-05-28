@@ -174,14 +174,14 @@ def get_tau_ij(psi_r, isospin_exchange_indices, pair_coefficients):
     return tau_ij
 
 
-def get_sigma_ij(psi_r, spin_exchange_indices, pair_coefficients):
+def get_sigma_ij(psi_r, spin_exchange_indices, pair_coefficients, vmap_axes=(None, 1, 0)):
     spin_exchange_indices = jnp.expand_dims(spin_exchange_indices, -1)
-    sigma_ij = vmap(sigma_psi_r, in_axes=(0, 1, None))(psi_r, spin_exchange_indices, pair_coefficients)
+    sigma_ij = vmap(sigma_psi_r, in_axes=vmap_axes)(psi_r, spin_exchange_indices, pair_coefficients)
     return sigma_ij
 
 
 def sigma_tau_psi_r(psi_r, spin_exchange_indices, isospin_exchange_indices, pair_coefficients):
     tau_ij = get_tau_ij(psi_r, isospin_exchange_indices, pair_coefficients)
-    sigma_tau_ij = get_sigma_ij(tau_ij, spin_exchange_indices, 1.0)
+    sigma_tau_ij = get_sigma_ij(tau_ij, spin_exchange_indices, 1.0, vmap_axes=(0, 1, None))
     sum_sigma_tau_ij = sigma_tau_ij.sum(axis=0)
     return sum_sigma_tau_ij
