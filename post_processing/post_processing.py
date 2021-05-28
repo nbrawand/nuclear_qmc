@@ -28,9 +28,9 @@ def fit_exp_model(energy_values, final_energy_estimate_name, sample_size):
         sigma = pm.HalfCauchy('sigma', beta=4, shape=len(energy_values))  # np.exp(-sa * opt_step) + sb
         likelihood = pm.Normal("energy", mu=mu, sigma=sigma, observed=energy_values)
 
-        trace = pm.sample(sample_size)  # draw 3000 posterior samples using NUTS sampling
+        #trace = pm.sample(sample_size)  # draw 3000 posterior samples using NUTS sampling
     map_estimate = pm.find_MAP(model=model)
-    return trace, map_estimate
+    return 1, map_estimate
 
 
 def get_energy_values(lines):
@@ -47,7 +47,7 @@ def get_optimization_plot(markdown_file, start, samples, title=None):
         lines = fil.readlines()
     energies = get_energy_values(lines)
     energies = energies[start:]
-    plt.plot(energies, 'b.')
+    plt.plot(energies, 'b.', zorder=0)
 
     samples = int(samples)
     if samples > 0:
@@ -55,8 +55,9 @@ def get_optimization_plot(markdown_file, start, samples, title=None):
         _, map = fit_exp_model(energies, energy_estimate_name, sample_size=samples)
         x = np.arange(len(energies)) + 1
         exp = exp_model(map['a'], map['b'], map[energy_estimate_name], x)
-        plt.plot(exp, 'g-')
-        plt.hlines(map[energy_estimate_name], 0, len(energies), colors='r', linestyles='--')
+        plt.plot(exp, 'r-', lw=3, zorder=1)
+        plt.hlines(map[energy_estimate_name], 0, len(energies), colors='r', linestyles='--', lw=3, zorder=1, label=f'MAP Estimate: {np.round(map[energy_estimate_name], 4)} MeV')
+        plt.legend()
 
     if title is not None:
         plt.title(title)
