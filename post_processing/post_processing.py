@@ -41,7 +41,7 @@ def get_energy_values(lines):
     return energy_values
 
 
-def get_optimization_plot(markdown_file, start, samples):
+def get_optimization_plot(markdown_file, start, samples, title=None):
     start = int(start)
     with open(markdown_file, 'r') as fil:
         lines = fil.readlines()
@@ -58,6 +58,9 @@ def get_optimization_plot(markdown_file, start, samples):
         plt.plot(exp, 'g-')
         plt.hlines(map[energy_estimate_name], 0, len(energies), colors='r', linestyles='--')
 
+    if title is not None:
+        plt.title(title)
+       
     plt.savefig('energy')
 
 
