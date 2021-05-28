@@ -35,18 +35,23 @@ def get_energy_values(lines):
     return energy_values
 
 
-def get_results(markdown_file, function_name):
+def get_optimization_plot(markdown_file, start):
+    start = int(start)
     with open(markdown_file, 'r') as fil:
         lines = fil.readlines()
+    energies = get_energy_values(lines)
+    energies = energies[start:]
+    plt.plot(energies, 'b.')
+    plt.savefig('energy')
 
-    return eval(function_name)(lines)
+
+def get_results(function_name, func_args):
+    return eval(function_name)(*func_args)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='post-processing routines for nuclear qmc runs.')
-    parser.add_argument("-i", dest="run_file_name", required=True,
-                        help="Nuclear QMC output file", metavar="FILE")
     parser.add_argument("-c", dest="command", type=str, help="command name to compute result")
+    parser.add_argument("-a", dest="func_args", type=str, help="function args", nargs='+')
     args = parser.parse_args()
-    run_results = get_results(args.run_file_name, args.command)
-    print(run_results)
+    run_results = get_results(args.command, args.func_args)
