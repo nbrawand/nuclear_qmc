@@ -60,7 +60,7 @@ def get_optimization_plot(markdown_file, start, samples, title=None):
 
     if title is not None:
         plt.title(title)
-       
+
     plt.savefig('energy')
 
 

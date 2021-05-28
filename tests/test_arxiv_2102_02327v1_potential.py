@@ -42,8 +42,8 @@ def test_build_arxiv_2102_02327v1_2H_zero_delta_r():
     c10 = -7.04040080
     r0 = 1.54592984
     expected = H_BAR * c10 / jnp.pi ** (3. / 2.) / r0 ** 3
-    expected = jnp.array([expected], dtype=jnp.float64)
-    assert computed == expected
+    expected = jnp.array(expected, dtype=jnp.float64)
+    assert jnp.array_equal(computed.round(8), expected.round(8))
 
 
 def test_build_arxiv_2102_02327v1_2H():
@@ -62,5 +62,4 @@ def test_build_arxiv_2102_02327v1_2H():
     r0 = 1.54592984
     expected = H_BAR * c10 / jnp.pi ** (3. / 2.) / r0 ** 3
     expected *= jnp.exp(-(1.5 / r0) ** 2)
-    expected = jnp.array([expected], dtype=jnp.float64)
-    assert computed == expected
+    assert jnp.array_equal(computed.round(8), expected.round(8))

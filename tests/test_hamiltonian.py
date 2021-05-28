@@ -80,7 +80,7 @@ class TestHamiltonian:
         hamiltonian = build_hamiltonian(psi_vector, 'arxiv_2007_14282v2', particle_pairs, particle_triplets,
                                         spin_exchange_indices, isospin_exchange_indices)
         computed = get_local_energy(psi, psi_params, psi_vector, r_coords, hamiltonian).round(8)
-        expected = jnp.array(-2.42576814)
+        expected = jnp.array(-2.41785314)
         assert jnp.array_equal(computed, expected)
 
     def test_potential_energy_with_test_wfc(self):
@@ -108,7 +108,7 @@ class TestHamiltonian:
             dtype=jnp.float64,
             as_jax_array=True)
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
-        expected = 238.69157666
+        expected = 238.69949166
         wfc_r = psi(psi_params, ex_r) * psi_vector
         psi_norm = jnp.vdot(wfc_r, wfc_r)
         ke_psi = kinetic_energy_psi(psi, psi_params, ex_r) * psi_vector
@@ -138,7 +138,7 @@ class TestHamiltonian:
                 [0.26104348, - 0.38107508, 0.07886705],
             ]
         )
-        expected = 33.38246175
+        expected = 33.38356871
         wfc_r = psi(psi_params, ex_r) * psi_vector
         psi_norm = jnp.vdot(wfc_r, wfc_r)
         ke_psi = kinetic_energy_psi(psi, psi_params, ex_r) * psi_vector

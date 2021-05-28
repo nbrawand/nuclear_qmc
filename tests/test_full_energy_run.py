@@ -25,7 +25,8 @@ def test_full_energy_run():
         N_PROTON, N_NEUTRON,
         dtype=jnp.float64,
         as_jax_array=True)
-    hamiltonian = build_hamiltonian(psi_vector, 'arxiv_2007_14282v2', particle_pairs, particle_triplets, spin_exchange_indices,
+    hamiltonian = build_hamiltonian(psi_vector, 'arxiv_2007_14282v2', particle_pairs, particle_triplets,
+                                    spin_exchange_indices,
                                     isospin_exchange_indices)
     key = random.PRNGKey(0)
     key, r_coord_samples = sample(psi_prefactor
@@ -48,6 +49,6 @@ def test_full_energy_run():
                                                                                , psi_vector
                                                                                , r_coords
                                                                                , hamiltonian)
-    computed = local_energy.mean().round(12)
-    expected = jnp.array(-2.20571193860801, dtype=jnp.float64).round(12)
+    computed = local_energy.mean().round(8)
+    expected = jnp.array(-2.20467771, dtype=jnp.float64).round(8)  # changed after updating mass and hbar
     assert jnp.array_equal(expected, computed)
