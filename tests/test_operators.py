@@ -88,16 +88,15 @@ class TestOperators:
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
         assert -3. == computed
 
-
-"""
-    def test_sigma_tau_psi_r_triton(self):
+    def test_sigma_and_tau_psi_r_triton(self):
         particle_pairs, particle_triplets, spin, spin_xi, iso_xi = get_wave_function_system(1, 2)
-        print('\n',spin)
-        print('\n', iso_xi)
-        print('\n', spin_xi)
-
         pairs = jnp.array([1, 1, 1])
         computed = sigma_tau_psi_r(spin, spin_xi, iso_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
-        #assert -3. == computed
-"""
+        assert -9. == computed
+        computed = sigma_psi_r(spin, spin_xi, pairs)
+        computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
+        assert -3. == computed
+        computed = tau_psi_r(spin, iso_xi, pairs)
+        computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
+        assert -3. == computed
