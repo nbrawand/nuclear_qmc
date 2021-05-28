@@ -56,7 +56,7 @@ class TestOperators:
             1, 2)
         pairs = jnp.array([0, 1, 2])
         computed = sigma_tau_psi_r(spin, spin_xi, iso_xi, pairs)
-        tau_ij = jnp.array([tau_psi_r(spin, iso_xi[:, i], pairs[i]) for i in range(3)])
+        tau_ij = jnp.array([tau_psi_r(spin, iso_xi[:, i].reshape(-1, 1), pairs[i]) for i in range(3)])
         expected = jnp.array([sigma_psi_r(tau_ij[i], spin_xi[:, i].reshape(-1, 1), 1) for i in range(3)]).sum(axis=0)
         assert jnp.array_equal(computed, expected)
 
