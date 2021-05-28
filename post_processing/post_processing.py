@@ -5,6 +5,10 @@ import numpy as np
 import pymc3 as pm
 
 
+def exp_model(a, b, c, opt_step):
+    return a * np.exp(-b * opt_step) + c
+
+
 def fit_exp_model(energy_values, final_energy_estimate_name, sample_size):
     with pm.Model() as model:
         """
@@ -14,12 +18,14 @@ def fit_exp_model(energy_values, final_energy_estimate_name, sample_size):
         b ~ HalfCauchy
         c ~ Gaussian
         """
-        sigma = pm.distributions.HalfCauchy("sigma", beta=10)
         a = pm.HalfCauchy("a", beta=10)
         b = pm.HalfCauchy("b", beta=10)
-        c = pm.Normal(final_energy_estimate_name, mu=np.mean(energy_values[-10:]), sigma=1)
-        opt_step = range(len(energy_values))
-        mu = a * np.exp(-b * opt_step) + c
+        c = pm.Normal(final_energy_estimate_name, mu=np.mean(energy_values[-10:]), sigma=10)
+        # sa = pm.HalfCauchy("sa", beta=0.5)
+        # sb = pm.HalfCauchy("sb", beta=10)
+        opt_step = np.arange(len(energy_values)) + 1
+        mu = exp_model(a, b, c, opt_step)
+        sigma = pm.HalfCauchy('sigma', beta=4, shape=len(energy_values))  # np.exp(-sa * opt_step) + sb
         likelihood = pm.Normal("energy", mu=mu, sigma=sigma, observed=energy_values)
 
         trace = pm.sample(sample_size)  # draw 3000 posterior samples using NUTS sampling
@@ -35,13 +41,23 @@ def get_energy_values(lines):
     return energy_values
 
 
-def get_optimization_plot(markdown_file, start):
+def get_optimization_plot(markdown_file, start, samples):
     start = int(start)
     with open(markdown_file, 'r') as fil:
         lines = fil.readlines()
     energies = get_energy_values(lines)
     energies = energies[start:]
     plt.plot(energies, 'b.')
+
+    samples = int(samples)
+    if samples > 0:
+        energy_estimate_name = 'energy_estimate'
+        _, map = fit_exp_model(energies, energy_estimate_name, sample_size=samples)
+        x = np.arange(len(energies)) + 1
+        exp = exp_model(map['a'], map['b'], map[energy_estimate_name], x)
+        plt.plot(exp, 'g-')
+        plt.hlines(map[energy_estimate_name], 0, len(energies), colors='r', linestyles='--')
+
     plt.savefig('energy')
 
 
