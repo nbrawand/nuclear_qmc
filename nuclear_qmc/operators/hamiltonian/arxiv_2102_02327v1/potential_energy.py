@@ -3,18 +3,19 @@ from nuclear_qmc.utils.get_expectation import get_expectation
 from nuclear_qmc.wave_function.utility import get_psi_r
 import jax.numpy as jnp
 from nuclear_qmc.constants.constants import H_BAR
+from jax import vmap
 
 from nuclear_qmc.utils.get_dr_ij import get_r_ij
 
 
 def get_01_and_10_channels(spin, spin_exchange_indices, isospin_exchange_indices):
-    one = jnp.array([1.0])
+    one = jnp.ones(shape=spin_exchange_indices.shape[1])
 
     sigma_ij = get_sigma_ij(spin, spin_exchange_indices, one)
-    sigma_ij = get_expectation(spin, sigma_ij)
+    sigma_ij = vmap(get_expectation, in_axes=(None, 0))(spin, sigma_ij)
 
     tau_ij = get_tau_ij(spin, isospin_exchange_indices, one)
-    tau_ij = get_expectation(spin, tau_ij)
+    tau_ij = vmap(get_expectation, in_axes=(None, 0))(spin, tau_ij)
 
     p_0 = lambda x: (1. - x) / 4.
     p_1 = lambda x: (3. + x) / 4.
