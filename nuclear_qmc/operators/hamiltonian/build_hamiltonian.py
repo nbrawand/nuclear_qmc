@@ -16,7 +16,7 @@ def build_hamiltonian(spin, potential_energy_expression, particle_pairs, particl
         },
         'arxiv_2102_02327v1': {
             'builder': build_arxiv_2102_02327v1,
-            'args': [spin, particle_pairs, spin_exchange_indices, isospin_exchange_indices]
+            'args': [spin, particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices]
         }
     }
 

@@ -5,7 +5,7 @@ import jax.numpy as jnp
 from nuclear_qmc.constants.constants import H_BAR
 from jax import vmap
 
-from nuclear_qmc.utils.get_dr_ij import get_r_ij
+from nuclear_qmc.utils.get_dr_ij import get_r_ij, get_r_ik_r_ij_cycles
 
 
 def get_01_and_10_channels(spin, spin_exchange_indices, isospin_exchange_indices):
@@ -26,7 +26,13 @@ def get_01_and_10_channels(spin, spin_exchange_indices, isospin_exchange_indices
     return spin_0_tau_1_channel, spin_1_tau_0_channel
 
 
-def build_arxiv_2102_02327v1(spin, particle_pairs, spin_exchange_indices, isospin_exchange_indices, model_string='o'):
+def build_arxiv_2102_02327v1(spin
+                             , particle_pairs
+                             , particle_triplets
+                             , spin_exchange_indices
+                             , isospin_exchange_indices
+                             , model_string='o'
+                             , R3=1.5):
     """
 
     Parameters
@@ -51,6 +57,21 @@ def build_arxiv_2102_02327v1(spin, particle_pairs, spin_exchange_indices, isospi
                                                                         , isospin_exchange_indices)
     C01 *= spin_0_tau_1_channel
     C10 *= spin_1_tau_0_channel
+
+    cE = {
+        'a': {1.0: 1.8354, 1.5: 4.6301, 2.0: 11.6871, 2.5: 27.4702},
+        'b': {1.0: 0.02828, 1.5: 0.06903, 2.0: 0.16387, 2.5: 20.36545},
+        'c': {1.0: -2.09231, 1.5: -5.37280, 2.0: -12.4415, 2.5: -26.8473},
+        'd': {1.0: -3.89132, 1.5: -10.9436, 2.0: -25.3577, 2.5: -53.7786},
+        'o': {1.0: 1.0786, 1.5: 2.7676, 2.0: 6.95356, 2.5: 16.21993}
+    }[model_string][R3]
+    hbarc6 = H_BAR ** 6
+    fpi4 = 92.4 ** 4
+    lambda_chi = 1000.0
+    pi3 = jnp.pi ** 3
+    R32 = R3 ** 2
+    R36 = R3 ** 6
+    three_body_factor = cE * hbarc6 / fpi4 / lambda_chi / pi3 / R36
 
     def C(r_ij, R):
         out = jnp.exp(-(r_ij / R) ** 2)
@@ -88,6 +109,12 @@ def build_arxiv_2102_02327v1(spin, particle_pairs, spin_exchange_indices, isospi
         out = sigma_tau_psi_r(psi_r, spin_exchange_indices, isospin_exchange_indices, pair_coefficients)
         return out
 
+    def three_body(r_coords, psi_r):
+        r_ik_r_ij = get_r_ik_r_ij_cycles(r_coords, particle_triplets)
+        out = three_body_factor * jnp.exp(-r_ik_r_ij / R32).sum()
+        out *= psi_r
+        return out
+
     def potential(psi, psi_params, psi_vector, r_coords):
         r_ij = get_r_ij(r_coords, particle_pairs)
         psi_r = get_psi_r(psi, psi_params, r_coords, psi_vector)
@@ -96,6 +123,8 @@ def build_arxiv_2102_02327v1(spin, particle_pairs, spin_exchange_indices, isospi
         out += v_sigma_r(r_ij, psi_r)
         out += v_sigma_tau_r(r_ij, psi_r)
         out *= H_BAR
+        if particle_triplets.shape[0] > 0:
+            out += three_body(r_coords, psi_r)
         return out
 
     return potential

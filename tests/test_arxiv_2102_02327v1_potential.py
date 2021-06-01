@@ -32,7 +32,8 @@ def test_get_01_and_10_channels_3H():
 
 
 def test_build_arxiv_2102_02327v1_2H_zero_delta_r():
-    potential = build_arxiv_2102_02327v1(spin, particle_pairs, spin_exchange_indices, isospin_exchange_indices,
+    potential = build_arxiv_2102_02327v1(spin, particle_pairs, particle_triplets, spin_exchange_indices,
+                                         isospin_exchange_indices,
                                          model_string='o')
     psi = lambda p, r: 1.
     psi_params = jnp.array([1.], dtype=jnp.float64)
@@ -47,7 +48,8 @@ def test_build_arxiv_2102_02327v1_2H_zero_delta_r():
 
 
 def test_build_arxiv_2102_02327v1_2H():
-    potential = build_arxiv_2102_02327v1(spin, particle_pairs, spin_exchange_indices, isospin_exchange_indices,
+    potential = build_arxiv_2102_02327v1(spin, particle_pairs, particle_triplets, spin_exchange_indices,
+                                         isospin_exchange_indices,
                                          model_string='o')
     psi_fac = 2.0
     psi = lambda p, r: psi_fac
