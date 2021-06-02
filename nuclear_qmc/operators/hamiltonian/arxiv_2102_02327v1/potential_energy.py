@@ -62,12 +62,6 @@ def build_arxiv_2102_02327v1(spin
     R0 = {'a': 1.7, 'b': 1.9, 'c': 2.1, 'd': 2.3, 'o': 1.54592984}[model_string]
     R1 = {'a': 1.5, 'b': 2.0, 'c': 2.5, 'd': 3.0, 'o': 1.83039397}[model_string]
 
-    # spin_0_tau_1_channel, spin_1_tau_0_channel = get_01_and_10_channels(spin
-    #                                                                     , spin_exchange_indices
-    #                                                                     , isospin_exchange_indices)
-    # C01 *= spin_0_tau_1_channel
-    # C10 *= spin_1_tau_0_channel
-
     cE = {
         'a': {1.0: 1.8354, 1.5: 4.6301, 2.0: 11.6871, 2.5: 27.4702},
         'b': {1.0: 0.02828, 1.5: 0.06903, 2.0: 0.16387, 2.5: 20.36545},
