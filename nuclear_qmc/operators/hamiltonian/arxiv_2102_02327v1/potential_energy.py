@@ -2,7 +2,7 @@ from nuclear_qmc.operators.operators import sigma_psi_r, tau_psi_r, sigma_tau_ps
 from nuclear_qmc.utils.get_expectation import get_expectation
 from nuclear_qmc.wave_function.utility import get_psi_r
 import jax.numpy as jnp
-from nuclear_qmc.constants.constants import H_BAR
+from nuclear_qmc.constants.constants import H_BAR, ALPHA
 from jax import vmap
 
 from nuclear_qmc.utils.get_dr_ij import get_r_ij, get_r_ik_r_ij_cycles
@@ -24,6 +24,16 @@ def get_01_and_10_channels(spin, spin_exchange_indices, isospin_exchange_indices
     spin_1_tau_0_channel = p_1(sigma_ij) * p_0(tau_ij)
 
     return spin_0_tau_1_channel, spin_1_tau_0_channel
+
+
+def v_coulomb_proton_proton(r_ij):
+    """https://arxiv.org/pdf/nucl-th/9408016.pdf eqn. 4"""
+    b = 4.27
+    x = b * r_ij
+    x2 = x ** 2
+    x3 = x ** 3
+    f = 1. - (1 + 11. / 16. * x + 3. / 16. * x2 + 1. / 48. * x3) * jnp.exp(-x)
+    return H_BAR * ALPHA * f / r_ij
 
 
 def build_arxiv_2102_02327v1(spin
@@ -52,11 +62,11 @@ def build_arxiv_2102_02327v1(spin
     R0 = {'a': 1.7, 'b': 1.9, 'c': 2.1, 'd': 2.3, 'o': 1.54592984}[model_string]
     R1 = {'a': 1.5, 'b': 2.0, 'c': 2.5, 'd': 3.0, 'o': 1.83039397}[model_string]
 
-    spin_0_tau_1_channel, spin_1_tau_0_channel = get_01_and_10_channels(spin
-                                                                        , spin_exchange_indices
-                                                                        , isospin_exchange_indices)
-    C01 *= spin_0_tau_1_channel
-    C10 *= spin_1_tau_0_channel
+    # spin_0_tau_1_channel, spin_1_tau_0_channel = get_01_and_10_channels(spin
+    #                                                                     , spin_exchange_indices
+    #                                                                     , isospin_exchange_indices)
+    # C01 *= spin_0_tau_1_channel
+    # C10 *= spin_1_tau_0_channel
 
     cE = {
         'a': {1.0: 1.8354, 1.5: 4.6301, 2.0: 11.6871, 2.5: 27.4702},

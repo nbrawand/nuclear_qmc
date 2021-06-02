@@ -1,7 +1,9 @@
 import jax.numpy as jnp
+
+from nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy import v_coulomb_proton_proton
 from nuclear_qmc.wave_function.utility import get_wave_function_system
 
-from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
+from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M, ALPHA, H_BAR
 from nuclear_qmc.operators.operators import sigma_psi_r, kinetic_energy_psi, tau_psi_r, sigma_tau_psi_r
 
 
@@ -100,3 +102,11 @@ class TestOperators:
         computed = tau_psi_r(spin, iso_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
         assert -3. == computed
+
+    def test_coulomb_potential(self):
+        r_ij = 1. / 4.27
+        computed = v_coulomb_proton_proton(r_ij)
+        expected = 1. - (1. + 14. / 16. + 1. / 48.) * jnp.exp(-1.)
+        expected *= ALPHA / r_ij
+        expected *= H_BAR
+        assert computed == expected
