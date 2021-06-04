@@ -9,8 +9,7 @@
       "2b",
       "3b",
       "sigma",
-      "tau",
-      "sigma_tau"
+      "tau"
     ],
     "wave_function_file": "wave_function_parameters_0.npy"
   },
@@ -22,7 +21,7 @@
   "optimization": {
     "seed": 0,
     "n_dimensions": 3,
-    "n_blocks": 5,
+    "n_blocks": 2,
     "n_equilibrium_blocks": 5,
     "n_walkers": 2000,
     "n_void_steps": 200,
