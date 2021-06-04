@@ -1,0 +1,36 @@
+{
+  "n_proton": 2,
+  "n_neutron": 1,
+  "wave_function": {
+    "seed": 0,
+    "n_dense": 6,
+    "n_hidden_layers": 2,
+    "jastro_list": [
+      "2b",
+      "3b",
+      "sigma",
+      "tau",
+      "sigma_tau"
+    ],
+    "wave_function_file": "wave_function_parameters_0.npy"
+  },
+  "potential_energy": "arxiv_2102_02327v1",
+  "potential_kwargs": {
+    "model_string": "o",
+    "R3": 1.5
+  },
+  "optimization": {
+    "seed": 0,
+    "n_dimensions": 3,
+    "n_blocks": 10,
+    "n_equilibrium_blocks": 10,
+    "n_walkers": 2000,
+    "n_void_steps": 200,
+    "walker_step_size": 0.2,
+    "initial_walker_standard_deviation": 1.0,
+    "n_optimization_steps": 1000,
+    "learning_rate": 0.0002,
+    "epsilon_sr": 0.0001,
+    "print_local_energy": true
+  }
+}
