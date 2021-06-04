@@ -40,8 +40,8 @@ logging.info(json.dumps(input_json, indent=4, sort_keys=True))
 logging.info("```")
 
 logging.info('## Building Wave Function System')
-particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
-    input_json['n_proton'], input_json['n_neutron'])
+particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_wave_function_system(
+    input_json['n_proton'], input_json['n_neutron'], also_return_binary_representation=True)
 key = random.PRNGKey(input_json['wave_function']['seed'])
 key, psi_prefactor, psi_params, psi_vector, psi_expression = build_jastro_nn(
     key
@@ -82,6 +82,7 @@ hamiltonian = build_hamiltonian(spin
                                 , particle_pairs
                                 , particle_triplets
                                 , spin_exchange_indices, isospin_exchange_indices
+                                , isospin_binary_representation
                                 , input_json['potential_kwargs'])
 
 logging.info('## Optimization')

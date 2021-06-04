@@ -1,5 +1,4 @@
-from nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy import build_arxiv_2102_02327v1, \
-    get_01_and_10_channels
+from nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy import build_arxiv_2102_02327v1
 import jax.numpy as jnp
 from jax import config
 from nuclear_qmc.wave_function.utility import get_wave_function_system
@@ -8,15 +7,9 @@ from nuclear_qmc.constants.constants import H_BAR
 
 config.update("jax_enable_x64", True)
 
-particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(1,
-                                                                                                                    1)
-
-
-def test_get_01_and_10_channels_2H():
-    c_01, c_10 = get_01_and_10_channels(spin, spin_exchange_indices, isospin_exchange_indices)
-    assert c_01 == 0.0
-    assert c_10 == 1.0
-
+particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices, iso_bin_rep = get_wave_function_system(
+    1,
+    1, also_return_binary_representation=True)
 
 """
 def test_get_01_and_10_channels_3H():
@@ -33,7 +26,7 @@ def test_get_01_and_10_channels_3H():
 
 def test_build_arxiv_2102_02327v1_2H_zero_delta_r():
     potential = build_arxiv_2102_02327v1(spin, particle_pairs, particle_triplets, spin_exchange_indices,
-                                         isospin_exchange_indices,
+                                         isospin_exchange_indices, jnp.zeros_like(iso_bin_rep),
                                          model_string='o')
     psi = lambda p, r: 1.
     psi_params = jnp.array([1.], dtype=jnp.float64)
@@ -49,7 +42,7 @@ def test_build_arxiv_2102_02327v1_2H_zero_delta_r():
 
 def test_build_arxiv_2102_02327v1_2H():
     potential = build_arxiv_2102_02327v1(spin, particle_pairs, particle_triplets, spin_exchange_indices,
-                                         isospin_exchange_indices,
+                                         isospin_exchange_indices, jnp.zeros_like(iso_bin_rep),
                                          model_string='o')
     psi_fac = 2.0
     psi = lambda p, r: psi_fac
