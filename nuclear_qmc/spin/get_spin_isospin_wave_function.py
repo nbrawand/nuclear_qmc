@@ -1,10 +1,12 @@
 import jax.numpy as jnp
+from sympy.combinatorics.permutations import Permutation
 from scipy.stats import rankdata
 from sympy import symbols, Matrix
 import copy
 import numpy as np
 from nuclear_qmc.spin.get_tables import get_number_of_isospin_states, get_number_of_spin_states
 from jax.ops import index, index_update
+from itertools import permutations as get_permutations
 
 
 def add_spin_str(state_str_list, spin='d'):
@@ -18,34 +20,47 @@ def add_particle_number(states):
     return [s + str(n) for s in states for n in range(len(states))]
 
 
+def add_orbitals(states, orbitals, new_orbital_every_n_states=2):
+    i_orbital = -1
+    for i_state in range(len(states)):
+        if i_state % new_orbital_every_n_states == 0:
+            i_orbital += 1
+        states[i_state] = orbitals[i_orbital] + states[i_state]
+    return states
 
-def get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float64):
+
+def get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float64, neutron_orbitals=None,
+                                   proton_orbitals=None):
     # build symbolic states to take det and manipulate str rep
     p_states = n_protons * ['p']
     p_states = add_spin_str(p_states)
+    if proton_orbitals is not None:
+        p_states = add_orbitals(p_states, proton_orbitals, new_orbital_every_n_states=2)
     n_states = n_neutrons * ['n']
     n_states = add_spin_str(n_states)
+    if neutron_orbitals is not None:
+        n_states = add_orbitals(n_states, neutron_orbitals, new_orbital_every_n_states=2)
     states = p_states + n_states
-    states = add_particle_number(states)
-    states = symbols(states)
+    states = np.array(states)
 
     # build matrix
     n_particles = n_protons + n_neutrons
-    matrix = np.array(states).reshape(-1, n_particles)
-    mat_det_terms = Matrix(matrix).det().args
+    permutations = get_permutations(range(n_particles))
+    permutations = np.array(list(permutations))
 
     # build list of signs and spin & isospin indices for each element from det
     iso_indices = []
     signs = []
     spin_indices = []
-    for term in mat_det_terms:
-        # grab sign from each term in det
-        sign = -1 if term.args[0] == -1 else +1
+    for perm in permutations:
+
+        sign = Permutation(perm).signature()
         signs.append(sign)
 
+        strs = states[perm]
+        strs = map(lambda s, i: s + str(i), strs, range(n_particles))
+
         # sort each product in term by particle number
-        strs = [str(x) for x in term.args]
-        strs = strs[1:] if sign < 0 else strs
         strs = sorted(strs, key=lambda x: -int(x[-1]))
         strs = [x[:-1] for x in strs]  # remove particle number from str
 
