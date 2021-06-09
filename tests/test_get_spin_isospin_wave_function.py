@@ -1,4 +1,5 @@
 from nuclear_qmc.spin.get_spin_isospin_wave_function import get_spin_isospin_wave_function
+import numpy as np
 import jax.numpy as jnp
 
 
@@ -21,3 +22,10 @@ class TestGetWFC:
             , dtype=jnp.float32)
         computed = get_spin_isospin_wave_function(1, 2, dtype=jnp.float32)
         assert jnp.array_equal(expected, computed)
+
+    def test_get_spin_isospin_wave_function_6Li(self):
+        n_protons = 3
+        n_neutrons = 3
+        computed = get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float32)
+        expected = np.load('saved.npy')
+        assert jnp.array_equal(computed, expected)

@@ -7,21 +7,26 @@ from nuclear_qmc.spin.get_tables import get_number_of_isospin_states, get_number
 from jax.ops import index, index_update
 
 
+def add_spin_str(state_str_list, spin='d'):
+    for i in range(len(state_str_list)):
+        state_str_list[i] = spin + state_str_list[i]
+        spin = 'u' if spin == 'd' else 'd'
+    return state_str_list
+
+
+def add_particle_number(states):
+    return [s + str(n) for s in states for n in range(len(states))]
+
+
+
 def get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float64):
     # build symbolic states to take det and manipulate str rep
-    states = [n_protons * ['p'], n_neutrons * ['n']]
-    for iso_i in range(2):
-        spin = 'd'
-        n_particles_of_type = len(states[iso_i])
-        for n in range(n_particles_of_type):
-            states[iso_i][n] = spin + states[iso_i][n]
-            spin = 'u' if spin == 'd' else 'd'
-    states = [elm for lst in states for elm in lst]
-    tmp = []
-    for s in states:
-        for n in range(len(states)):
-            tmp.append(s + str(n))
-    states = tmp
+    p_states = n_protons * ['p']
+    p_states = add_spin_str(p_states)
+    n_states = n_neutrons * ['n']
+    n_states = add_spin_str(n_states)
+    states = p_states + n_states
+    states = add_particle_number(states)
     states = symbols(states)
 
     # build matrix
