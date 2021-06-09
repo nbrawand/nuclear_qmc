@@ -1,6 +1,7 @@
 from nuclear_qmc.spin.get_spin_isospin_wave_function import get_spin_isospin_wave_function
 import numpy as np
 import jax.numpy as jnp
+from nuclear_qmc.spin.spherical_harmonics import get_spherical_harmonic_system
 
 
 def iterable_equal(a, b):
@@ -29,3 +30,16 @@ class TestGetWFC:
         computed = get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float32)
         expected = np.load('saved.npy')
         assert jnp.array_equal(computed, expected)
+
+    def test_get_spherical_harmonic_system_not_including_functions(self):
+        L = 0
+        Lz = 0
+        L1 = 1
+        L2 = 1
+        names, coefs, funcs = get_spherical_harmonic_system(L, Lz, L1, L2)
+
+        expected_names = np.array([['Y_1_-1', 'Y_1_1'], ['Y_1_0', 'Y_1_0'], ['Y_1_1', 'Y_1_-1']])
+        assert np.array_equal(expected_names, names)
+
+        expected_coefs = jnp.array([np.sqrt(3) / 3., -np.sqrt(3) / 3., np.sqrt(3) / 3.])
+        assert jnp.array_equal(expected_coefs, coefs)
