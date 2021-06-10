@@ -30,19 +30,39 @@ def get_spherical_harmonic_names(L_1, L_2, L_z_combinations):
     return np.array(spherical_harmonics)
 
 
+def get_theta(r):
+    """arctan \\frac{\\sqrt{x^2+y^2}}{z}"""
+    theta = jnp.linalg.norm(r[:-1])
+    theta = jnp.arctan2(theta, r[-1])
+    return theta
+
+
+def get_phi(r):
+    """arctan(y/x)"""
+    phi = jnp.arctan2(r[1], r[0])
+    return phi
+
+
 def get_spherical_harmonic_function(L, L_z):
-    return lambda theta, phi: sph_harm(L_z, L, theta, phi)
+    def func(r):
+        theta = get_theta(r)
+        phi = get_phi(r)
+        return sph_harm(L_z, L, theta, phi)
+
+    return func
 
 
-def get_spherical_harmonic_functions(L_1, L_2, L_z_combinations):
-    functions = [[get_spherical_harmonic_function(L_1, lz1), get_spherical_harmonic_function(L_2, lz2)]
-                 for lz1, lz2 in L_z_combinations]
-    return np.array(functions)
+def get_spherical_harmonic_functions(names):
+    names = list(set(names))
+    L = [n.split('_')[1] for n in names]
+    Lz = [n.split('_')[-1] for n in names]
+    functions = {n: get_spherical_harmonic_function(l, lz) for n, l, lz in zip(names, L, Lz)}
+    return functions
 
 
 def get_spherical_harmonic_system(L_total, L_z_total, L_1, L_2):
     L_z_combinations = get_valid_L_z_combintations(L_z_total, L_1, L_2)
     spherical_harmonics_names = get_spherical_harmonic_names(L_1, L_2, L_z_combinations)
     coefficients = get_clebsch_gordan_coeff(L_total, L_z_total, L_1, L_2, L_z_combinations)
-    functions = get_spherical_harmonic_functions(L_1, L_2, L_z_combinations)
+    functions = get_spherical_harmonic_functions(spherical_harmonics_names.reshape(-1))
     return spherical_harmonics_names, coefficients, functions

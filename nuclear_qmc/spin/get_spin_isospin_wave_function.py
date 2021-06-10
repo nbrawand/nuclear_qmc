@@ -1,12 +1,17 @@
 import jax.numpy as jnp
+from jax import vmap
+from copy import deepcopy
 from sympy.combinatorics.permutations import Permutation
 from scipy.stats import rankdata
+from jax.ops import index, index_update
 from sympy import symbols, Matrix
 import copy
 import numpy as np
 from nuclear_qmc.spin.get_tables import get_number_of_isospin_states, get_number_of_spin_states
 from jax.ops import index, index_update
 from itertools import permutations as get_permutations
+
+from nuclear_qmc.spin.spherical_harmonics import get_spherical_harmonic_names, get_spherical_harmonic_functions
 
 
 def add_spin_str(state_str_list, spin='d'):
@@ -29,9 +34,46 @@ def add_orbitals(states, orbitals, new_orbital_every_n_states=2):
     return states
 
 
-def get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float64, neutron_orbitals=None,
-                                   proton_orbitals=None):
-    # build symbolic states to take det and manipulate str rep
+def get_permutation_signature(permutations):
+    return jnp.array([Permutation(perm).signature() for perm in permutations])
+
+
+def get_state_permutations(states, permutations, n_particles):
+    representations = states[permutations]
+    # particle_numbers = np.arange(n_particles).astype(np.str)
+    # representations = np.array([[elm+i for elm, i in zip(rep, particle_numbers)]for rep in representations])
+    return representations
+
+
+def get_spin_and_isospin_indices(state_representations):
+    iso_indices = []
+    spin_indices = []
+    for strs in state_representations:
+        # # sort each product in term by particle number
+        # strs = sorted(strs, key=lambda x: -int(x[-1]))
+        # strs = [x[:-1] for x in strs]  # remove particle number from str
+
+        # get iso spin indices
+        iso_expr = ''
+        for s in strs: iso_expr += s[-1]
+        iso_index = iso_expr.replace('p', '1').replace('n', '0')
+        iso_index = int(iso_index, 2)
+        iso_indices.append(iso_index)
+
+        # get spin indices
+        spin_expr = ''
+        for s in strs: spin_expr += s[-2]
+        spin_index = spin_expr.replace('u', '1').replace('d', '0')
+        spin_index = int(spin_index, 2)
+        spin_indices.append(spin_index)
+
+    # iso spin is condensed to charge conserved states
+    iso_indices = rankdata(iso_indices, method='dense') - 1
+
+    return spin_indices, iso_indices
+
+
+def get_states(n_protons, n_neutrons, proton_orbitals=None, neutron_orbitals=None):
     p_states = n_protons * ['p']
     p_states = add_spin_str(p_states)
     if proton_orbitals is not None:
@@ -40,51 +82,57 @@ def get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float64, neu
     n_states = add_spin_str(n_states)
     if neutron_orbitals is not None:
         n_states = add_orbitals(n_states, neutron_orbitals, new_orbital_every_n_states=2)
-    states = p_states + n_states
+    states = n_states + p_states
     states = np.array(states)
+    return states
 
-    # build matrix
+
+def get_orbital_wave_function(function_permutations, functions, spin_indices, iso_indices, n_particles, n_spin, n_iso):
+    p_index = jnp.arange(n_particles)
+
+    def func(r):
+        particle_function_matrix = input_function_cross_product(functions, r)  # [n_particles, n_functions]
+        evaluations = particle_function_matrix[p_index, function_permutations]  # [n_permutations, n_functions]
+        psi = vmap(jnp.prod, in_axes=(0))(evaluations)
+        out = jnp.zeros((n_iso, n_spin))
+        # TODO: This loop needs to be refactored!
+        i = 0
+        for iso, spin in zip(iso_indices, spin_indices):
+            out = index_update(out, index[iso, spin], psi[i])
+            i += 1
+        return out
+
+    return func
+
+
+def input_function_cross_product(functions, inputs):
+    return jnp.array([[f(input) for f in functions] for input in inputs], dtype=jnp.float64)
+
+
+def get_wave_function_sign(n_particles, n_protons, spin_indices, iso_indices, signatures, dtype):
+    # build wfc assume all zeros and then fill in non zero elements using signatures from above
+    n_spin_states = get_number_of_spin_states(n_particles)
+    n_isospin_states = get_number_of_isospin_states(n_particles, n_protons)
+    wfc = np.zeros(shape=(n_isospin_states, n_spin_states))
+    for iso, spin, sign in zip(iso_indices, spin_indices, signatures):
+        wfc[iso, spin] = sign
+    spin_isospin_signs = jnp.array(wfc, dtype=dtype)
+    return spin_isospin_signs
+
+
+def get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float64,
+                                   proton_orbitals=None, neutron_orbitals=None):
+    # build permutations of states to enforce antisymmetry
     n_particles = n_protons + n_neutrons
     permutations = get_permutations(range(n_particles))
     permutations = np.array(list(permutations))
 
-    # build list of signs and spin & isospin indices for each element from det
-    iso_indices = []
-    signs = []
-    spin_indices = []
-    for perm in permutations:
+    states = get_states(n_protons, n_neutrons, proton_orbitals=proton_orbitals, neutron_orbitals=neutron_orbitals)
+    state_permutations = get_state_permutations(states, permutations, n_particles)
 
-        sign = Permutation(perm).signature()
-        signs.append(sign)
+    spin_indices, iso_indices = get_spin_and_isospin_indices(state_permutations)
 
-        strs = states[perm]
-        strs = map(lambda s, i: s + str(i), strs, range(n_particles))
+    signatures = get_permutation_signature(permutations)
+    spin_isospin_signs = get_wave_function_sign(n_particles, n_protons, spin_indices, iso_indices, signatures, dtype)
 
-        # sort each product in term by particle number
-        strs = sorted(strs, key=lambda x: -int(x[-1]))
-        strs = [x[:-1] for x in strs]  # remove particle number from str
-
-        # get iso spin indices
-        iso_expr = ''
-        for s in strs: iso_expr += s[1]
-        iso_index = iso_expr.replace('p', '1').replace('n', '0')
-        iso_index = int(iso_index, 2)
-        iso_indices.append(iso_index)
-        spin_expr = ''
-
-        # get spin indices
-        for s in strs: spin_expr += s[0]
-        spin_index = spin_expr.replace('u', '1').replace('d', '0')
-        spin_index = int(spin_index, 2)
-        spin_indices.append(spin_index)
-
-    # iso spin is condensed to charge conserved states
-    iso_indices = rankdata(iso_indices, method='dense') - 1
-
-    # build wfc assume all zeros and then fill in non zero elements using signs from above
-    n_spin_states = get_number_of_spin_states(n_particles)
-    n_isospin_states = get_number_of_isospin_states(n_particles, n_protons)
-    wfc = np.zeros(shape=(n_isospin_states, n_spin_states))
-    for iso, spin, sign in zip(iso_indices, spin_indices, signs):
-        wfc[iso, spin] = sign
-    return jnp.array(wfc, dtype=dtype)
+    return spin_isospin_signs
