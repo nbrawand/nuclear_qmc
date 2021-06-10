@@ -109,10 +109,8 @@ def input_function_cross_product(functions, inputs):
     return jnp.array([[f(input) for f in functions] for input in inputs], dtype=jnp.float64)
 
 
-def get_wave_function_sign(n_particles, n_protons, spin_indices, iso_indices, signatures, dtype):
+def get_wave_function_sign(n_spin_states, n_isospin_states, spin_indices, iso_indices, signatures, dtype):
     # build wfc assume all zeros and then fill in non zero elements using signatures from above
-    n_spin_states = get_number_of_spin_states(n_particles)
-    n_isospin_states = get_number_of_isospin_states(n_particles, n_protons)
     wfc = np.zeros(shape=(n_isospin_states, n_spin_states))
     for iso, spin, sign in zip(iso_indices, spin_indices, signatures):
         wfc[iso, spin] = sign
@@ -127,12 +125,22 @@ def get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float64,
     permutations = get_permutations(range(n_particles))
     permutations = np.array(list(permutations))
 
+    n_spin_states = get_number_of_spin_states(n_particles)
+    n_isospin_states = get_number_of_isospin_states(n_particles, n_protons)
+
     states = get_states(n_protons, n_neutrons, proton_orbitals=proton_orbitals, neutron_orbitals=neutron_orbitals)
     state_permutations = get_state_permutations(states, permutations, n_particles)
 
     spin_indices, iso_indices = get_spin_and_isospin_indices(state_permutations)
 
     signatures = get_permutation_signature(permutations)
-    spin_isospin_signs = get_wave_function_sign(n_particles, n_protons, spin_indices, iso_indices, signatures, dtype)
-
-    return spin_isospin_signs
+    spin_isospin_signs = get_wave_function_sign(n_spin_states, n_isospin_states, spin_indices, iso_indices, signatures
+                                                , dtype)
+    if proton_orbitals is None:
+        return spin_isospin_signs
+    else:
+        function_names = [s[:-2] for s in states]  # strip off isospin and spin str
+        functions = get_spherical_harmonic_functions(function_names)
+        psi = get_orbital_wave_function(permutations, functions, spin_indices, iso_indices, n_particles
+                                        , n_spin_states, n_isospin_states)
+        return spin_isospin_signs, psi

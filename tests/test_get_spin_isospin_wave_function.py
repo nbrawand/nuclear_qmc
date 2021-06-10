@@ -38,9 +38,6 @@ class TestGetWFC:
         p_orbitals = ['Y_0_0', 'Y_1,_-1']
         computed = get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float32, neutron_orbitals=n_orbitals,
                                                   proton_orbitals=p_orbitals)
-        print(computed)
-        # expected = np.load('saved.npy')
-        # assert jnp.array_equal(computed, expected)
 
     def test_get_spherical_harmonic_system_not_including_functions(self):
         L = 0
