@@ -11,7 +11,8 @@ from nuclear_qmc.spin.get_tables import get_number_of_isospin_states, get_number
 from jax.ops import index, index_update
 from itertools import permutations as get_permutations
 
-from nuclear_qmc.spin.spherical_harmonics import get_spherical_harmonic_names, get_spherical_harmonic_functions
+from nuclear_qmc.spin.spherical_harmonics import get_spherical_harmonic_names, get_spherical_harmonic_functions, \
+    get_spherical_harmonic_system, get_spherical_harmonic_systems
 
 
 def add_spin_str(state_str_list, spin='d'):
@@ -87,19 +88,21 @@ def get_states(n_protons, n_neutrons, proton_orbitals=None, neutron_orbitals=Non
     return states
 
 
-def get_orbital_wave_function(function_permutations, functions, spin_indices, iso_indices, n_particles, n_spin, n_iso):
+def get_orbital_wave_function(function_permutations, functions, spin_indices, iso_indices, n_particles, n_spin, n_iso
+                              , spin_isospin_signs):
     p_index = jnp.arange(n_particles)
 
     def func(r):
         particle_function_matrix = input_function_cross_product(functions, r)  # [n_particles, n_functions]
         evaluations = particle_function_matrix[p_index, function_permutations]  # [n_permutations, n_functions]
         psi = vmap(jnp.prod, in_axes=(0))(evaluations)
-        out = jnp.zeros((n_iso, n_spin))
+        out = jnp.ones((n_iso, n_spin))
         # TODO: This loop needs to be refactored!
         i = 0
         for iso, spin in zip(iso_indices, spin_indices):
             out = index_update(out, index[iso, spin], psi[i])
             i += 1
+        out *= spin_isospin_signs
         return out
 
     return func
@@ -141,6 +144,23 @@ def get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float64,
     else:
         function_names = [s[:-2] for s in states]  # strip off isospin and spin str
         functions = get_spherical_harmonic_functions(function_names)
-        psi = get_orbital_wave_function(permutations, functions, spin_indices, iso_indices, n_particles
-                                        , n_spin_states, n_isospin_states)
-        return spin_isospin_signs, psi
+        psi = get_orbital_wave_function(permutations, functions.values(), spin_indices, iso_indices, n_particles
+                                        , n_spin_states, n_isospin_states, spin_isospin_signs)
+        return psi
+
+
+def get_spin_wave_function(n_protons, n_neutrons, L_total, L_z_total, L_1, L_2, dtype=jnp.float64):
+    spherical_harmonics_names, coefficients, functions = get_spherical_harmonic_systems(n_protons + n_neutrons, L_total,
+                                                                                        L_z_total, L_1, L_2)
+
+    psis = [get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=dtype,
+                                           proton_orbitals=names[0], neutron_orbitals=names[1])
+            for names in spherical_harmonics_names]  # spin_isospin, psi
+    psis = [lambda r: coef * psi(r) for coef, psi in zip(coefficients, psis)]
+
+    def psi(r):
+        out = 0.0
+        for psi in psis: out = psi(r) + out
+        return out
+
+    return psi

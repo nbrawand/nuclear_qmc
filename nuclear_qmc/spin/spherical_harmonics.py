@@ -6,7 +6,10 @@ from sympy import S
 
 
 def get_possible_L_z_values(L):
-    L_z = np.arange(-L, 2 * L, L)
+    if L > 0:
+        L_z = np.arange(-L, 2 * L, L)
+    else:
+        L_z = [0]
     L_z = [S(l_z) for l_z in L_z]
     return L_z
 
@@ -54,8 +57,8 @@ def get_spherical_harmonic_function(L, L_z):
 
 def get_spherical_harmonic_functions(names):
     names = list(set(names))
-    L = [n.split('_')[1] for n in names]
-    Lz = [n.split('_')[-1] for n in names]
+    L = [int(n.split('_')[1]) for n in names]
+    Lz = [int(n.split('_')[-1]) for n in names]
     functions = {n: get_spherical_harmonic_function(l, lz) for n, l, lz in zip(names, L, Lz)}
     return functions
 
@@ -65,4 +68,20 @@ def get_spherical_harmonic_system(L_total, L_z_total, L_1, L_2):
     spherical_harmonics_names = get_spherical_harmonic_names(L_1, L_2, L_z_combinations)
     coefficients = get_clebsch_gordan_coeff(L_total, L_z_total, L_1, L_2, L_z_combinations)
     functions = get_spherical_harmonic_functions(spherical_harmonics_names.reshape(-1))
+    return spherical_harmonics_names, coefficients, functions
+
+
+def get_spherical_harmonic_systems(n_particles, L_total, L_z_total, L_1, L_2):
+    if n_particles <= 4:
+        spherical_harmonics_names, coefficients, functions = get_spherical_harmonic_system(L_total, L_z_total, L_1, L_2)
+        spherical_harmonics_names = [[[harm[0]], [harm[1]]] for harm in spherical_harmonics_names]
+    elif n_particles <= 8:
+        alpha_core = get_spherical_harmonic_system(0, 0, 0, 0)
+        spherical_harmonics_names, coefficients, functions = get_spherical_harmonic_system(L_total, L_z_total, L_1, L_2)
+        Y00 = 'Y_0_0'
+        spherical_harmonics_names = [[[Y00, harm[0]], [Y00, harm[1]]] for harm in spherical_harmonics_names]
+        functions.update(alpha_core[-1])
+    else:
+        raise RuntimeError('get_spherical_harmonic_systems: n_particles must be <= 8.')
+
     return spherical_harmonics_names, coefficients, functions

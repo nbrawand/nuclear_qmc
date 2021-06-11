@@ -1,4 +1,5 @@
-from nuclear_qmc.spin.get_spin_isospin_wave_function import get_spin_isospin_wave_function, get_orbital_wave_function
+from nuclear_qmc.spin.get_spin_isospin_wave_function import get_spin_isospin_wave_function, get_orbital_wave_function, \
+    get_spin_wave_function
 import numpy as np
 import jax.numpy as jnp
 from nuclear_qmc.spin.spherical_harmonics import get_spherical_harmonic_system, get_phi, get_theta
@@ -92,3 +93,15 @@ class TestGetWFC:
             [4., 4., 4., 4.]
         ])
         assert jnp.array_equal(computed, expected)
+
+    def test_get_spin_wave_function(self):
+        n_protons = 3
+        n_neutrons = 3
+        L_total = 0
+        L_z_total = 0
+        L_1 = 1
+        L_2 = 1
+        psi = get_spin_wave_function(n_protons, n_neutrons, L_total, L_z_total, L_1, L_2, dtype=jnp.float64)
+        r = jnp.ones(shape=(6, 3))
+        psi_r = psi(r)
+        print(jnp.abs(psi_r).sum())
