@@ -93,23 +93,15 @@ def get_orbital_wave_function(function_permutations, functions, spin_indices, is
     p_index = jnp.arange(n_particles)
 
     def func(r):
-        particle_function_matrix = input_function_cross_product(functions, r)  # [n_particles, n_functions]
+        particle_function_matrix = jnp.array([[f(ri) for f in functions] for ri in r])  # [n_particles, n_functions]
         evaluations = particle_function_matrix[p_index, function_permutations]  # [n_permutations, n_functions]
         psi = vmap(jnp.prod, in_axes=(0))(evaluations)
-        out = jnp.ones((n_iso, n_spin))
-        # TODO: This loop needs to be refactored!
-        i = 0
-        for iso, spin in zip(iso_indices, spin_indices):
-            out = index_update(out, index[iso, spin], psi[i])
-            i += 1
+        out = jnp.ones((n_iso, n_spin), dtype=jnp.complex64)
+        out = index_update(out, index[iso_indices, spin_indices], psi)
         out *= spin_isospin_signs
         return out
 
     return func
-
-
-def input_function_cross_product(functions, inputs):
-    return jnp.array([[f(input) for f in functions] for input in inputs], dtype=jnp.float64)
 
 
 def get_wave_function_sign(n_spin_states, n_isospin_states, spin_indices, iso_indices, signatures, dtype):

@@ -5,6 +5,7 @@ import numpy as np
 from sympy import S
 
 
+
 def get_possible_L_z_values(L):
     if L > 0:
         L_z = np.arange(-L, 2 * L, L)
@@ -50,7 +51,8 @@ def get_spherical_harmonic_function(L, L_z):
     def func(r):
         theta = get_theta(r)
         phi = get_phi(r)
-        return sph_harm(L_z, L, theta, phi)
+        out = sph_harm(L_z, L, theta, phi)
+        return out
 
     return func
 
