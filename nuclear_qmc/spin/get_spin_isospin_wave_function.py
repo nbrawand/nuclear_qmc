@@ -141,7 +141,7 @@ def get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float64,
         return psi
 
 
-def get_spin_wave_function(n_protons, n_neutrons, L_total, L_z_total, L_1, L_2, dtype=jnp.float64):
+def get_wave_function(n_protons, n_neutrons, L_total, L_z_total, L_1, L_2, dtype=jnp.complex64):
     spherical_harmonics_names, coefficients, functions = get_spherical_harmonic_systems(n_protons + n_neutrons, L_total,
                                                                                         L_z_total, L_1, L_2)
 
