@@ -1,6 +1,6 @@
 from nuclear_qmc.wave_function.build_angular_momentum_wave_function import build_angular_momentum_wave_function
 from nuclear_qmc.wave_function.build_spin_isospin_wave_function import build_spin_isospin
-from nuclear_qmc.wave_function.build_wave_function import build_wave_function
+from nuclear_qmc.wave_function.build_wave_function_from_list import build_wave_function
 import jax.numpy as jnp
 
 
