@@ -57,7 +57,6 @@ def get_spherical_harmonic_function(L, L_z):
 
 
 def get_spherical_harmonic_functions(names):
-    names = list(set(names))
     L = [int(n.split('_')[1]) for n in names]
     Lz = [int(n.split('_')[-1]) for n in names]
     functions = [get_spherical_harmonic_function(l, lz) for n, l, lz in zip(names, L, Lz)]
@@ -74,15 +73,14 @@ def get_spherical_harmonic_system(L_total, L_z_total, L_1, L_2):
 
 def get_spherical_harmonic_systems(n_particles, L_total, L_z_total, L_1, L_2):
     if n_particles <= 4:
-        spherical_harmonics_names, coefficients, functions = get_spherical_harmonic_system(L_total, L_z_total, L_1, L_2)
-        spherical_harmonics_names = [[[harm[0]], [harm[1]]] for harm in spherical_harmonics_names]
+        coefficients = jnp.array([[1.0]], dtype=jnp.complex64)
+        functions = n_particles * ['Y_0_0']
+        functions = [get_spherical_harmonic_functions(functions)]
     elif n_particles <= 8:
-        alpha_core = get_spherical_harmonic_system(0, 0, 0, 0)
-        spherical_harmonics_names, coefficients, functions = get_spherical_harmonic_system(L_total, L_z_total, L_1, L_2)
-        Y00 = 'Y_0_0'
-        spherical_harmonics_names = [[[Y00, harm[0]], [Y00, harm[1]]] for harm in spherical_harmonics_names]
-        functions.update(alpha_core[-1])
+        alpha_functions = get_spherical_harmonic_functions(4 * ['Y_0_0'])
+        _, coefficients, functions = get_spherical_harmonic_system(L_total, L_z_total, L_1, L_2)
+        functions = [f + alpha_functions for f in functions]  # add alpha core functions
     else:
         raise RuntimeError('get_spherical_harmonic_systems: n_particles must be <= 8.')
 
-    return spherical_harmonics_names, coefficients, functions
+    return coefficients, functions

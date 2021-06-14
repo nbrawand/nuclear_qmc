@@ -27,10 +27,14 @@ class TestWaveFunction:
 
     def test_build_angular_momentum_wave_function(self):
         wfc = build_angular_momentum_wave_function(n_particles=2
-                                                   , spherical_harmonic_function_names=['Y_0_0']
                                                    , function_permutations=jnp.array([[0, 1], [1, 0]])
                                                    , iso_indices=jnp.array([0, 1])
-                                                   , spin_indices=jnp.array([0, 0]))
+                                                   , spin_indices=jnp.array([0, 0])
+                                                   , L_total=0
+                                                   , L_z_total=0
+                                                   , L_1=0
+                                                   , L_2=0
+                                                   )
         spin_isospin = jnp.array([[1., 0., 0., 0.],
                                   [-1., 0., 0., 0.]], dtype=jnp.float64)
         r = jnp.array([[0, 0, 0], [1, 0, 0]])
