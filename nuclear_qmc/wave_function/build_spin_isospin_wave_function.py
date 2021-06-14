@@ -1,8 +1,6 @@
 import jax.numpy as jnp
 from sympy.combinatorics.permutations import Permutation
 import numpy as np
-from itertools import permutations as get_permutations
-
 from nuclear_qmc.spin.get_tables import get_number_of_spin_states, get_number_of_isospin_states
 
 

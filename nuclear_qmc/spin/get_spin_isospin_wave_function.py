@@ -76,15 +76,15 @@ def get_spin_and_isospin_indices(state_representations):
     return spin_indices, iso_indices
 
 
-def get_states(n_protons, n_neutrons, proton_orbitals=None, neutron_orbitals=None):
+def get_states(n_protons, n_neutrons):
     p_states = n_protons * ['p']
     p_states = add_spin_str(p_states)
-    if proton_orbitals is not None:
-        p_states = add_orbitals(p_states, proton_orbitals, new_orbital_every_n_states=2)
+    # if proton_orbitals is not None:
+    #    p_states = add_orbitals(p_states, proton_orbitals, new_orbital_every_n_states=2)
     n_states = n_neutrons * ['n']
     n_states = add_spin_str(n_states)
-    if neutron_orbitals is not None:
-        n_states = add_orbitals(n_states, neutron_orbitals, new_orbital_every_n_states=2)
+    # if neutron_orbitals is not None:
+    #    n_states = add_orbitals(n_states, neutron_orbitals, new_orbital_every_n_states=2)
     states = n_states + p_states
     states = np.array(states)
     return states
@@ -118,50 +118,11 @@ def get_wave_function_sign(n_spin_states, n_isospin_states, spin_indices, iso_in
     return spin_isospin_signs
 
 
-def get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=jnp.float64,
-                                   proton_orbitals=None, neutron_orbitals=None):
-    # build permutations of states to enforce antisymmetry
+def get_spin_isospin_indices(n_protons, n_neutrons):
     n_particles = n_protons + n_neutrons
     permutations = get_permutations(range(n_particles))
     permutations = np.array(list(permutations))
-
-    n_spin_states = get_number_of_spin_states(n_particles)
-    n_isospin_states = get_number_of_isospin_states(n_particles, n_protons)
-
-    states = get_states(n_protons, n_neutrons, proton_orbitals=proton_orbitals, neutron_orbitals=neutron_orbitals)
+    states = get_states(n_protons, n_neutrons)
     state_permutations = get_state_permutations(states, permutations, n_particles)
-
     spin_indices, iso_indices = get_spin_and_isospin_indices(state_permutations)
-
-    signatures = get_permutation_signature(permutations)
-    spin_isospin_signs = get_wave_function_sign(n_spin_states, n_isospin_states, spin_indices, iso_indices, signatures
-                                                , dtype)
-    if proton_orbitals is None:
-        return spin_isospin_signs
-    else:
-        function_names = [s[:-2] for s in states]  # strip off isospin and spin str
-        functions = get_spherical_harmonic_functions(function_names)
-        param_indices = None
-        psi = get_orbital_wave_function(permutations, functions.values(), param_indices, spin_indices, iso_indices,
-                                        n_particles
-                                        , n_spin_states, n_isospin_states, spin_isospin_signs)
-        return psi
-
-
-def get_wave_function(n_protons, n_neutrons, L_total, L_z_total, L_1, L_2, dtype=jnp.complex64):
-    spherical_harmonics_names, coefficients, functions = get_spherical_harmonic_systems(n_protons + n_neutrons, L_total,
-                                                                                        L_z_total, L_1, L_2)
-
-    psis = [get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=dtype,
-                                           proton_orbitals=names[0], neutron_orbitals=names[1])
-            for names in spherical_harmonics_names]  # spin_isospin, psi
-    psis = [lambda params, r: coef * psi(params, r) for coef, psi in zip(coefficients, psis)]
-
-    psi = psis[0]
-    empty = jnp.array([])
-    name = spherical_harmonics_names[0][0][-1] + spherical_harmonics_names[0][1][-1]
-    for func, func_name in zip(psis[1:], spherical_harmonics_names[1:]):
-        func_name = func_name[0][-1] + func_name[1][-1]
-        psi, _, name = combine_wave_functions(psi, empty, name, func, empty, func_name, add)
-
-    return psi
+    return spin_indices, iso_indices
