@@ -47,7 +47,7 @@ def get_phi(r):
 
 
 def get_spherical_harmonic_function(L, L_z):
-    def func(params, r):
+    def func(r):
         theta = get_theta(r)
         phi = get_phi(r)
         out = sph_harm(L_z, L, theta, phi)
@@ -60,7 +60,7 @@ def get_spherical_harmonic_functions(names):
     names = list(set(names))
     L = [int(n.split('_')[1]) for n in names]
     Lz = [int(n.split('_')[-1]) for n in names]
-    functions = {n: get_spherical_harmonic_function(l, lz) for n, l, lz in zip(names, L, Lz)}
+    functions = [get_spherical_harmonic_function(l, lz) for n, l, lz in zip(names, L, Lz)]
     return functions
 
 
