@@ -120,7 +120,7 @@ def get_spherical_harmonic_systems(key, n_particles, L_total, L_z_total, L_1, L_
         functions = [functions]
         params = jnp.array([])
     elif n_particles <= 8:
-        alpha_functions = get_spherical_harmonic_functions(4 * ['Y_0_0'])
+        alpha_functions = get_spherical_harmonic_functions(key, 4 * ['Y_0_0'], n_dense, n_hidden_layers)
         key, coefficients, functions, params = get_spherical_harmonic_system(key, L_total, L_z_total, L_1, L_2, n_dense,
                                                                              n_hidden_layers)
         functions = [f + alpha_functions for f in functions]  # add alpha core functions
