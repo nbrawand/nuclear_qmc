@@ -41,7 +41,7 @@ def build_3b_jastro(func_3b, particle_pairs, particle_triplets):
     return psi_function
 
 
-def build_sigma_jastro(func_s, particle_pairs, orbital_wave_function, spin_exchange_indices):
+def build_sigma_jastro(func_s, particle_pairs, spin_exchange_indices):
     """Returns the spin-isospin vector. Set psi_vector for calculation to 1.0.
 
     Parameters
@@ -57,8 +57,7 @@ def build_sigma_jastro(func_s, particle_pairs, orbital_wave_function, spin_excha
 
     """
 
-    def psi_function(in_params, in_r_coords):
-        psi = orbital_wave_function(in_params, in_r_coords)
+    def psi_function(in_params, in_r_coords, psi):
         r_ij = get_r_ij(in_r_coords, particle_pairs)
         f_s_ij = vmap(func_s, in_axes=(None, 0))(in_params, r_ij)
         sum_ij_sigma = sigma_psi_r(psi, spin_exchange_indices, f_s_ij)
@@ -67,7 +66,7 @@ def build_sigma_jastro(func_s, particle_pairs, orbital_wave_function, spin_excha
     return psi_function
 
 
-def build_tau_jastro(func_tau, particle_pairs, orbital_wave_function, isospin_exchange_indices):
+def build_tau_jastro(func_tau, particle_pairs, isospin_exchange_indices):
     """Returns the spin-isospin vector. Set psi_vector for calculation to 1.0.
 
     Parameters
@@ -83,8 +82,7 @@ def build_tau_jastro(func_tau, particle_pairs, orbital_wave_function, isospin_ex
 
     """
 
-    def psi_function(in_params, in_r_coords):
-        psi = orbital_wave_function(in_params, in_r_coords)
+    def psi_function(in_params, in_r_coords, psi):
         r_ij = get_r_ij(in_r_coords, particle_pairs)
         f_tau_ij = vmap(func_tau, in_axes=(None, 0))(in_params, r_ij)
         sum_ij_tau = tau_psi_r(psi, isospin_exchange_indices, f_tau_ij)
@@ -93,7 +91,7 @@ def build_tau_jastro(func_tau, particle_pairs, orbital_wave_function, isospin_ex
     return psi_function
 
 
-def build_sigma_tau_jastro(func_sigma_tau, particle_pairs, orbital_wave_function, spin_exchange_indices,
+def build_sigma_tau_jastro(func_sigma_tau, particle_pairs, spin_exchange_indices,
                            isospin_exchange_indices):
     """Returns the spin-isospin vector. Set psi_vector for calculation to 1.0.
 
@@ -110,8 +108,7 @@ def build_sigma_tau_jastro(func_sigma_tau, particle_pairs, orbital_wave_function
 
     """
 
-    def psi_function(in_params, in_r_coords):
-        psi = orbital_wave_function(in_params, in_r_coords)
+    def psi_function(in_params, in_r_coords, psi):
         r_ij = get_r_ij(in_r_coords, particle_pairs)
         f_ij = vmap(func_sigma_tau, in_axes=(None, 0))(in_params, r_ij)
         sum_ij_tau = sigma_tau_psi_r(psi, spin_exchange_indices, isospin_exchange_indices, f_ij)

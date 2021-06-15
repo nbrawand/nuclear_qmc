@@ -89,11 +89,17 @@ def get_spherical_harmonic_functions(key, names, n_dense=2, n_hidden_layers=6):
     Lz = [int(n.split('_')[-1]) for n in names]
     functions = [get_spherical_harmonic_function(l, lz) for n, l, lz in zip(names, L, Lz)]
     if 1 in L:
+        # add radial functions
         key, radial_func, params = build_radial_function(key
                                                          , n_dense
                                                          , n_hidden_layers
                                                          , nn_wrapper_function=jnp.exp)
-        functions = [lambda p, r: radial_func(p, r) * f(r) for f, l in zip(functions, L) if l == 1]
+        functions = [lambda p, r: radial_func(p, r) * f(r) if l == 1 else lambda p, r,: f(r) for f, l in
+                     zip(functions, L)]
+    else:
+        functions = [lambda p, r: f(r) for f, l in zip(functions, L)]
+        params = jnp.array([])
+
     return key, functions, params
 
 

@@ -1,4 +1,5 @@
 from operator import add, mul
+from copy import deepcopy
 from collections import OrderedDict
 import jax.numpy as jnp
 
@@ -39,137 +40,112 @@ def build_jastro_nn(
     if jastro_list is None:
         jastro_list = ['2b', '3b']
 
-    key, orbital_wave_function, orbital_wave_function_params = build_angular_momentum_wave_function(key
-                                                                                                    , n_particles
-                                                                                                    ,
-                                                                                                    function_permutations
-                                                                                                    , iso_indices
-                                                                                                    , spin_indices
-                                                                                                    , L_total
-                                                                                                    , L_z_total
-                                                                                                    , L_1
-                                                                                                    , L_2
-                                                                                                    , spin
-                                                                                                    , n_dense
-                                                                                                    , n_hidden_layers
-                                                                                                    )
+    # orbitals
+    key, orbitals_func, orbital_params = build_angular_momentum_wave_function(key
+                                                                              , n_particles
+                                                                              ,
+                                                                              function_permutations
+                                                                              , iso_indices
+                                                                              , spin_indices
+                                                                              , L_total
+                                                                              , L_z_total
+                                                                              , L_1
+                                                                              , L_2
+                                                                              , spin
+                                                                              , n_dense
+                                                                              , n_hidden_layers
+                                                                              )
+    psi_parameters = orbital_params
 
-    builder_dictionary = {
-        '2b': {
-            'function': get_nn_jastro_func_and_params
-            , 'args': [key
-                , n_dense
-                , n_hidden_layers
-                , build_2b_jastro
-                , [particle_pairs]
-                , jnp.exp]
-            , 'correlation_group': 'top'
-            , 'combine_function': mul
-        }
-        , '3b': {
-            'function': get_nn_jastro_func_and_params
-            , 'args': [key
-                , n_dense
-                , n_hidden_layers
-                , build_3b_jastro
-                , [particle_pairs, particle_triplets]
-                , jnp.exp]
-            , 'correlation_group': 'top'
-            , 'combine_function': mul
-        }
-        , 'sigma_tau': {
-            'function': get_nn_jastro_func_and_params
-            , 'args': [key
-                , n_dense
-                , n_hidden_layers
-                , build_sigma_tau_jastro
-                , [particle_pairs, orbital_wave_function, spin_exchange_indices, isospin_exchange_indices]
-                , jnp.tanh]
-            , 'correlation_group': 'linear_operators'
-            , 'combine_function': add
-        }
-        , 'sigma': {
-            'function': get_nn_jastro_func_and_params
-            , 'args': [key
-                , n_dense
-                , n_hidden_layers
-                , build_sigma_jastro
-                , [particle_pairs, orbital_wave_function, spin_exchange_indices]
-                , jnp.tanh]
-            , 'correlation_group': 'linear_operators'
-            , 'combine_function': add
-        }
-        , 'tau': {
-            'function': get_nn_jastro_func_and_params
-            , 'args': [key
-                , n_dense
-                , n_hidden_layers
-                , build_tau_jastro
-                , [particle_pairs, orbital_wave_function, isospin_exchange_indices]
-                , jnp.tanh]
-            , 'correlation_group': 'linear_operators'
-            , 'combine_function': add
-        }
-    }
+    if 'sigma' in jastro_list:
+        key, sigma_func, sigma_params = get_nn_jastro_func_and_params(key
+                                                                      , n_dense
+                                                                      , n_hidden_layers
+                                                                      , build_sigma_jastro
+                                                                      , [particle_pairs, spin_exchange_indices]
+                                                                      , jnp.tanh)
+        psi_parameters = jnp.concatenate((psi_parameters, sigma_params))
 
-    # check for bad jastro type
-    for s in jastro_list:
-        if s not in builder_dictionary.keys():
-            raise RuntimeError(s + ' not in supported jastro types: ', list(builder_dictionary.keys()))
+    if 'tau' in jastro_list:
+        key, tau_func, tau_params = get_nn_jastro_func_and_params(key
+                                                                  , n_dense
+                                                                  , n_hidden_layers
+                                                                  , build_tau_jastro
+                                                                  , [particle_pairs, isospin_exchange_indices]
+                                                                  , jnp.tanh)
+        psi_parameters = jnp.concatenate((psi_parameters, tau_params))
 
-    # build all functions and parameters combine them with final wave function
-    func_dict = OrderedDict()
-    params_dict = OrderedDict()
-    function_expression = OrderedDict()
-    for jastro in jastro_list:
-        jastro_builder_function = builder_dictionary[jastro]['function']
-        jastro_args = builder_dictionary[jastro]['args']
-        group = builder_dictionary[jastro]['correlation_group']
-        combine_func = builder_dictionary[jastro]['combine_function']
-        func_expression = '' if group not in function_expression.keys() else function_expression[group]
-        key, func, param = jastro_builder_function(*jastro_args)
-        if group in func_dict.keys():
-            func_dict[group], params_dict[group], function_expression[group] = combine_wave_functions(func_dict[group]
-                                                                                                      ,
-                                                                                                      params_dict[group]
-                                                                                                      , func_expression
-                                                                                                      , func
-                                                                                                      , param
-                                                                                                      , jastro
-                                                                                                      , combine_func)
+    if 'sigma_tau' in jastro_list:
+        key, sigtau_func, sigtau_params = get_nn_jastro_func_and_params(key
+                                                                        , n_dense
+                                                                        , n_hidden_layers
+                                                                        , build_sigma_tau_jastro
+                                                                        , [particle_pairs, spin_exchange_indices,
+                                                                           isospin_exchange_indices]
+                                                                        , jnp.tanh)
+        psi_parameters = jnp.concatenate((psi_parameters, sigtau_params))
+
+    if '2b' in jastro_list:
+        key, b2_func, b2_params = get_nn_jastro_func_and_params(key
+                                                                , n_dense
+                                                                , n_hidden_layers
+                                                                , build_2b_jastro
+                                                                , [particle_pairs]
+                                                                , jnp.exp)
+        psi_parameters = jnp.concatenate((psi_parameters, b2_params))
+
+    if '3b' in jastro_list:
+        if n_particles > 2:
+            key, b3_func, b3_params = get_nn_jastro_func_and_params(key
+                                                                    , n_dense
+                                                                    , n_hidden_layers
+                                                                    , build_3b_jastro
+                                                                    , [particle_pairs, particle_triplets]
+                                                                    , jnp.exp)
+            psi_parameters = jnp.concatenate((psi_parameters, b3_params))
         else:
-            func_dict[group], params_dict[group], function_expression[group] = func, param, jastro
+            raise RuntimeError('3b jastro requires A>2')
 
-    # if any linear operator terms are present, add plain spin term to the linear group
-    lin_group = 'linear_operators'
-    if lin_group in func_dict.keys():
-        func_dict[lin_group], params_dict[lin_group], function_expression[lin_group] = combine_wave_functions(
-            func_dict[lin_group]
-            , params_dict[lin_group]
-            , function_expression[lin_group]
-            , orbital_wave_function
-            , orbital_wave_function_params
-            , '1'
-            , add)
-    else:
-        # no linear operators so add orbital wave function for product
-        func_dict[lin_group] = orbital_wave_function
-        params_dict[lin_group] = orbital_wave_function_params
-        function_expression[lin_group] = '1'
+    def psi_function(in_parameters, in_r_coords):
+        psi_out = 0
 
-    # now multiply all groups together
-    _, psi = func_dict.popitem(last=False)
-    _, psi_parameters = params_dict.popitem(last=False)
-    _, psi_expression = function_expression.popitem(last=False)
-    psi_expression = add_parentheses_if_needed(psi_expression)
-    for func, param, expr in zip(func_dict.values(), params_dict.values(), function_expression.values()):
-        expr = add_parentheses_if_needed(expr)
-        psi, psi_parameters, psi_expression = combine_wave_functions(psi, psi_parameters, psi_expression
-                                                                     , func, param, expr, mul)
+        # apply orbitals
+        start = 0
+        end = len(orbital_params)
+        orbitals_psi = orbitals_func(in_parameters[start:end], in_r_coords)
+        psi_out += orbitals_psi
 
-    # add a confining potential
-    confined_psi = lambda p, r: psi(p, r) * apply_confining_potential(r)
+        # linear operators act on orbitals and are added to the original wave function
+        if 'sigma' in jastro_list:
+            start = end
+            end += len(sigma_params)
+            psi_out += sigma_func(in_parameters[start:end], in_r_coords, orbitals_psi)
+
+        if 'tau' in jastro_list:
+            start = end
+            end += len(tau_params)
+            psi_out += tau_func(in_parameters[start:end], in_r_coords, orbitals_psi)
+
+        if 'sigtau' in jastro_list:
+            start = end
+            end += len(sigtau_params)
+            psi_out += sigtau_func(in_parameters[start:end], in_r_coords, orbitals_psi)
+
+        # multiply by 2b and 3b jastros
+        if '2b' in jastro_list:
+            start = end
+            end += len(b2_params)
+            psi_out *= b2_func(in_parameters[start:end], in_r_coords)
+
+        if '3b' in jastro_list:
+            start = end
+            end += len(b3_params)
+            psi_out *= b3_func(in_parameters[start:end], in_r_coords)
+
+        psi_out *= apply_confining_potential(in_r_coords)
+
+        return psi_out
 
     psi_vector = 1.0
 
-    return key, confined_psi, psi_parameters, psi_vector, psi_expression
+    return key, psi_function, psi_parameters, psi_vector

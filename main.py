@@ -45,10 +45,11 @@ logging.info('## Building Wave Function System')
 particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_wave_function_system(
     input_json['n_proton'], input_json['n_neutron'], also_return_binary_representation=True)
 spin_indices, iso_indices, permutations = get_spin_isospin_indices(input_json['n_proton'], input_json['n_neutron'])
-spin = build_spin_isospin(input_json['n_proton'] + input_json['n_neutron'], input_json['n_proton'], iso_indices, spin_indices
-                   , permutations)
+spin = build_spin_isospin(input_json['n_proton'] + input_json['n_neutron'], input_json['n_proton'], iso_indices,
+                          spin_indices
+                          , permutations)
 key = random.PRNGKey(input_json['wave_function']['seed'])
-key, psi_prefactor, psi_params, psi_vector, psi_expression = build_jastro_nn(
+key, psi_prefactor, psi_params, psi_vector = build_jastro_nn(
     key
     , spin
     , particle_pairs
@@ -67,7 +68,7 @@ key, psi_prefactor, psi_params, psi_vector, psi_expression = build_jastro_nn(
     , n_hidden_layers=input_json['wave_function']['n_hidden_layers']
     , jastro_list=input_json['wave_function']['jastro_list']
 )
-logging.info(f'Wave Function Expression: {psi_expression}')
+# logging.info(f'Wave Function Expression: {psi_expression}')
 
 logging.info('## Wave Function Parameters')
 if 'wave_function_file' not in input_json['wave_function']:
