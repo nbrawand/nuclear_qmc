@@ -6,7 +6,7 @@ from nuclear_qmc.spin.spherical_harmonics import get_spherical_harmonic_function
 
 def get_spherical_harmonics_vector(spherical_harmonics, r_coords, particle_indices, function_permutations):
     y_r_matrix = jnp.array([[f(r) for f in spherical_harmonics] for r in r_coords],
-                           dtype=jnp.complex64)  # [n_particles, n_func]
+                           dtype=jnp.float64)  # [n_particles, n_func]
     y_r_vector = y_r_matrix[particle_indices, function_permutations]  # [n_permutations, n_functions]
     y_r_vector = vmap(jnp.prod)(y_r_vector)
     return y_r_vector

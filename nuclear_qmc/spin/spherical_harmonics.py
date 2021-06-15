@@ -47,13 +47,22 @@ def get_phi(r):
 
 
 def get_spherical_harmonic_function(L, L_z):
-    def func(r):
-        theta = get_theta(r)
-        phi = get_phi(r)
-        #out = sph_harm(L_z, L, theta, phi)
-        out = jnp.sqrt(1/jnp.pi)/2.
-        return out
-
+    sq12pi = jnp.sqrt(1. / jnp.pi) / 2.
+    sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
+    if L_z == 0 and L == 0:
+        def func(r):
+            return sq12pi
+    elif L == 0 and L_z == -1:
+        def func(r):
+            return sq34pi * r[1] / jnp.linalg.norm(r)
+    elif L == 0 and L_z == 0:
+        def func(r):
+            return sq34pi * r[2] / jnp.linalg.norm(r)
+    elif L == 0 and L_z == 1:
+        def func(r):
+            return sq34pi * r[0] / jnp.linalg.norm(r)
+    else:
+        raise RuntimeError(f'get_spherical_harmonic_function: invalid L and Lz: {L}, {L_z}')
     return func
 
 
@@ -74,7 +83,7 @@ def get_spherical_harmonic_system(L_total, L_z_total, L_1, L_2):
 
 def get_spherical_harmonic_systems(n_particles, L_total, L_z_total, L_1, L_2):
     if n_particles <= 4:
-        coefficients = jnp.array([[1.0]], dtype=jnp.complex64)
+        coefficients = jnp.array([[1.0]], dtype=jnp.float64)
         functions = n_particles * ['Y_0_0']
         functions = [get_spherical_harmonic_functions(functions)]
     elif n_particles <= 8:
