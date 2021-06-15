@@ -70,13 +70,13 @@ def get_spherical_harmonic_function(L, L_z):
     if L_z == 0 and L == 0:
         def func(r_i):
             return sq12pi
-    elif L == 0 and L_z == -1:
+    elif L == 1 and L_z == -1:
         def func(r_i):
             return sq34pi * r_i[1] / jnp.linalg.norm(r_i)
-    elif L == 0 and L_z == 0:
+    elif L == 1 and L_z == 0:
         def func(r_i):
             return sq34pi * r_i[2] / jnp.linalg.norm(r_i)
-    elif L == 0 and L_z == 1:
+    elif L == 1 and L_z == 1:
         def func(r_i):
             return sq34pi * r_i[0] / jnp.linalg.norm(r_i)
     else:
