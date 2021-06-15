@@ -42,7 +42,7 @@ def get_permutation_signature(permutations):
 
 
 def get_state_permutations(states, permutations, n_particles):
-    representations = states[permutations]
+    representations = states[np.array(permutations)]
     # particle_numbers = np.arange(n_particles).astype(np.str)
     # representations = np.array([[elm+i for elm, i in zip(rep, particle_numbers)]for rep in representations])
     return representations
