@@ -39,16 +39,20 @@ def build_jastro_nn(
     if jastro_list is None:
         jastro_list = ['2b', '3b']
 
-    orbital_wave_function, orbital_wave_function_params = build_angular_momentum_wave_function(n_particles
-                                                                                               , function_permutations
-                                                                                               , iso_indices
-                                                                                               , spin_indices
-                                                                                               , L_total
-                                                                                               , L_z_total
-                                                                                               , L_1
-                                                                                               , L_2
-                                                                                               , spin
-                                                                                               )
+    key, orbital_wave_function, orbital_wave_function_params = build_angular_momentum_wave_function(key
+                                                                                                    , n_particles
+                                                                                                    ,
+                                                                                                    function_permutations
+                                                                                                    , iso_indices
+                                                                                                    , spin_indices
+                                                                                                    , L_total
+                                                                                                    , L_z_total
+                                                                                                    , L_1
+                                                                                                    , L_2
+                                                                                                    , spin
+                                                                                                    , n_dense
+                                                                                                    , n_hidden_layers
+                                                                                                    )
 
     builder_dictionary = {
         '2b': {

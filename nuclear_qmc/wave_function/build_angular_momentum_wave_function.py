@@ -4,7 +4,7 @@ import jax.numpy as jnp
 from nuclear_qmc.spin.spherical_harmonics import get_spherical_harmonic_functions, get_spherical_harmonic_systems
 
 
-def build_angular_momentum_wave_function(n_particles
+def build_angular_momentum_wave_function(key, n_particles
                                          , function_permutations
                                          , iso_indices
                                          , spin_indices
@@ -13,12 +13,15 @@ def build_angular_momentum_wave_function(n_particles
                                          , L_1
                                          , L_2
                                          , spin_isospin_wave_function
+                                         , n_dense
+                                         , n_hidden_layers
                                          ):
-    coefficients, spherical_harmonics_list = get_spherical_harmonic_systems(n_particles
-                                                                            , L_total
-                                                                            , L_z_total
-                                                                            , L_1
-                                                                            , L_2)
+    key, coefficients, spherical_harmonics_list, params = get_spherical_harmonic_systems(key, n_particles
+                                                                                         , L_total
+                                                                                         , L_z_total
+                                                                                         , L_1
+                                                                                         , L_2, n_dense,
+                                                                                         n_hidden_layers)
     particle_indices = jnp.arange(n_particles)
 
     @jit
@@ -40,4 +43,4 @@ def build_angular_momentum_wave_function(n_particles
         wave_function = index_update(spin_isospin_wave_function, index[iso_indices, spin_indices], new_values)
         return wave_function
 
-    return wave_function, jnp.array([])
+    return key, wave_function, params

@@ -4,6 +4,24 @@ from scipy.special import sph_harm
 import numpy as np
 from sympy import S
 
+from nuclear_qmc.wave_function.jastro_neural_network_builder.build_nn_wave_function import build_nn_wave_function
+
+
+def build_radial_function(key
+                          , n_dense
+                          , n_hidden_layers
+                          , nn_wrapper_function=jnp.exp
+                          ):
+    key, nn, params = build_nn_wave_function(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
+
+    def func(p, r_i):
+        r_mag = jnp.linalg.norm(r_i)
+        out = nn(p, r_mag)
+        out = nn_wrapper_function(out)
+        return out
+
+    return key, func, params
+
 
 def get_possible_L_z_values(L):
     if L > 0:
@@ -50,47 +68,57 @@ def get_spherical_harmonic_function(L, L_z):
     sq12pi = jnp.sqrt(1. / jnp.pi) / 2.
     sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
     if L_z == 0 and L == 0:
-        def func(r):
+        def func(r_i):
             return sq12pi
     elif L == 0 and L_z == -1:
-        def func(r):
-            return sq34pi * r[1] / jnp.linalg.norm(r)
+        def func(r_i):
+            return sq34pi * r_i[1] / jnp.linalg.norm(r_i)
     elif L == 0 and L_z == 0:
-        def func(r):
-            return sq34pi * r[2] / jnp.linalg.norm(r)
+        def func(r_i):
+            return sq34pi * r_i[2] / jnp.linalg.norm(r_i)
     elif L == 0 and L_z == 1:
-        def func(r):
-            return sq34pi * r[0] / jnp.linalg.norm(r)
+        def func(r_i):
+            return sq34pi * r_i[0] / jnp.linalg.norm(r_i)
     else:
         raise RuntimeError(f'get_spherical_harmonic_function: invalid L and Lz: {L}, {L_z}')
     return func
 
 
-def get_spherical_harmonic_functions(names):
+def get_spherical_harmonic_functions(key, names, n_dense=2, n_hidden_layers=6):
     L = [int(n.split('_')[1]) for n in names]
     Lz = [int(n.split('_')[-1]) for n in names]
     functions = [get_spherical_harmonic_function(l, lz) for n, l, lz in zip(names, L, Lz)]
-    return functions
+    if 1 in L:
+        key, radial_func, params = build_radial_function(key
+                                                         , n_dense
+                                                         , n_hidden_layers
+                                                         , nn_wrapper_function=jnp.exp)
+        functions = [lambda p, r: radial_func(p, r) * f(r) for f, l in zip(functions, L) if l == 1]
+    return key, functions, params
 
 
-def get_spherical_harmonic_system(L_total, L_z_total, L_1, L_2):
+def get_spherical_harmonic_system(key, L_total, L_z_total, L_1, L_2, n_dense, n_hidden_layers):
     L_z_combinations = get_valid_L_z_combintations(L_z_total, L_1, L_2)
     spherical_harmonics_names = get_spherical_harmonic_names(L_1, L_2, L_z_combinations)
     coefficients = get_clebsch_gordan_coeff(L_total, L_z_total, L_1, L_2, L_z_combinations)
-    functions = get_spherical_harmonic_functions(spherical_harmonics_names.reshape(-1))
-    return spherical_harmonics_names, coefficients, functions
+    key, functions, params = get_spherical_harmonic_functions(key, spherical_harmonics_names.reshape(-1), n_dense,
+                                                              n_hidden_layers)
+    return key, coefficients, functions, params
 
 
-def get_spherical_harmonic_systems(n_particles, L_total, L_z_total, L_1, L_2):
+def get_spherical_harmonic_systems(key, n_particles, L_total, L_z_total, L_1, L_2, n_dense, n_hidden_layers):
     if n_particles <= 4:
         coefficients = jnp.array([[1.0]], dtype=jnp.float64)
         functions = n_particles * ['Y_0_0']
-        functions = [get_spherical_harmonic_functions(functions)]
+        key, functions, params = get_spherical_harmonic_functions(key, functions, n_dense, n_hidden_layers)
+        functions = [functions]
+        params = jnp.array([])
     elif n_particles <= 8:
         alpha_functions = get_spherical_harmonic_functions(4 * ['Y_0_0'])
-        _, coefficients, functions = get_spherical_harmonic_system(L_total, L_z_total, L_1, L_2)
+        key, coefficients, functions, params = get_spherical_harmonic_system(key, L_total, L_z_total, L_1, L_2, n_dense,
+                                                                             n_hidden_layers)
         functions = [f + alpha_functions for f in functions]  # add alpha core functions
     else:
         raise RuntimeError('get_spherical_harmonic_systems: n_particles must be <= 8.')
 
-    return coefficients, functions
+    return key, coefficients, functions, params
