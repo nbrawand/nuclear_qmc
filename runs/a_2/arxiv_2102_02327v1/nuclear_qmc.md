@@ -6879,3 +6879,239 @@ optimization step | 1038 | -2.2411881991567766 | 0.00013874710534197897
 optimization step | 1039 | -2.241070855230392 | 0.00028008621076468324
 optimization step | 1040 | -2.241829521650155 | 0.0005871993403106386
 optimization step | 1041 | -2.241224410206472 | 0.00017149967161558954
+# Nuclear QMC Run
+## Log File
+/home/nbrawand/computation/argonne/nuclear_qmc/runs/a_2/arxiv_2102_02327v1/nuclear_qmc.md
+## Input File
+```json
+{
+    "n_neutron": 1,
+    "n_proton": 1,
+    "optimization": {
+        "epsilon_sr": 0.0001,
+        "initial_walker_standard_deviation": 1.0,
+        "learning_rate": 0.001,
+        "n_blocks": 18,
+        "n_dimensions": 3,
+        "n_equilibrium_blocks": 18,
+        "n_optimization_steps": 1000000,
+        "n_void_steps": 300,
+        "n_walkers": 3000,
+        "print_local_energy": true,
+        "seed": 0,
+        "walker_step_size": 0.2
+    },
+    "potential_energy": "arxiv_2102_02327v1",
+    "potential_kwargs": {
+        "model_string": "o"
+    },
+    "wave_function": {
+        "L_1": 0,
+        "L_2": 0,
+        "L_total": 0,
+        "L_z": 0,
+        "jastro_list": [
+            "2b"
+        ],
+        "n_dense": 6,
+        "n_hidden_layers": 2,
+        "seed": 0,
+        "wave_function_file": "wave_function_parameters_0.npy"
+    }
+}
+```
+## Building Wave Function System
+# Nuclear QMC Run
+## Log File
+/home/nbrawand/computation/argonne/nuclear_qmc/runs/a_2/arxiv_2102_02327v1/nuclear_qmc.md
+## Input File
+```json
+{
+    "n_neutron": 1,
+    "n_proton": 1,
+    "optimization": {
+        "epsilon_sr": 0.0001,
+        "initial_walker_standard_deviation": 1.0,
+        "learning_rate": 0.001,
+        "n_blocks": 18,
+        "n_dimensions": 3,
+        "n_equilibrium_blocks": 18,
+        "n_optimization_steps": 1000000,
+        "n_void_steps": 300,
+        "n_walkers": 3000,
+        "print_local_energy": true,
+        "seed": 0,
+        "walker_step_size": 0.2
+    },
+    "potential_energy": "arxiv_2102_02327v1",
+    "potential_kwargs": {
+        "model_string": "o"
+    },
+    "wave_function": {
+        "L_1": 0,
+        "L_2": 0,
+        "L_total": 0,
+        "L_z": 0,
+        "jastro_list": [
+            "2b"
+        ],
+        "n_dense": 6,
+        "n_hidden_layers": 2,
+        "seed": 0,
+        "wave_function_file": "wave_function_parameters_0.npy"
+    }
+}
+```
+## Building Wave Function System
+# Nuclear QMC Run
+## Log File
+/home/nbrawand/computation/argonne/nuclear_qmc/runs/a_2/arxiv_2102_02327v1/nuclear_qmc.md
+## Input File
+```json
+{
+    "n_neutron": 1,
+    "n_proton": 1,
+    "optimization": {
+        "epsilon_sr": 0.0001,
+        "initial_walker_standard_deviation": 1.0,
+        "learning_rate": 0.001,
+        "n_blocks": 18,
+        "n_dimensions": 3,
+        "n_equilibrium_blocks": 18,
+        "n_optimization_steps": 1000000,
+        "n_void_steps": 300,
+        "n_walkers": 3000,
+        "print_local_energy": true,
+        "seed": 0,
+        "walker_step_size": 0.2
+    },
+    "potential_energy": "arxiv_2102_02327v1",
+    "potential_kwargs": {
+        "model_string": "o"
+    },
+    "wave_function": {
+        "L_1": 0,
+        "L_2": 0,
+        "L_total": 0,
+        "L_z": 0,
+        "jastro_list": [
+            "2b"
+        ],
+        "n_dense": 6,
+        "n_hidden_layers": 2,
+        "seed": 0,
+        "wave_function_file": "wave_function_parameters_0.npy"
+    }
+}
+```
+## Building Wave Function System
+Wave Function Expression: 2b*1
+## Wave Function Parameters
+reading wave function parameters from: /home/nbrawand/computation/argonne/nuclear_qmc/runs/a_2/arxiv_2102_02327v1/wave_function_parameters_0.npy
+## Hamiltonian
+## Optimization
+Search String | Step | Energy | Error
+------------- | ---- | ------ | -----
+# Nuclear QMC Run
+## Log File
+/home/nbrawand/computation/argonne/nuclear_qmc/runs/a_2/arxiv_2102_02327v1/nuclear_qmc.md
+## Input File
+```json
+{
+    "n_neutron": 1,
+    "n_proton": 1,
+    "optimization": {
+        "epsilon_sr": 0.0001,
+        "initial_walker_standard_deviation": 1.0,
+        "learning_rate": 0.001,
+        "n_blocks": 18,
+        "n_dimensions": 3,
+        "n_equilibrium_blocks": 18,
+        "n_optimization_steps": 1000000,
+        "n_void_steps": 300,
+        "n_walkers": 3000,
+        "print_local_energy": true,
+        "seed": 0,
+        "walker_step_size": 0.2
+    },
+    "potential_energy": "arxiv_2102_02327v1",
+    "potential_kwargs": {
+        "model_string": "o"
+    },
+    "wave_function": {
+        "L_1": 0,
+        "L_2": 0,
+        "L_total": 0,
+        "L_z": 0,
+        "jastro_list": [
+            "2b"
+        ],
+        "n_dense": 6,
+        "n_hidden_layers": 2,
+        "seed": 0,
+        "wave_function_file": "wave_function_parameters_0.npy"
+    }
+}
+```
+## Building Wave Function System
+Wave Function Expression: 2b*1
+## Wave Function Parameters
+reading wave function parameters from: /home/nbrawand/computation/argonne/nuclear_qmc/runs/a_2/arxiv_2102_02327v1/wave_function_parameters_0.npy
+## Hamiltonian
+## Optimization
+Search String | Step | Energy | Error
+------------- | ---- | ------ | -----
+optimization step | 0 | -2.241309888136479 | 0.0003523214040103711
+# Nuclear QMC Run
+## Log File
+/home/nbrawand/computation/argonne/nuclear_qmc/runs/a_2/arxiv_2102_02327v1/nuclear_qmc.md
+## Input File
+```json
+{
+    "n_neutron": 1,
+    "n_proton": 1,
+    "optimization": {
+        "epsilon_sr": 0.0001,
+        "initial_walker_standard_deviation": 1.0,
+        "learning_rate": 0.001,
+        "n_blocks": 18,
+        "n_dimensions": 3,
+        "n_equilibrium_blocks": 18,
+        "n_optimization_steps": 1000000,
+        "n_void_steps": 300,
+        "n_walkers": 3000,
+        "print_local_energy": true,
+        "seed": 0,
+        "walker_step_size": 0.2
+    },
+    "potential_energy": "arxiv_2102_02327v1",
+    "potential_kwargs": {
+        "model_string": "o"
+    },
+    "wave_function": {
+        "L_1": 0,
+        "L_2": 0,
+        "L_total": 0,
+        "L_z": 0,
+        "jastro_list": [
+            "2b"
+        ],
+        "n_dense": 6,
+        "n_hidden_layers": 2,
+        "seed": 0,
+        "wave_function_file": "wave_function_parameters_0.npy"
+    }
+}
+```
+## Building Wave Function System
+Wave Function Expression: 2b*1
+## Wave Function Parameters
+reading wave function parameters from: /home/nbrawand/computation/argonne/nuclear_qmc/runs/a_2/arxiv_2102_02327v1/wave_function_parameters_0.npy
+## Hamiltonian
+## Optimization
+Search String | Step | Energy | Error
+------------- | ---- | ------ | -----
+optimization step | 0 | -2.241309888136479 | 0.0003523214040103711
+optimization step | 1 | -2.240897812038352 | 0.00015550750376361493
+optimization step | 2 | -2.2410828203427133 | 9.703949097437978e-05
+optimization step | 3 | -2.2409197118678956 | 0.00012660521488915122

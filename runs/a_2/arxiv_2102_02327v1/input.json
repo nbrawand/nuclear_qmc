@@ -8,7 +8,11 @@
     "jastro_list": [
       "2b"
     ],
-    "wave_function_file": "wave_function_parameters_0.npy"
+    "wave_function_file": "wave_function_parameters_0.npy",
+    "L_total": 0,
+    "L_z": 0,
+    "L_1": 0,
+    "L_2": 0
   },
   "potential_energy": "arxiv_2102_02327v1",
   "potential_kwargs": {

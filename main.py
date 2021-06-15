@@ -4,7 +4,9 @@ import json
 
 from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonian
 from nuclear_qmc.optimize.optimize_wave_function import optimize_wave_function
+from nuclear_qmc.spin.get_spin_isospin_wave_function import get_spin_isospin_indices
 from nuclear_qmc.utils.get_new_file_name import get_new_file_name
+from nuclear_qmc.wave_function.build_spin_isospin_wave_function import build_spin_isospin
 from nuclear_qmc.wave_function.jastro_neural_network_builder.neural_network import build_jastro_nn
 from nuclear_qmc.wave_function.utility import get_wave_function_system
 import os
@@ -40,8 +42,11 @@ logging.info(json.dumps(input_json, indent=4, sort_keys=True))
 logging.info("```")
 
 logging.info('## Building Wave Function System')
-particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_wave_function_system(
+particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_wave_function_system(
     input_json['n_proton'], input_json['n_neutron'], also_return_binary_representation=True)
+spin_indices, iso_indices, permutations = get_spin_isospin_indices(input_json['n_proton'], input_json['n_neutron'])
+spin = build_spin_isospin(input_json['n_proton'] + input_json['n_neutron'], input_json['n_proton'], iso_indices, spin_indices
+                   , permutations)
 key = random.PRNGKey(input_json['wave_function']['seed'])
 key, psi_prefactor, psi_params, psi_vector, psi_expression = build_jastro_nn(
     key
@@ -50,6 +55,14 @@ key, psi_prefactor, psi_params, psi_vector, psi_expression = build_jastro_nn(
     , particle_triplets=particle_triplets
     , spin_exchange_indices=spin_exchange_indices
     , isospin_exchange_indices=isospin_exchange_indices
+    , n_particles=input_json['n_proton'] + input_json['n_neutron']
+    , function_permutations=permutations
+    , iso_indices=iso_indices
+    , spin_indices=spin_indices
+    , L_total=input_json['wave_function']['L_total']
+    , L_z_total=input_json['wave_function']['L_z']
+    , L_1=input_json['wave_function']['L_1']
+    , L_2=input_json['wave_function']['L_2']
     , n_dense=input_json['wave_function']['n_dense']
     , n_hidden_layers=input_json['wave_function']['n_hidden_layers']
     , jastro_list=input_json['wave_function']['jastro_list']

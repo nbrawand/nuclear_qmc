@@ -1,6 +1,8 @@
 from operator import add, mul
 from collections import OrderedDict
 import jax.numpy as jnp
+
+from nuclear_qmc.wave_function.build_angular_momentum_wave_function import build_angular_momentum_wave_function
 from nuclear_qmc.wave_function.combine_wave_functions import combine_wave_functions
 from nuclear_qmc.wave_function.jastro import build_sigma_jastro, build_3b_jastro, build_2b_jastro, build_tau_jastro, \
     build_sigma_tau_jastro
@@ -22,12 +24,31 @@ def build_jastro_nn(
         , particle_triplets
         , spin_exchange_indices
         , isospin_exchange_indices
+        , n_particles
+        , function_permutations
+        , iso_indices
+        , spin_indices
+        , L_total
+        , L_z_total
+        , L_1
+        , L_2
         , n_dense=6
         , n_hidden_layers=2
         , jastro_list=None
 ):
     if jastro_list is None:
         jastro_list = ['2b', '3b']
+
+    orbital_wave_function, orbital_wave_function_params = build_angular_momentum_wave_function(n_particles
+                                                                                               , function_permutations
+                                                                                               , iso_indices
+                                                                                               , spin_indices
+                                                                                               , L_total
+                                                                                               , L_z_total
+                                                                                               , L_1
+                                                                                               , L_2
+                                                                                               , spin
+                                                                                               )
 
     builder_dictionary = {
         '2b': {
@@ -58,7 +79,7 @@ def build_jastro_nn(
                 , n_dense
                 , n_hidden_layers
                 , build_sigma_tau_jastro
-                , [particle_pairs, spin, spin_exchange_indices, isospin_exchange_indices]
+                , [particle_pairs, orbital_wave_function, spin_exchange_indices, isospin_exchange_indices]
                 , jnp.tanh]
             , 'correlation_group': 'linear_operators'
             , 'combine_function': add
@@ -69,7 +90,7 @@ def build_jastro_nn(
                 , n_dense
                 , n_hidden_layers
                 , build_sigma_jastro
-                , [particle_pairs, spin, spin_exchange_indices]
+                , [particle_pairs, orbital_wave_function, spin_exchange_indices]
                 , jnp.tanh]
             , 'correlation_group': 'linear_operators'
             , 'combine_function': add
@@ -80,7 +101,7 @@ def build_jastro_nn(
                 , n_dense
                 , n_hidden_layers
                 , build_tau_jastro
-                , [particle_pairs, spin, isospin_exchange_indices]
+                , [particle_pairs, orbital_wave_function, isospin_exchange_indices]
                 , jnp.tanh]
             , 'correlation_group': 'linear_operators'
             , 'combine_function': add
@@ -115,22 +136,22 @@ def build_jastro_nn(
         else:
             func_dict[group], params_dict[group], function_expression[group] = func, param, jastro
 
-    # if any linear operator terms are present, add plain spin term to the linear group and set the psi_vector to 1
+    # if any linear operator terms are present, add plain spin term to the linear group
     lin_group = 'linear_operators'
     if lin_group in func_dict.keys():
-        func, param = lambda p, r: spin, jnp.array([], dtype=jnp.float64)
         func_dict[lin_group], params_dict[lin_group], function_expression[lin_group] = combine_wave_functions(
             func_dict[lin_group]
             , params_dict[lin_group]
             , function_expression[lin_group]
-            , func
-            , param
+            , orbital_wave_function
+            , orbital_wave_function_params
             , '1'
             , add)
-        psi_vector = 1.0
     else:
-        # linear operators not present
-        psi_vector = spin
+        # no linear operators so add orbital wave function for product
+        func_dict[lin_group] = orbital_wave_function
+        params_dict[lin_group] = orbital_wave_function_params
+        function_expression[lin_group] = '1'
 
     # now multiply all groups together
     _, psi = func_dict.popitem(last=False)
@@ -144,5 +165,7 @@ def build_jastro_nn(
 
     # add a confining potential
     confined_psi = lambda p, r: psi(p, r) * apply_confining_potential(r)
+
+    psi_vector = 1.0
 
     return key, confined_psi, psi_parameters, psi_vector, psi_expression

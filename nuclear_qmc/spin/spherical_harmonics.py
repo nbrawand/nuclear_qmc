@@ -50,7 +50,8 @@ def get_spherical_harmonic_function(L, L_z):
     def func(r):
         theta = get_theta(r)
         phi = get_phi(r)
-        out = sph_harm(L_z, L, theta, phi)
+        #out = sph_harm(L_z, L, theta, phi)
+        out = jnp.sqrt(1/jnp.pi)/2.
         return out
 
     return func
