@@ -73,7 +73,7 @@ def get_spin_and_isospin_indices(state_representations):
     # iso spin is condensed to charge conserved states
     iso_indices = rankdata(iso_indices, method='dense') - 1
 
-    return spin_indices, iso_indices
+    return jnp.array(spin_indices), jnp.array(iso_indices)
 
 
 def get_states(n_protons, n_neutrons):
@@ -121,7 +121,7 @@ def get_wave_function_sign(n_spin_states, n_isospin_states, spin_indices, iso_in
 def get_spin_isospin_indices(n_protons, n_neutrons):
     n_particles = n_protons + n_neutrons
     permutations = get_permutations(range(n_particles))
-    permutations = np.array(list(permutations))
+    permutations = jnp.array(list(permutations))
     states = get_states(n_protons, n_neutrons)
     state_permutations = get_state_permutations(states, permutations, n_particles)
     spin_indices, iso_indices = get_spin_and_isospin_indices(state_permutations)

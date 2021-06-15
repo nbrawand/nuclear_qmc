@@ -33,12 +33,14 @@ def build_angular_momentum_wave_function(key, n_particles
             y_r_vector = y_r_matrix[particle_indices, function_permutations]  # [n_permutations, n_functions]
             y_r_vector = vmap(jnp.prod)(y_r_vector)
             out.append(y_r_vector)
-        return jnp.array(out, dtype=jnp.float64)
+        out = jnp.array(out, dtype=jnp.float64)
+        out = jnp.swapaxes(out, 0, 1)  # [n_harmonics_set, n_permutations]
+        return out
 
     def wave_function(parameters, r_coords):
         y_r_vector = get_y_r_vector(parameters, r_coords)
         y_r_vector = coefficients * y_r_vector
-        y_r_vector = y_r_vector.sum(axis=0)
+        y_r_vector = y_r_vector.sum(axis=1)
         new_values = y_r_vector * spin_isospin_wave_function[iso_indices, spin_indices]
         wave_function = index_update(spin_isospin_wave_function, index[iso_indices, spin_indices], new_values)
         return wave_function
