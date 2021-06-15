@@ -125,4 +125,4 @@ def get_spin_isospin_indices(n_protons, n_neutrons):
     states = get_states(n_protons, n_neutrons)
     state_permutations = get_state_permutations(states, permutations, n_particles)
     spin_indices, iso_indices = get_spin_and_isospin_indices(state_permutations)
-    return spin_indices, iso_indices
+    return spin_indices, iso_indices, permutations
