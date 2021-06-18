@@ -2,6 +2,8 @@ import jax.numpy as jnp
 from jax.ops import index, index_update
 from jax import vmap
 
+from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
+
 
 def partial_i_j(f, x, i, j):
     epsilon = 1e-3
@@ -26,4 +28,5 @@ def laplacian(f, x, i, j):
 def kinetic_energy(f, x, i, j):
     ke = vmap(laplacian, in_axes=(None, None, 0, None))(f, x, i, j)
     ke = ke.sum(axis=0)
+    ke = - H_BAR_SQRD_OVER_2_M * ke
     return ke
