@@ -7,10 +7,14 @@ from sympy import S
 from nuclear_qmc.wave_function.jastro_neural_network_builder.build_nn_wave_function import build_nn_wave_function
 
 
+def sigmoid(x):
+    return 1. / (1 + jnp.exp(-x))
+
+
 def build_radial_function(key
                           , n_dense
                           , n_hidden_layers
-                          , nn_wrapper_function=jnp.exp
+                          , nn_wrapper_function=sigmoid
                           ):
     key, nn, params = build_nn_wave_function(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
 
