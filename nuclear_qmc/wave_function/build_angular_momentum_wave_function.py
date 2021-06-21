@@ -41,8 +41,15 @@ def build_angular_momentum_wave_function(key, n_particles
         y_r_vector = get_y_r_vector(parameters, r_coords)
         y_r_vector = coefficients * y_r_vector
         y_r_vector = y_r_vector.sum(axis=1)
-        new_values = y_r_vector * spin_isospin_wave_function[iso_indices, spin_indices]
-        wave_function = index_update(spin_isospin_wave_function, index[iso_indices, spin_indices], new_values)
+
+        # new_values = y_r_vector * spin_isospin_wave_function[iso_indices, spin_indices]
+        # wave_function = index_update(spin_isospin_wave_function, index[iso_indices, spin_indices], new_values)
+
+        f = lambda i: y_r_vector[i] * spin_isospin_wave_function[iso_indices[i], spin_indices[i]]
+        new_values = vmap(f)(jnp.arange(len(iso_indices)))
+        wave_function = spin_isospin_wave_function.copy()
+        for i in range(len(iso_indices)):
+            wave_function = index_update(wave_function, index[iso_indices[i], spin_indices[i]], new_values[i])
         return wave_function
 
     return key, wave_function, params
