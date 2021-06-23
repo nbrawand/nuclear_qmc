@@ -1,7 +1,11 @@
 import jax.numpy as jnp
 from operator import add
-from jax import vmap
+from jax.ops import index_update, index
+from jax import vmap, numpy as jnp
 from copy import deepcopy
+
+from scipy.special import comb
+from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import Permutation
 from scipy.stats import rankdata
 from jax.ops import index, index_update
@@ -45,7 +49,7 @@ def get_state_permutations(states, permutations, n_particles):
     representations = states[np.array(permutations)]
     # particle_numbers = np.arange(n_particles).astype(np.str)
     # representations = np.array([[elm+i for elm, i in zip(rep, particle_numbers)]for rep in representations])
-    return representations
+    return np.array(representations)
 
 
 def get_spin_and_isospin_indices(state_representations):
@@ -76,15 +80,23 @@ def get_spin_and_isospin_indices(state_representations):
     return jnp.array(spin_indices), jnp.array(iso_indices)
 
 
+def get_orbitals(n_particle_of_type):
+    n_pshell = get_number_of_p_shell_particles(n_particle_of_type, max_in_lower_shell=2)
+    neutron_orbitals = ['S'] + n_pshell * ['P']
+    return neutron_orbitals
+
+
+def get_states_per_type(n_particle_of_type, iso_type_str):
+    states = n_particle_of_type * [iso_type_str]
+    states = add_spin_str(states)
+    orbitals = get_orbitals(n_particle_of_type)
+    states = add_orbitals(states, orbitals, new_orbital_every_n_states=2)
+    return states
+
+
 def get_states(n_protons, n_neutrons):
-    p_states = n_protons * ['p']
-    p_states = add_spin_str(p_states)
-    # if proton_orbitals is not None:
-    #    p_states = add_orbitals(p_states, proton_orbitals, new_orbital_every_n_states=2)
-    n_states = n_neutrons * ['n']
-    n_states = add_spin_str(n_states)
-    # if neutron_orbitals is not None:
-    #    n_states = add_orbitals(n_states, neutron_orbitals, new_orbital_every_n_states=2)
+    p_states = get_states_per_type(n_protons, 'p')
+    n_states = get_states_per_type(n_neutrons, 'n')
     states = n_states + p_states
     states = np.array(states)
     return states
@@ -126,3 +138,58 @@ def get_spin_isospin_indices(n_protons, n_neutrons):
     state_permutations = get_state_permutations(states, permutations, n_particles)
     spin_indices, iso_indices = get_spin_and_isospin_indices(state_permutations)
     return spin_indices, iso_indices, permutations
+
+
+def get_number_of_p_shell_particles(n_particles, max_in_lower_shell=4):
+    n_p = n_particles - max_in_lower_shell
+    if n_p <= 0:
+        return 0
+    elif n_p > max_in_lower_shell:
+        return max_in_lower_shell
+    else:
+        return n_p
+
+
+def get_number_of_orbital_configurations(n_particles):
+    if n_particles > 8:
+        raise RuntimeError('number of orbital configs only works for n particles <= 8')
+    n_p_shell_particles = get_number_of_p_shell_particles(n_particles)
+    return comb(n_particles, n_p_shell_particles)
+
+
+def get_indices(state_permutations, state_position_index, str_to_int_rules, use_rank=True):
+    # extract state str at given index
+    original_shape = state_permutations.shape
+    states = np.array([str_to_int_rules[e[state_position_index]] for l in state_permutations for e in l]).reshape(
+        *original_shape)
+    states = [''.join(lst) for lst in states]
+    if use_rank:
+        states = [int(str) for str in states]
+        states = rankdata(states, method='dense') - 1
+    else:
+        states = [int(str, 2) for str in states]
+    return jnp.array(states)
+
+
+def build_spin_isospin_system(n_neutrons, n_protons):
+    # build initial wave function
+    n_particles = n_neutrons + n_protons
+    n_iso_configs = get_number_of_isospin_states(n_particles, n_protons)
+    n_spin_configs = get_number_of_spin_states(n_particles)
+    n_orbital_configs = int(get_number_of_orbital_configurations(n_particles))
+    wave_function = jnp.zeros(shape=(n_orbital_configs, n_iso_configs, n_spin_configs))
+
+    # get indices for permutation signatures
+    coordinate_permutations = jnp.array(list(get_permutations(range(n_particles))))
+    states = get_states(n_protons, n_neutrons)
+    state_permutations = get_state_permutations(states, coordinate_permutations, n_particles)
+    orbital_indices = get_indices(state_permutations, 0, {'S': '0', 'P': '1'}, use_rank=True)
+    spin_indices = get_indices(state_permutations, 1, {'d': '0', 'u': '1'}, use_rank=False)
+    iso_indices = get_indices(state_permutations, 2, {'n': '0', 'p': '1'}, use_rank=True)
+    indices = jnp.stack((orbital_indices, iso_indices, spin_indices), axis=-1)
+
+    # fill wfc with values that enforce antisymmetry (permutation signatures)
+    permutation_signatures = jnp.array([Permutation(perm).signature() for perm in coordinate_permutations])
+    wave_function = index_update(wave_function, index[indices[:, 0], indices[:, 1], indices[:, 2]],
+                                 permutation_signatures)
+    return wave_function, indices, coordinate_permutations
