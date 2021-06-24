@@ -1,4 +1,5 @@
 from nuclear_qmc.spin.get_spin_isospin_wave_function import get_orbital_wave_function, build_orbital_wave_function
+from jax import random
 import numpy as np
 import jax.numpy as jnp
 from nuclear_qmc.spin.spherical_harmonics import get_spherical_harmonic_system, get_phi, get_theta
@@ -98,6 +99,8 @@ class TestGetWFC:
             ['Pdn', 'Pdp', 'Sup', 'S', 'S', 'S'],
             ['Pdp', 'Sup', 'Pdn', 'S', 'S', 'S'],
         ])
-        psi, params = build_orbital_wave_function(state_permutations, orbital_index=0)
+
+        key = random.PRNGKey(0)
+        key, psi, params = build_orbital_wave_function(key, state_permutations, 2, 4, orbital_index=0)
         computed = psi(params, r)
         expected = 1.0

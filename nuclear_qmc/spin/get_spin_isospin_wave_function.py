@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 import re
-from nuclear_qmc.spin.spherical_harmonics import Y1m1, Y10, Y11
+from nuclear_qmc.spin.spherical_harmonics import Y1m1, Y10, Y11, build_radial_function
 from operator import add
 from jax.ops import index_update, index
 from jax import vmap, numpy as jnp
@@ -180,12 +180,12 @@ def get_indices(state_permutations, state_position_index, str_to_int_rules, use_
     return jnp.array(states)
 
 
-def build_orbital_wave_function(state_permutations, orbital_index=0):
+def build_orbital_wave_function(key, state_permutations, n_dense, n_hidden_layers, orbital_index=0):
     n_particles = state_permutations.shape[-1]
 
     if n_particles <= 4:
         # just S wave return 1.0
-        return lambda p, r: 1.0, jnp.array([])
+        return key, lambda p, r: 1.0, jnp.array([])
     elif n_particles == 6:
         # Create orbitals, only works for Li
         # replace the Pneutron->A and Pproton->B
@@ -194,8 +194,14 @@ def build_orbital_wave_function(state_permutations, orbital_index=0):
         # strip just the orbital information
         state_permutations = apply_func(state_permutations, lambda x: x[orbital_index])
 
+        # create radial functions
+        key, radial_func, params = build_radial_function(key, n_dense, n_hidden_layers, nn_wrapper_function=jnp.exp)
+
         # setup orbital functions and indices to replace characters
-        functions = [lambda r: 1.0, Y11, Y10, Y1m1]
+        functions = [lambda p, r: 1.0
+            , lambda p, r: radial_func(p, r) * Y11(r)
+            , lambda p, r: radial_func(p, r) * Y10(r)
+            , lambda p, r: radial_func(p, r) * Y1m1(r)]
         p_orbital_indices = [['1', '3'], ['2', '2'], ['3', '2']]  # 1,-1  0,0  -1,1
         sqrt3 = 1. / jnp.sqrt(3.)
         coef = jnp.array([sqrt3, -sqrt3, sqrt3], dtype=jnp.float64)  # 3 coefficients for each determinant
@@ -211,9 +217,10 @@ def build_orbital_wave_function(state_permutations, orbital_index=0):
 
         particles = jnp.arange(n_particles)
 
-        def psi(p, r_coords):
+        def psi(in_params, r_coords):
             # apply every function to each particle coordinate
-            orbital_i_r_j = jnp.array([vmap(func)(r_coords) for func in functions])  # n_functions, n_particles
+            orbital_i_r_j = jnp.array(
+                [vmap(func, in_axes=(None, 0))(in_params, r_coords) for func in functions])  # n_functions, n_particles
             # expand orbital values for each permutation
             out = orbital_i_r_j[
                 function_indices[:, :, particles], particles]  # n_determinant, n_permutation, n_particles
@@ -223,12 +230,12 @@ def build_orbital_wave_function(state_permutations, orbital_index=0):
             out = jnp.einsum('i,ij', coef, out)  # n_permutation
             return out
 
-        return psi, jnp.array([])
+        return key, psi, params
     else:
         raise RuntimeError('build_orbital_wave_function requires n_particles <= 4 or == 6')
 
 
-def build_spin_isospin_system(n_neutrons, n_protons):
+def build_spin_isospin_system(key, n_neutrons, n_protons, n_dense, n_hidden_layers):
     # build initial wave function
     n_particles = n_neutrons + n_protons
     n_iso_configs = get_number_of_isospin_states(n_particles, n_protons)
@@ -242,7 +249,7 @@ def build_spin_isospin_system(n_neutrons, n_protons):
     state_permutations = get_state_permutations(states, coordinate_permutations, n_particles)
 
     # orbital function
-    psi, psi_params = build_orbital_wave_function(state_permutations, orbital_index=0)
+    psi, psi_params = build_orbital_wave_function(key, state_permutations, n_dense, n_hidden_layers, orbital_index=0)
 
     orbital_indices = get_indices(state_permutations, 0, {'S': '0', 'P': '1'}, use_rank=True)
     spin_indices = get_indices(state_permutations, 1, {'d': '0', 'u': '1'}, use_rank=False)
@@ -254,4 +261,4 @@ def build_spin_isospin_system(n_neutrons, n_protons):
     wave_function = index_update(wave_function, index[indices[:, 0], indices[:, 1], indices[:, 2]],
                                  permutation_signatures)
 
-    return wave_function, indices, psi, psi_params
+    return key, wave_function, indices, psi, psi_params
