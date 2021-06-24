@@ -68,6 +68,41 @@ def get_phi(r):
     return phi
 
 
+def Y1m1(r):
+    sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
+    return sq34pi * r[1] / jnp.linalg.norm(r)
+
+
+def Y11(r):
+    sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
+    return sq34pi * r[0] / jnp.linalg.norm(r)
+
+
+def Y10(r):
+    sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
+    return sq34pi * r[2] / jnp.linalg.norm(r)
+
+
+def get_spherical_harmonic_function(L, L_z):
+    sq12pi = jnp.sqrt(1. / jnp.pi) / 2.
+    sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
+    if L_z == 0 and L == 0:
+        def func(r_i):
+            return sq12pi
+    elif L == 1 and L_z == -1:
+        def func(r_i):
+            return sq34pi * r_i[1] / jnp.linalg.norm(r_i)
+    elif L == 1 and L_z == 0:
+        def func(r_i):
+            return sq34pi * r_i[2] / jnp.linalg.norm(r_i)
+    elif L == 1 and L_z == 1:
+        def func(r_i):
+            return sq34pi * r_i[0] / jnp.linalg.norm(r_i)
+    else:
+        raise RuntimeError(f'get_spherical_harmonic_function: invalid L and Lz: {L}, {L_z}')
+    return func
+
+
 def get_spherical_harmonic_function(L, L_z):
     sq12pi = jnp.sqrt(1. / jnp.pi) / 2.
     sq34pi = jnp.sqrt(3. / (4. * jnp.pi))

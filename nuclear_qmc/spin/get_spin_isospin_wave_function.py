@@ -1,4 +1,6 @@
 import jax.numpy as jnp
+import re
+from nuclear_qmc.spin.spherical_harmonics import Y1m1, Y10, Y11
 from operator import add
 from jax.ops import index_update, index
 from jax import vmap, numpy as jnp
@@ -157,11 +159,18 @@ def get_number_of_orbital_configurations(n_particles):
     return comb(n_particles, n_p_shell_particles)
 
 
+def apply_func(matrix, func):
+    original_shape = matrix.shape
+    matrix = matrix.reshape(-1)
+    matrix = np.array(list(map(func, matrix)))
+    matrix = matrix.reshape(*original_shape)
+    return matrix
+
+
 def get_indices(state_permutations, state_position_index, str_to_int_rules, use_rank=True):
     # extract state str at given index
-    original_shape = state_permutations.shape
-    states = np.array([str_to_int_rules[e[state_position_index]] for l in state_permutations for e in l]).reshape(
-        *original_shape)
+    replace_state = lambda x: str_to_int_rules[x[state_position_index]]
+    states = apply_func(state_permutations, replace_state)
     states = [''.join(lst) for lst in states]
     if use_rank:
         states = [int(str) for str in states]
@@ -169,6 +178,54 @@ def get_indices(state_permutations, state_position_index, str_to_int_rules, use_
     else:
         states = [int(str, 2) for str in states]
     return jnp.array(states)
+
+
+def build_orbital_wave_function(state_permutations, orbital_index=0):
+    n_particles = state_permutations.shape[-1]
+
+    if n_particles <= 4:
+        # just S wave return 1.0
+        return lambda p, r: 1.0, jnp.array([])
+    elif n_particles == 6:
+        # Create orbitals, only works for Li
+        # replace the Pneutron->A and Pproton->B
+        state_permutations = apply_func(state_permutations, lambda x: re.sub('P.n', 'A', x))
+        state_permutations = apply_func(state_permutations, lambda x: re.sub('P.p', 'B', x))
+        # strip just the orbital information
+        state_permutations = apply_func(state_permutations, lambda x: x[orbital_index])
+
+        # setup orbital functions and indices to replace characters
+        functions = [lambda r: 1.0, Y11, Y10, Y1m1]
+        p_orbital_indices = [['1', '3'], ['2', '2'], ['3', '2']]  # 1,-1  0,0  -1,1
+        sqrt3 = 1. / jnp.sqrt(3.)
+        coef = jnp.array([sqrt3, -sqrt3, sqrt3], dtype=jnp.float64)  # 3 coefficients for each determinant
+
+        # Replace orbital characters with indices A->p1, B->p2, S->0
+        funcs = [lambda x: x.replace('A', p1).replace('B', p2).replace('S', '0') for p1, p2 in p_orbital_indices]
+        # n_determinant, n_permutation, n_particles
+        function_indices = np.array([apply_func(state_permutations.copy()
+                                                , lambda x: x.replace('A', p1).replace('B', p2).replace('S', '0')) for
+                                     p1, p2 in p_orbital_indices])
+        function_indices = apply_func(function_indices, lambda x: int(x))
+        function_indices = jnp.array(function_indices)
+
+        particles = jnp.arange(n_particles)
+
+        def psi(p, r_coords):
+            # apply every function to each particle coordinate
+            orbital_i_r_j = jnp.array([vmap(func)(r_coords) for func in functions])  # n_functions, n_particles
+            # expand orbital values for each permutation
+            out = orbital_i_r_j[
+                function_indices[:, :, particles], particles]  # n_determinant, n_permutation, n_particles
+            # multiply all orbitals together
+            out = jnp.prod(out, axis=-1)  # n_determinant, n_permutation
+            # sum over determinants
+            out = jnp.einsum('i,ij', coef, out)  # n_permutation
+            return out
+
+        return psi, jnp.array([])
+    else:
+        raise RuntimeError('build_orbital_wave_function requires n_particles <= 4 or == 6')
 
 
 def build_spin_isospin_system(n_neutrons, n_protons):
@@ -183,6 +240,10 @@ def build_spin_isospin_system(n_neutrons, n_protons):
     coordinate_permutations = jnp.array(list(get_permutations(range(n_particles))))
     states = get_states(n_protons, n_neutrons)
     state_permutations = get_state_permutations(states, coordinate_permutations, n_particles)
+
+    # orbital function
+    psi, psi_params = build_orbital_wave_function(state_permutations, orbital_index=0)
+
     orbital_indices = get_indices(state_permutations, 0, {'S': '0', 'P': '1'}, use_rank=True)
     spin_indices = get_indices(state_permutations, 1, {'d': '0', 'u': '1'}, use_rank=False)
     iso_indices = get_indices(state_permutations, 2, {'n': '0', 'p': '1'}, use_rank=True)
@@ -192,4 +253,5 @@ def build_spin_isospin_system(n_neutrons, n_protons):
     permutation_signatures = jnp.array([Permutation(perm).signature() for perm in coordinate_permutations])
     wave_function = index_update(wave_function, index[indices[:, 0], indices[:, 1], indices[:, 2]],
                                  permutation_signatures)
-    return wave_function, indices, coordinate_permutations
+
+    return wave_function, indices, psi, psi_params

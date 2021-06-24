@@ -1,4 +1,4 @@
-from nuclear_qmc.spin.get_spin_isospin_wave_function import get_orbital_wave_function
+from nuclear_qmc.spin.get_spin_isospin_wave_function import get_orbital_wave_function, build_orbital_wave_function
 import numpy as np
 import jax.numpy as jnp
 from nuclear_qmc.spin.spherical_harmonics import get_spherical_harmonic_system, get_phi, get_theta
@@ -9,7 +9,6 @@ def iterable_equal(a, b):
 
 
 class TestGetWFC:
-
 
     def test_get_spin_isospin_wave_function_6Li(self):
         n_protons = 3
@@ -92,3 +91,13 @@ class TestGetWFC:
         empty = jnp.array([])
         psi_r = psi(empty, r)
         print(jnp.abs(psi_r).sum())
+
+    def test_build_orbital_wave_function(self):
+        r = jnp.ones(shape=(6, 3))
+        state_permutations = np.array([
+            ['Pdn', 'Pdp', 'Sup', 'S', 'S', 'S'],
+            ['Pdp', 'Sup', 'Pdn', 'S', 'S', 'S'],
+        ])
+        psi, params = build_orbital_wave_function(state_permutations, orbital_index=0)
+        computed = psi(params, r)
+        expected = 1.0
