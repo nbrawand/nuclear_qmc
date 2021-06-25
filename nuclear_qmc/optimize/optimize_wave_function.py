@@ -159,6 +159,10 @@ def optimize_wave_function(
             logging.info(f'optimization step | {n_opt} | {local_energy} | {local_energy_error}')
 
         # compute average wave function parameter update over each block
+        dims = r_coord_samples.shape[2:]
+        r_coord_samples = r_coord_samples.reshape(-1, *dims)
+        n_total_walkers = r_coord_samples.shape[0]
+
         def sum_delta_params(i, args):
             _delta_params_sum = args[0]
             _params = args[1]
@@ -166,7 +170,7 @@ def optimize_wave_function(
                 psi_prefactor
                 , _params
                 , psi_vector
-                , r_coord_samples[i]
+                , jnp.expand_dims(r_coord_samples[i], axis=0)
                 , learning_rate
                 , hamiltonian
                 , return_loss=False
@@ -174,8 +178,8 @@ def optimize_wave_function(
             return _delta_params_sum, _params
 
         args = (jnp.zeros_like(psi_params), psi_params)
-        args = fori_loop(0, n_blocks, sum_delta_params, args)
-        delta_params_avg = args[0] / n_blocks
+        args = fori_loop(0, n_total_walkers, sum_delta_params, args)
+        delta_params_avg = args[0] / n_total_walkers
         psi_params += delta_params_avg
         jnp.save(psi_param_file, psi_params)
 
