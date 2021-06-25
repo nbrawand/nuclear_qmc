@@ -2,7 +2,7 @@ from jax.config import config
 import jax.numpy as jnp
 import json
 
-from nuclear_qmc.spin.build_wave_function import build_wave_function
+from nuclear_qmc.wave_function.build_wave_function import build_wave_function
 from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonian
 from nuclear_qmc.optimize.optimize_wave_function import optimize_wave_function
 from nuclear_qmc.utils.get_new_file_name import get_new_file_name
