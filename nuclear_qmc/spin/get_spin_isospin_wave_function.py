@@ -10,15 +10,6 @@ from itertools import permutations as get_permutations
 from jax.lax import fori_loop
 
 
-def accumulate_2d(i, array_indices_values):
-    array, array_indices, values, = array_indices_values
-    value = values[i]
-    array_index = array_indices[i]
-    k, l = array_index[0], array_index[1]
-    array = index_update(array, index[k, l], value + array[k, l])
-    return array, array_indices, values
-
-
 def add_spin_str(state_str_list, spin='d'):
     for i in range(len(state_str_list)):
         state_str_list[i] = spin + state_str_list[i]
@@ -103,19 +94,32 @@ def create_wave_function(key
                          , n_iso_configs
                          , n_spin_configs
                          , state_permutations
-                         , indices
+                         , signature_indices
                          , permutation_signatures
                          , n_dense
                          , n_hidden_layers
                          , orbital_index=0):
     n_particles = state_permutations.shape[-1]
+
+    def accumulate_2d(i, array_and_values):
+        array, values, = array_and_values
+        value = values[i]
+        array_index = signature_indices[i]
+        k, l = array_index[0], array_index[1]
+        array = index_update(array, index[k, l], value + array[k, l])
+        return array, values
+
+    def accumulate_wave_function(terms):
+        wave_function = jnp.zeros(shape=(n_iso_configs, n_spin_configs))
+        wave_function, terms = fori_loop(0
+                                         , len(signature_indices)
+                                         , accumulate_2d
+                                         , (wave_function, terms))
+        return wave_function
+
     if n_particles <= 4:
         # just S wave return 1.0
-        wave_function = jnp.zeros(shape=(n_iso_configs, n_spin_configs))
-        wave_function, indices, orbitals = fori_loop(0
-                                                     , len(indices)
-                                                     , accumulate_2d
-                                                     , (wave_function, indices, permutation_signatures))
+        wave_function = accumulate_wave_function(permutation_signatures)
 
         def psi(p, r):
             return wave_function
@@ -153,7 +157,6 @@ def create_wave_function(key
         particles = jnp.arange(n_particles)
 
         def psi(in_params, r_coords):
-            global indices
             # apply every function to each particle coordinate
             orbital_i_r_j = jnp.array(
                 [vmap(func, in_axes=(None, 0))(in_params, r_coords) for func in functions])  # n_functions, n_particles
@@ -164,13 +167,8 @@ def create_wave_function(key
             orbitals = jnp.prod(orbitals, axis=-1)  # n_determinant, n_permutation
             # sum over determinants
             orbitals = jnp.einsum('i,ij', coef, orbitals)  # n_permutation
-
-            #  wfc[indx] +=  orbitals[indx] * signatures[indx] for all indices
-            wave_function = jnp.zeros(shape=(n_iso_configs, n_spin_configs))
-            wave_function, indices, orbitals = fori_loop(0
-                                                         , len(indices)
-                                                         , accumulate_2d
-                                                         , (wave_function, indices, orbitals))
+            orbitals *= permutation_signatures
+            wave_function = accumulate_wave_function(orbitals)
             return wave_function
 
         return key, psi, params
