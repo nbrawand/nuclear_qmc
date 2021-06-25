@@ -3,7 +3,7 @@ from jax.random import PRNGKey
 from nuclear_qmc.wave_function.jastro_neural_network_builder.neural_network import build_jastro_nn
 from nuclear_qmc.wave_function.utility import get_wave_function_system
 import jax.numpy as jnp
-from nuclear_qmc.spin.get_spin_isospin_wave_function import build_wave_function
+from nuclear_qmc.wave_function.build_wave_function import build_wave_function
 
 particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
     1, 2)

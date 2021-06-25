@@ -1,5 +1,5 @@
 import jax.numpy as jnp
-from nuclear_qmc.spin.get_spin_isospin_wave_function import build_wave_function
+from nuclear_qmc.wave_function.build_wave_function import build_wave_function
 import jax
 from nuclear_qmc.wave_function.utility import get_wave_function_system
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M

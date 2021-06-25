@@ -1,6 +1,6 @@
 from nuclear_qmc.operators.hamiltonian.get_local_energy import get_local_energy
 from jax import random
-from nuclear_qmc.spin.get_spin_isospin_wave_function import build_wave_function
+from nuclear_qmc.wave_function.build_wave_function import build_wave_function
 from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonian
 import jax.numpy as jnp
 

@@ -1,7 +1,7 @@
 import jax
 from jax import numpy as jnp
 
-from nuclear_qmc.spin.get_tables import get_spin_particle_pairs, get_spin_exchange_indices, get_spin_state_indices, \
+from nuclear_qmc.wave_function.spin.get_tables import get_spin_particle_pairs, get_spin_exchange_indices, get_spin_state_indices, \
     get_isospin_exchange_index
 from nuclear_qmc.utils.get_triplets import get_triplets
 

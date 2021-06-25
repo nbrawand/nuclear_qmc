@@ -1,4 +1,4 @@
-from nuclear_qmc.spin.get_spin_isospin_wave_function import build_wave_function, get_states
+from nuclear_qmc.wave_function.build_wave_function import build_wave_function, get_states
 from jax import random
 import jax.numpy as jnp
 
