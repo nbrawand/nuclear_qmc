@@ -7,6 +7,16 @@ import numpy as np
 from nuclear_qmc.spin.get_tables import get_number_of_isospin_states, get_number_of_spin_states
 from jax.ops import index, index_update
 from itertools import permutations as get_permutations
+from jax.lax import fori_loop
+
+
+def accumulate_2d(i, array_indices_values):
+    array, array_indices, values, = array_indices_values
+    value = values[i]
+    array_index = array_indices[i]
+    k, l = array_index[0], array_index[1]
+    array = index_update(array, index[k, l], value + array[k, l])
+    return array, array_indices, values
 
 
 def add_spin_str(state_str_list, spin='d'):
@@ -102,10 +112,10 @@ def create_wave_function(key
     if n_particles <= 4:
         # just S wave return 1.0
         wave_function = jnp.zeros(shape=(n_iso_configs, n_spin_configs))
-        wave_function = vmap(
-            lambda i, sig: index_update(wave_function, index[i[0], i[1]], sig)
-        )(indices, permutation_signatures)
-        wave_function = wave_function.sum(axis=0)
+        wave_function, indices, orbitals = fori_loop(0
+                                                     , len(indices)
+                                                     , accumulate_2d
+                                                     , (wave_function, indices, permutation_signatures))
 
         def psi(p, r):
             return wave_function
@@ -142,9 +152,8 @@ def create_wave_function(key
 
         particles = jnp.arange(n_particles)
 
-        zeros_wave_function = jnp.zeros(shape=(n_iso_configs, n_spin_configs))
-
         def psi(in_params, r_coords):
+            global indices
             # apply every function to each particle coordinate
             orbital_i_r_j = jnp.array(
                 [vmap(func, in_axes=(None, 0))(in_params, r_coords) for func in functions])  # n_functions, n_particles
@@ -157,11 +166,11 @@ def create_wave_function(key
             orbitals = jnp.einsum('i,ij', coef, orbitals)  # n_permutation
 
             #  wfc[indx] +=  orbitals[indx] * signatures[indx] for all indices
-            wave_function = vmap(
-                lambda i, sig, orb: index_update(zeros_wave_function, index[i[0], i[1]], sig * orb)
-            )(indices, permutation_signatures, orbitals)
-            wave_function = wave_function.sum(axis=0)
-
+            wave_function = jnp.zeros(shape=(n_iso_configs, n_spin_configs))
+            wave_function, indices, orbitals = fori_loop(0
+                                                         , len(indices)
+                                                         , accumulate_2d
+                                                         , (wave_function, indices, orbitals))
             return wave_function
 
         return key, psi, params
