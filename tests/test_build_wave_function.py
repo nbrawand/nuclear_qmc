@@ -1,4 +1,4 @@
-from nuclear_qmc.spin.get_spin_isospin_wave_function import build_wave_function
+from nuclear_qmc.spin.get_spin_isospin_wave_function import build_wave_function, get_states
 from jax import random
 import jax.numpy as jnp
 
@@ -31,3 +31,42 @@ class TestGetWFC:
                               [0., -1., 0., 0., 1., 0., 0., 0.],
                               [0., 1., -1., 0., 0., 0., 0., 0.]])
         assert jnp.array_equal(computed, expected)
+
+
+def test_get_states():
+    c = get_states(n_protons=1, n_neutrons=1)
+    e = ['Sdn', 'Sdp']
+    for cc, ee in zip(c, e):
+        assert cc == ee
+
+    c = get_states(n_protons=2, n_neutrons=1)
+    e = ['Sdn', 'Sdp', 'Sup']
+    for cc, ee in zip(c, e):
+        assert cc == ee
+
+    c = get_states(n_protons=1, n_neutrons=2)
+    e = ['Sdn', 'Sun', 'Sdp']
+    for cc, ee in zip(c, e):
+        assert cc == ee
+
+    c = get_states(n_protons=2, n_neutrons=2)
+    e = ['Sdn', 'Sun', 'Sdp', 'Sup']
+    for cc, ee in zip(c, e):
+        assert cc == ee
+
+
+def test_get_states_pshell():
+    c = get_states(n_protons=3, n_neutrons=2)
+    e = ['Sdn', 'Sun', 'Sdp', 'Sup', 'Pdp']
+    for cc, ee in zip(c, e):
+        assert cc == ee
+
+    c = get_states(n_protons=2, n_neutrons=3)
+    e = ['Sdn', 'Sun', 'Pdn', 'Sdp', 'Sup']
+    for cc, ee in zip(c, e):
+        assert cc == ee
+
+    c = get_states(n_protons=3, n_neutrons=3)
+    e = ['Sdn', 'Sun', 'Pdn', 'Sdp', 'Sup', 'Pdp']
+    for cc, ee in zip(c, e):
+        assert cc == ee

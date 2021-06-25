@@ -1,4 +1,6 @@
 from nuclear_qmc.operators.hamiltonian.get_local_energy import get_local_energy
+from jax import random
+from nuclear_qmc.spin.get_spin_isospin_wave_function import build_wave_function
 from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonian
 import jax.numpy as jnp
 
@@ -54,11 +56,13 @@ class TestHamiltonian:
         )
         psi = exp_psi
         psi_params = jnp.array([1.])
-        particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+        particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
             1, 2,
             dtype=jnp.float64,
             as_jax_array=True)
-
+        key = random.PRNGKey(0)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 2, 1, 1)
+        psi_vector = orbital_psi(orbital_psi_params, r_coords)
         potential_energy_psi = build_arxiv_2007_14282v2(particle_pairs, particle_triplets,
                                                         spin_exchange_indices)
         v_psi = potential_energy_psi(psi, psi_params, psi_vector, r_coords)
@@ -73,23 +77,29 @@ class TestHamiltonian:
     def test_get_local_energy(self):
         r_coords = jnp.array([[0.43, 0, 0], [0, 0, 0]])
         _, psi, psi_params = build_test_nn_wfc()
-        particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+        particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
             1, 1,
             dtype=jnp.float64,
             as_jax_array=True)
-        hamiltonian = build_hamiltonian(psi_vector, 'arxiv_2007_14282v2', particle_pairs, particle_triplets,
-                                        spin_exchange_indices, isospin_exchange_indices)
+        key = random.PRNGKey(0)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
+        psi_vector = orbital_psi(orbital_psi_params, r_coords)
+        hamiltonian = build_hamiltonian('arxiv_2007_14282v2', particle_pairs, particle_triplets,
+                                        spin_exchange_indices, isospin_exchange_indices, use_finite_diff=False)
         computed = get_local_energy(psi, psi_params, psi_vector, r_coords, hamiltonian).round(8)
         expected = jnp.array(-2.41785314)
         assert jnp.array_equal(computed, expected)
 
     def test_potential_energy_with_test_wfc(self):
         _, psi, psi_params = build_test_nn_wfc()
-        particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+        ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
+        key = random.PRNGKey(0)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
+        psi_vector = orbital_psi(orbital_psi_params, ex_r)
+        particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
             1, 1,
             dtype=jnp.float64,
             as_jax_array=True)
-        ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
         wfc_r = psi(psi_params, ex_r) * psi_vector
         psi_norm = jnp.vdot(wfc_r, wfc_r)
         potential_energy_psi = build_arxiv_2007_14282v2(particle_pairs, particle_triplets,
@@ -103,11 +113,10 @@ class TestHamiltonian:
 
     def test_kinetic_energy_with_test_wfc(self):
         _, psi, psi_params = build_test_nn_wfc()
-        particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
-            1, 1,
-            dtype=jnp.float64,
-            as_jax_array=True)
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
+        key = random.PRNGKey(0)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
+        psi_vector = orbital_psi(orbital_psi_params, ex_r)
         expected = 238.69949166
         wfc_r = psi(psi_params, ex_r) * psi_vector
         psi_norm = jnp.vdot(wfc_r, wfc_r)
@@ -126,10 +135,6 @@ class TestHamiltonian:
 
     def test_kinetic_energy_with_3H(self):
         psi, psi_params = exp_psi, jnp.array([1.])
-        particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
-            1, 2,
-            dtype=jnp.float64,
-            as_jax_array=True)
         # ex_r = jnp.ones(9).reshape(3,3)
         ex_r = jnp.array(
             [
@@ -138,6 +143,9 @@ class TestHamiltonian:
                 [0.26104348, - 0.38107508, 0.07886705],
             ]
         )
+        key = random.PRNGKey(0)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 2, 1, 1)
+        psi_vector = orbital_psi(orbital_psi_params, ex_r)
         expected = 33.38356871
         wfc_r = psi(psi_params, ex_r) * psi_vector
         psi_norm = jnp.vdot(wfc_r, wfc_r)

@@ -1,4 +1,6 @@
 import jax.numpy as jnp
+from nuclear_qmc.spin.get_spin_isospin_wave_function import build_wave_function
+import jax
 from nuclear_qmc.wave_function.utility import get_wave_function_system
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
 from nuclear_qmc.operators.operators import sigma_psi_r, kinetic_energy_psi, tau_psi_r, sigma_tau_psi_r
@@ -41,64 +43,85 @@ class TestOperators:
         assert expected == computed
 
     def test_tau_r(self):
-        particle_pairs, particle_triplets, spin, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+        particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
             1, 2)
         pairs = jnp.array([0, 1, 2])
+        key = jax.random.PRNGKey(0)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 2, 1, 1, 1)
+        spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(3, 3)))
         computed = tau_psi_r(spin, isospin_exchange_indices, pairs)
-        expected = jnp.array([[0., -2., 1., 0., 1., 0., 0., 0.],
+        expected = -jnp.array([[0., -2., 1., 0., 1., 0., 0., 0.],
                               [0., -5., 4., 0., 1., 0., 0., 0.],
                               [0., 7., -5., 0., -2., 0., 0., 0.]], dtype=jnp.float64)
         assert jnp.array_equal(expected, computed)
 
     def test_sigma_tau_psi_r(self):
-        particle_pairs, particle_triplets, spin, spin_xi, iso_xi = get_wave_function_system(
+        particle_pairs, particle_triplets, spin_xi, iso_xi = get_wave_function_system(
             1, 2)
         pairs = jnp.array([0, 1, 2])
+        key = jax.random.PRNGKey(0)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 2, 1, 1)
+        spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(3, 3)))
         computed = sigma_tau_psi_r(spin, spin_xi, iso_xi, pairs)
         tau_ij = jnp.array([tau_psi_r(spin, iso_xi[:, i].reshape(-1, 1), pairs[i]) for i in range(3)])
         expected = jnp.array([sigma_psi_r(tau_ij[i], spin_xi[:, i].reshape(-1, 1), 1) for i in range(3)]).sum(axis=0)
         assert jnp.array_equal(computed, expected)
 
     def test_sigma_tau_psi_r_deuteron(self):
-        particle_pairs, particle_triplets, spin, spin_xi, iso_xi = get_wave_function_system(1, 1)
+        key = jax.random.PRNGKey(0)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
+        spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(2, 3)))
+        particle_pairs, particle_triplets, spin_xi, iso_xi = get_wave_function_system(1, 1)
         pairs = jnp.array([1])
         computed = sigma_tau_psi_r(spin, spin_xi, iso_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
         assert -3. == computed
 
     def test_sigma_tau_psi_r_deuteron_with_prefactor(self):
-        particle_pairs, particle_triplets, spin, spin_xi, iso_xi = get_wave_function_system(1, 1)
+        key = jax.random.PRNGKey(0)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
+        spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(2, 3)))
+        particle_pairs, particle_triplets, spin_xi, iso_xi = get_wave_function_system(1, 1)
         pairs = jnp.array([-2.0])
         computed = sigma_tau_psi_r(spin, spin_xi, iso_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
         assert 6. == computed
 
     def test_sigma_psi_r_deuteron(self):
-        particle_pairs, particle_triplets, spin, spin_xi, iso_xi = get_wave_function_system(1, 1)
+        key = jax.random.PRNGKey(0)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
+        spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(2, 3)))
+        particle_pairs, particle_triplets, spin_xi, iso_xi = get_wave_function_system(1, 1)
         pairs = jnp.array([1])
         computed = sigma_psi_r(spin, spin_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
         assert 1. == computed
 
     def test_tau_psi_r_deuteron(self):
-        particle_pairs, particle_triplets, spin, spin_xi, iso_xi = get_wave_function_system(1, 1)
+        key = jax.random.PRNGKey(0)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
+        spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(2, 3)))
+        particle_pairs, particle_triplets, spin_xi, iso_xi = get_wave_function_system(1, 1)
         pairs = jnp.array([1])
         computed = tau_psi_r(spin, iso_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
         assert -3. == computed
 
     def test_sigma_and_tau_psi_r_triton(self):
-        particle_pairs, particle_triplets, spin, spin_xi, iso_xi = get_wave_function_system(1, 2)
+        key = jax.random.PRNGKey(0)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 2, 1, 1, 1)
+        spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(3, 3)))
+        particle_pairs, particle_triplets, spin_xi, iso_xi = get_wave_function_system(1, 2)
         pairs = jnp.array([1, 1, 1])
-        computed = sigma_tau_psi_r(spin, spin_xi, iso_xi, pairs)
-        computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
-        assert -9. == computed
         computed = sigma_psi_r(spin, spin_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
         assert -3. == computed
         computed = tau_psi_r(spin, iso_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
         assert -3. == computed
+        computed = sigma_tau_psi_r(spin, spin_xi, iso_xi, pairs)
+        computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
+        assert -9. == computed
 
 
 """

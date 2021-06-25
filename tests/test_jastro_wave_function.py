@@ -37,7 +37,6 @@ def test_build_3b_jastro():
 
 
 def test_build_sigma_jastro():
-    func = lambda p, rc: 1.
     pairs = jnp.array([
         [0, 1],
         [0, 2],
@@ -46,6 +45,7 @@ def test_build_sigma_jastro():
         [1, 2, 3],
         [4, 5, 6]
     ])
+    func = lambda p, rc: 1.
     x_indices = jnp.array([
         [1, 0, 0],
         [0, 1, 1],
@@ -57,13 +57,12 @@ def test_build_sigma_jastro():
         [6, 3, 6]
     ])
     expected = 2 * spin + x_spin
-    psi = build_sigma_jastro(func, pairs, spin, x_indices)
-    computed = psi(None, r)
+    psi = build_sigma_jastro(func, pairs, x_indices)
+    computed = psi(None, r, spin)
     assert jnp.array_equal(expected, computed)
 
 
 def test_build_tau_jastro():
-    func = lambda p, rc: 1.
     pairs = jnp.array([
         [0, 1],
         [0, 2],
@@ -73,6 +72,7 @@ def test_build_tau_jastro():
         [1, 1, 1, 1, 1],
         [0, 0, 0, 0, 0]
     ])
+    func = lambda p, rc: 1.
     x_indices = jnp.array([
         [1, 0, 0],
         [0, 1, 1],
@@ -85,6 +85,6 @@ def test_build_tau_jastro():
         [0, 0, 0, 0, 0]
     ]) - spin
     expected = 2 * spin + x_spin
-    psi = build_tau_jastro(func, pairs, spin, x_indices)
-    computed = psi(None, r)
+    psi = build_tau_jastro(func, pairs, x_indices)
+    computed = psi(None, r, spin)
     assert jnp.array_equal(expected, computed)

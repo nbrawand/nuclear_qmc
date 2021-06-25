@@ -21,14 +21,18 @@ def test_full_energy_run():
     N_STEPS = 20
     N_VOID_STEPS = 100
     _, psi_prefactor, psi_params = build_test_nn_wfc()
-    particle_pairs, particle_triplets, psi_vector, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+    particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
         N_PROTON, N_NEUTRON,
         dtype=jnp.float64,
         as_jax_array=True)
-    hamiltonian = build_hamiltonian(psi_vector, 'arxiv_2007_14282v2', particle_pairs, particle_triplets,
+    hamiltonian = build_hamiltonian('arxiv_2007_14282v2', particle_pairs, particle_triplets,
                                     spin_exchange_indices,
-                                    isospin_exchange_indices)
+                                    isospin_exchange_indices, use_finite_diff=False)
     key = random.PRNGKey(0)
+    psi_vector = jnp.array([
+        [1., 0., 0., 0.],
+        [-1., 0., 0., 0.]
+    ])
     key, r_coord_samples = sample(psi_prefactor
                                   , psi_params
                                   , psi_vector
