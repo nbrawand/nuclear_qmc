@@ -169,15 +169,15 @@ def create_wave_function(key
         raise RuntimeError('build_orbital_wave_function requires n_particles <= 4 or == 6')
 
 
-def build_wave_function(key, n_neutrons, n_protons, n_dense, n_hidden_layers):
+def build_wave_function(key, n_neutron, n_proton, n_dense, n_hidden_layers):
     # build initial wave function
-    n_particles = n_neutrons + n_protons
-    n_iso_configs = get_number_of_isospin_states(n_particles, n_protons)
+    n_particles = n_neutron + n_proton
+    n_iso_configs = get_number_of_isospin_states(n_particles, n_proton)
     n_spin_configs = get_number_of_spin_states(n_particles)
 
     # get indices for permutation signatures
     coordinate_permutations = jnp.array(list(get_permutations(range(n_particles))))
-    states = get_states(n_protons, n_neutrons)
+    states = get_states(n_proton, n_neutron)
     state_permutations = get_state_permutations(states, coordinate_permutations, n_particles)
 
     # orbital_indices = get_indices(state_permutations, 0, {'S': '0', 'P': '1'}, use_rank=True)

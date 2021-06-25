@@ -8,8 +8,8 @@ class TestGetWFC:
     def test_build_wave_function_2H(self):
         key = random.PRNGKey(0)
         key, psi, params = build_wave_function(key
-                                               , n_neutrons=1
-                                               , n_protons=1
+                                               , n_neutron=1
+                                               , n_proton=1
                                                , n_dense=2
                                                , n_hidden_layers=2)
         r = jnp.ones(shape=(2, 3))
@@ -21,8 +21,8 @@ class TestGetWFC:
     def test_build_wave_function_3H(self):
         key = random.PRNGKey(0)
         key, psi, params = build_wave_function(key
-                                               , n_neutrons=2
-                                               , n_protons=1
+                                               , n_neutron=2
+                                               , n_proton=1
                                                , n_dense=2
                                                , n_hidden_layers=2)
         r = jnp.ones(shape=(3, 3))

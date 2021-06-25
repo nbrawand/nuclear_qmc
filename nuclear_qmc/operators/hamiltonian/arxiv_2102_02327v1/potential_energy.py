@@ -16,8 +16,7 @@ def get_proton_proton_projection(particle_pairs, isospin_binary_representation):
     return projection
 
 
-def build_arxiv_2102_02327v1(spin
-                             , particle_pairs
+def build_arxiv_2102_02327v1(particle_pairs
                              , particle_triplets
                              , spin_exchange_indices
                              , isospin_exchange_indices

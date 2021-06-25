@@ -5,7 +5,7 @@ from nuclear_qmc.utils.finite_difference import kinetic_energy
 import jax.numpy as jnp
 
 
-def build_hamiltonian(spin, potential_energy_expression, particle_pairs, particle_triplets, spin_exchange_indices,
+def build_hamiltonian(potential_energy_expression, particle_pairs, particle_triplets, spin_exchange_indices,
                       isospin_exchange_indices, isospin_binary_representation=None, potential_kwargs=None
                       , use_finite_diff=True):
     if potential_kwargs is None:
@@ -19,7 +19,7 @@ def build_hamiltonian(spin, potential_energy_expression, particle_pairs, particl
         },
         'arxiv_2102_02327v1': {
             'builder': build_arxiv_2102_02327v1,
-            'args': [spin, particle_pairs, particle_triplets
+            'args': [particle_pairs, particle_triplets
                 , spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation]
         }
     }

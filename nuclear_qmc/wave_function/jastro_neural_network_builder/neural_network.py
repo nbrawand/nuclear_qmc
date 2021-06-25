@@ -20,19 +20,13 @@ def add_parentheses_if_needed(expr):
 
 def build_jastro_nn(
         key
-        , spin
+        , orbital_psi
+        , orbital_psi_params
         , particle_pairs
         , particle_triplets
         , spin_exchange_indices
         , isospin_exchange_indices
         , n_particles
-        , function_permutations
-        , iso_indices
-        , spin_indices
-        , L_total
-        , L_z_total
-        , L_1
-        , L_2
         , n_dense=6
         , n_hidden_layers=2
         , jastro_list=None
@@ -40,22 +34,7 @@ def build_jastro_nn(
     if jastro_list is None:
         jastro_list = ['2b', '3b']
 
-    # orbitals
-    key, orbitals_func, orbital_params = build_angular_momentum_wave_function(key
-                                                                              , n_particles
-                                                                              ,
-                                                                              function_permutations
-                                                                              , iso_indices
-                                                                              , spin_indices
-                                                                              , L_total
-                                                                              , L_z_total
-                                                                              , L_1
-                                                                              , L_2
-                                                                              , spin
-                                                                              , n_dense
-                                                                              , n_hidden_layers
-                                                                              )
-    psi_parameters = orbital_params
+    psi_parameters = orbital_psi_params
 
     if 'sigma' in jastro_list:
         key, sigma_func, sigma_params = get_nn_jastro_func_and_params(key
@@ -111,8 +90,8 @@ def build_jastro_nn(
 
         # apply orbitals
         start = 0
-        end = len(orbital_params)
-        orbitals_psi = orbitals_func(in_parameters[start:end], in_r_coords)
+        end = len(orbital_psi_params)
+        orbitals_psi = orbital_psi(in_parameters[start:end], in_r_coords)
         psi_out += orbitals_psi
 
         # linear operators act on orbitals and are added to the original wave function
