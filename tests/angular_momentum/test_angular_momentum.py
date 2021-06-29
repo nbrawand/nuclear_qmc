@@ -102,7 +102,20 @@ def test_angular_momentum_yl1():
     sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
     phi = get_phi(r_coords[0])
     theta = get_theta(r_coords[0])
-    assert z.round(3) == (-sq34pi * jnp.sin(theta) * jnp.sin(phi)).round(3)
+    expected = -sq34pi * jnp.sin(theta) * jnp.sin(phi)
+    assert z.round(3) == expected.round(3)
+
+
+def test_angular_momentum_yl1_with_radial():
+    r_coords = jnp.array(np.random.random(size=(1, 3)))
+    r_func = lambda r: jnp.exp(jnp.linalg.norm(r[0]))
+    func = lambda r: r_func(r) * Y11(r[0])
+    z = finite_diff_theta(func, r_coords, 0)
+    sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
+    phi = get_phi(r_coords[0])
+    theta = get_theta(r_coords[0])
+    expected = -sq34pi * jnp.sin(theta) * jnp.sin(phi) * r_func(r_coords)
+    assert z.round(2) == expected.round(2)
 
 
 def test_get_angular_momentum_he():
@@ -134,40 +147,37 @@ def test_get_angular_momentum_li():
     r_coords = jnp.array(np.random.random(size=(n_proton + n_neutron, 3)))
     computed = get_total_angular_momentum_z(func, r_coords)
     expected = jnp.zeros(shape=n_proton + n_neutron)
-    assert jnp.array_equal(computed, expected)
+    assert jnp.array_equal(computed.sum(), expected)
 
-# def test_get_angular_momentum_Li():
-#    # build wfc
-#    n_proton = 3
-#    n_neutron = 3
-#    key = jax.random.PRNGKey(0)
-#    key, orbital_psi, orbital_psi_params = build_wave_function(key
-#                                                               , n_neutron
-#                                                               , n_proton
-#                                                               , 1
-#                                                               , 1)
-#    psi_vector = 1.0
-#    key = jax.random.PRNGKey(0)
-#
-#    orbital_psi = lambda p, r: jnp.exp(-jnp.linalg.norm(r[0])) * Y10(r[0])
-#    key, samples = sample(orbital_psi
-#                          , orbital_psi_params
-#                          , psi_vector
-#                          , n_steps=2
-#                          , walker_step_size=0.2
-#                          , n_walkers=2000
-#                          , n_particles=n_neutron + n_proton
-#                          , n_dimensions=3
-#                          , n_equilibrium_steps=2
-#                          , n_void_steps=200
-#                          , key=key
-#                          , initial_walker_standard_deviation=1.0
-#                          )
-#    samples = samples.reshape(-1, n_neutron + n_proton, 3)
-#    func_3d = lambda r: orbital_psi(orbital_psi_params, r)
-#    rotation_angle_rads = 0.0 * jnp.pi
-#    computed = vmap(get_total_angular_momentum_z, in_axes=(None, 0, None))(func_3d, samples, rotation_angle_rads)
-#    computed /= -1.j * H_BAR
-#    print(computed.mean())
-#    expected = 0.0
-#    # assert computed == expected
+
+def test_get_angular_momentum_Li():
+    # build wfc
+    n_proton = 3
+    n_neutron = 3
+    key = jax.random.PRNGKey(0)
+    key, orbital_psi, orbital_psi_params = build_wave_function(key
+                                                               , n_neutron
+                                                               , n_proton
+                                                               , 1
+                                                               , 1)
+    psi_vector = 1.0
+    key = jax.random.PRNGKey(0)
+    key, samples = sample(orbital_psi
+                          , orbital_psi_params
+                          , psi_vector
+                          , n_steps=2
+                          , walker_step_size=0.2
+                          , n_walkers=1000
+                          , n_particles=n_neutron + n_proton
+                          , n_dimensions=3
+                          , n_equilibrium_steps=2
+                          , n_void_steps=300
+                          , key=key
+                          , initial_walker_standard_deviation=1.0
+                          )
+    samples = samples.reshape(-1, n_neutron + n_proton, 3)
+    func_3d = lambda r: orbital_psi(orbital_psi_params, r)
+    computed = vmap(get_total_angular_momentum_z, in_axes=(None, 0))(func_3d, samples)
+    computed = computed.mean().round(2)
+    expected = 0.0
+    assert computed == expected
