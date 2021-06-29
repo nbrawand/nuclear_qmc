@@ -1,11 +1,12 @@
 from nuclear_qmc.wave_function.build_wave_function import build_wave_function
-from tests.angular_momentum.get_total_angular_momentum import finite_diff_theta
+from tests.angular_momentum.get_total_angular_momentum import finite_diff_theta, get_L_sqrd, finite_diff_theta_2nd_order
 
 from nuclear_qmc.sampling.sample import sample
 from nuclear_qmc.constants.constants import H_BAR
 import jax.numpy as jnp
 import numpy as np
-from tests.angular_momentum.get_total_angular_momentum import get_total_angular_momentum_z, get_rotate_r, rotate_z
+from tests.angular_momentum.get_total_angular_momentum import get_total_angular_momentum_z, get_rotate_r, rotate, \
+    get_total_angular_momentum
 import jax
 
 from jax import vmap, jacfwd
@@ -65,15 +66,15 @@ def test_finite_diff_theta():
 
     # test finite diff partial theta
     r_coords = jnp.array([[1., 0., 1.]])
-    computed = finite_diff_theta(cos, r_coords, 0)
+    computed = finite_diff_theta(cos, r_coords, 0, 2)
     expected = 0.0
     assert computed.round(4) == expected
     r_coords = jnp.array([[0., 1., 1.]])
-    computed = finite_diff_theta(cos, r_coords, 0)
+    computed = finite_diff_theta(cos, r_coords, 0, 2)
     expected = -1.0
     assert computed.round(3) == expected
     r_coords = jnp.array([[1., -1., 1.]])
-    computed = finite_diff_theta(cos, r_coords, 0)
+    computed = finite_diff_theta(cos, r_coords, 0, 2)
     expected = 0.708
     assert computed.round(3) == expected
 
@@ -81,14 +82,31 @@ def test_finite_diff_theta():
 def test_angular_momentum_yl0():
     r_coords = jnp.array([[1.0, 1.0, 8.324]])
     func = lambda r: Y10(r[0])
-    z = finite_diff_theta(func, r_coords, 0)
+    z = finite_diff_theta(func, r_coords, 0, 2)
     assert z == 0.0
+
+
+def test_total_angular_momentum_1():
+    r_coords = jnp.array([[1.0, 1.0, 8.324]])
+    func = lambda r: 0.0
+    z = get_L_sqrd(func, r_coords, 0)
+    assert z == 0.0
+
+
+def test_total_angular_momentum_2():
+    r_coords = jnp.array([[1.0, 1.0, 8.324]])
+    func = lambda r: get_theta(r[0])**2
+    z = finite_diff_theta(func, r_coords, 0, 2)
+    print(z)
+    z = finite_diff_theta_2nd_order(func, r_coords, 0, 2)
+    print(z)
+    #assert z == 0.0
 
 
 def test_angular_momentum_ylm1():
     r_coords = jnp.array([[1.0, 1.0, 8.324]])
     func = lambda r: Y1m1(r[0])
-    z = finite_diff_theta(func, r_coords, 0)
+    z = finite_diff_theta(func, r_coords, 0, 2)
     sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
     phi = get_phi(r_coords[0])
     theta = get_theta(r_coords[0])
@@ -98,7 +116,7 @@ def test_angular_momentum_ylm1():
 def test_angular_momentum_yl1():
     r_coords = jnp.array([[1.0, 1.0, 8.324]])
     func = lambda r: Y11(r[0])
-    z = finite_diff_theta(func, r_coords, 0)
+    z = finite_diff_theta(func, r_coords, 0, 2)
     sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
     phi = get_phi(r_coords[0])
     theta = get_theta(r_coords[0])
@@ -110,7 +128,7 @@ def test_angular_momentum_yl1_with_radial():
     r_coords = jnp.array(np.random.random(size=(1, 3)))
     r_func = lambda r: jnp.exp(jnp.linalg.norm(r[0]))
     func = lambda r: r_func(r) * Y11(r[0])
-    z = finite_diff_theta(func, r_coords, 0)
+    z = finite_diff_theta(func, r_coords, 0, 2)
     sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
     phi = get_phi(r_coords[0])
     theta = get_theta(r_coords[0])
@@ -178,6 +196,11 @@ def test_get_angular_momentum_Li():
     samples = samples.reshape(-1, n_neutron + n_proton, 3)
     func_3d = lambda r: orbital_psi(orbital_psi_params, r)
     computed = vmap(get_total_angular_momentum_z, in_axes=(None, 0))(func_3d, samples)
+    computed = computed.mean().round(2)
+    expected = 0.0
+    # assert computed == expected
+
+    computed = vmap(get_total_angular_momentum, in_axes=(None, 0))(func_3d, samples)
     computed = computed.mean().round(2)
     expected = 0.0
     assert computed == expected
