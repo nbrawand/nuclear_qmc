@@ -3,7 +3,7 @@ import jax.numpy as jnp
 from jax.ops import index_update, index
 
 
-def rotate_r(r_coords, theta, axis):
+def rotate_r(r_coords, theta, ith_particle, axis):
     cos = jnp.cos(theta)
     sin = jnp.sin(theta)
     rotation_matrix = jnp.array([
@@ -17,18 +17,19 @@ def rotate_r(r_coords, theta, axis):
          [sin, cos, 0.],
          [0., 0., 1.]]  # z
     ])[axis]
-    rotated_r_coords = jnp.einsum('ij,pj->pi', rotation_matrix, r_coords)
-    return rotated_r_coords
+    rotated_ith_coords_prime = jnp.einsum('ji,i', rotation_matrix, r_coords[ith_particle])
+    r_coords = index_update(r_coords, index[ith_particle], rotated_ith_coords_prime)
+    return r_coords
 
 
-def rotate_psi(func_3d, r_coords, theta, axis):
-    r_coords_prime = rotate_r(r_coords, -theta, axis)
+def rotate_psi(func_3d, r_coords, theta, ith_particle, axis):
+    r_coords_prime = rotate_r(r_coords, -theta, ith_particle, axis)
     func_out_prime = func_3d(r_coords_prime)
     return func_out_prime
 
 
-def hessian_theta(func, r_coords, axis):
-    return hessian(rotate_psi, argnums=(2,))(func, r_coords, 0.0, axis)[0][0]
+def hessian_theta(func, r_coords, ith_particle, axis):
+    return hessian(rotate_psi, argnums=(2,))(func, r_coords, 0.0, ith_particle, axis)[0][0]
 
 
 def get_expected_value(psi, r_coords, o_psi):
@@ -36,10 +37,16 @@ def get_expected_value(psi, r_coords, o_psi):
     return jnp.vdot(psi_r, o_psi) / jnp.vdot(psi_r, psi_r)
 
 
-def get_L_sqrd(psi, r_coords):
+def get_particle_L_sqrd(psi, r_coords, ith_particle):
     axis = jnp.arange(3)
     # L_x^2 = -d^2_{\theta}
-    L_sqrd_psi = -1.0 * vmap(hessian_theta, in_axes=(None, None, 0))(psi, r_coords, axis)
+    L_sqrd_psi = -1.0 * vmap(hessian_theta, in_axes=(None, None, None, 0))(psi, r_coords, ith_particle, axis)
     L_sqrd = vmap(get_expected_value, in_axes=(None, None, 0))(psi, r_coords, L_sqrd_psi)
     L_sqrd = L_sqrd.sum(axis=0)
     return L_sqrd
+
+
+def get_L_sqrd(psi, r_coords):
+    particles = jnp.arange(r_coords.shape[0])
+    L_sqrd = vmap(get_particle_L_sqrd, in_axes=(None, None, 0))(psi, r_coords, particles)
+    return L_sqrd.sum()
