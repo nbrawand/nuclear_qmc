@@ -11,9 +11,9 @@ from nuclear_qmc.wave_function.spherical_harmonics import Y11, Y10, Y1m1
 def test_total_angular_momentum_Y11():
     r_coords = jnp.array(np.random.random(size=(1, 3)))
     func = lambda r: r[0, -1] / jnp.linalg.norm(r[0])  # Y10(r[0])
-    z = get_L_sqrd(func, r_coords, 0)
+    z = get_L_sqrd(func, r_coords)
     print(z)
-    assert z == 0.0
+    assert z == 2.0
 
 # def test_get_angular_momentum_li():
 #     n_proton = 3
