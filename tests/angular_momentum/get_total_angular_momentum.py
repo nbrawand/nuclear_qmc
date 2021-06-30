@@ -3,7 +3,7 @@ import jax.numpy as jnp
 from jax.ops import index_update, index
 
 
-def get_rotate_r(r_coords, theta, ith_particle, axis):
+def rotate_r(r_coords, theta, ith_particle, axis):
     cos = jnp.cos(theta)
     sin = jnp.sin(theta)
     rotation_matrix = jnp.array([
@@ -22,14 +22,14 @@ def get_rotate_r(r_coords, theta, ith_particle, axis):
     return r_coords
 
 
-def rotate(func_3d, r_coords, theta, ith_particle, axis):
-    r_coords_prime = get_rotate_r(r_coords, theta, ith_particle, axis)
+def rotate_psi(func_3d, r_coords, theta, ith_particle, axis):
+    r_coords_prime = rotate_r(r_coords, -theta, ith_particle, axis)
     func_out_prime = func_3d(r_coords_prime)
     return func_out_prime
 
 
 def hessian_theta(func, r_coords, ith_particle, axis):
-    return hessian(rotate, argnums=(2,))(func, r_coords, 0.0, ith_particle, axis)[0][0]
+    return hessian(rotate_psi, argnums=(2,))(func, r_coords, 0.0, ith_particle, axis)[0][0]
 
 
 def get_expected_value(psi, r_coords, o_psi):
@@ -39,6 +39,7 @@ def get_expected_value(psi, r_coords, o_psi):
 
 def get_L_sqrd(psi, r_coords, ith_particle):
     axis = jnp.arange(3)
+    # L_x^2 = -d^2_{\theta}
     L_sqrd_psi = -1.0 * vmap(hessian_theta, in_axes=(None, None, None, 0))(psi, r_coords, ith_particle, axis)
     L_sqrd = vmap(get_expected_value, in_axes=(None, None, 0))(psi, r_coords, L_sqrd_psi)
     L_sqrd = L_sqrd.sum(axis=0)
