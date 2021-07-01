@@ -1,66 +1,62 @@
 from nuclear_qmc.wave_function.build_wave_function import build_wave_function
-from tests.angular_momentum.get_total_angular_momentum import get_L_sqrd, get_particle_L_sqrd
+from tests.angular_momentum.get_total_angular_momentum import get_L_sqrd, get_particle_L_sqrd, get_expected_value, \
+    auto_diff_hessian_theta
 from nuclear_qmc.sampling.sample import sample
 import jax.numpy as jnp
 import numpy as np
 import jax
 from jax import vmap
-from nuclear_qmc.wave_function.spherical_harmonics import Y11, Y10, Y1m1
+from nuclear_qmc.wave_function.spherical_harmonics import Y11, Y10, Y1m1, get_phi
 
 
-def test_angular_momentum_one_particle():
-    r_coords = jnp.array(np.random.random(size=(1, 3)))
-    func = lambda r: Y10(r[0])
-    z = get_particle_L_sqrd(func, r_coords, 0)
-    assert z == 2.0
+def test_angular_momentum_1():
+    r_coords = jnp.array([[1., 1., 0.]])
+    psi = lambda r: jnp.cos(get_phi(r[0]))  # -> partial_theta^2 cos(theta) = - sin(theta)
+    computed = get_L_sqrd(psi, r_coords, use_auto_diff=True)
+    expected = jnp.array(1.)
+    assert jnp.array_equal(computed, expected)
 
 
-def test_angular_momentum_two_particle():
-    r_coords = jnp.array(np.random.random(size=(2, 3)))
-    func = lambda r: Y10(r[0])
-    z = get_particle_L_sqrd(func, r_coords, 0)
-    assert z.round(7) == 2.0
+def test_angular_momentum_2():
+    r_coords = jnp.array([[1., 1., 0.]])
+    psi = lambda r: jnp.cos(get_phi(r[0]))  # -> partial_theta^2 cos(theta) = - sin(theta)
+    computed = get_L_sqrd(psi, r_coords, use_auto_diff=False)
+    expected = jnp.array(1.)
+    assert jnp.array_equal(computed.round(2), expected)
 
 
-def test_angular_momentum_two_particle_multiple_states():
-    r_coords = jnp.array(np.random.random(size=(2, 3)))
+def test_angular_momentum_3():
+    r_coords = jnp.array([[1., 1., 1.0]])
+    psi = lambda r: Y10(r[0])
+    computed = get_L_sqrd(psi, r_coords, use_auto_diff=True)
+    expected = jnp.array(2.)  # L^2 |psi> = l ( l + 1 ) |psi> thus  2 = l^2+l gives l=-2 or l=1 and we take the positive
+    assert jnp.array_equal(computed.round(2), expected)
+
+
+def test_angular_momentum_4():
+    r_coords = jnp.array([[1., 1., 1.0]])
+    psi = lambda r: Y11(r[0])
+    computed = get_L_sqrd(psi, r_coords, use_auto_diff=True)
+    expected = jnp.array(2.)  # L^2 |psi> = l ( l + 1 ) |psi> thus  2 = l^2+l gives l=-2 or l=1 and we take the positive
+    assert jnp.array_equal(computed.round(2), expected)
+
+
+def test_angular_momentum_5():
+    r_coords = jnp.array([[1., 1., 1.0]])
+    psi = lambda r: Y1m1(r[0])
+    computed = get_L_sqrd(psi, r_coords, use_auto_diff=True)
+    expected = jnp.array(2.)  # L^2 |psi> = l ( l + 1 ) |psi> thus  2 = l^2+l gives l=-2 or l=1 and we take the positive
+    assert jnp.array_equal(computed.round(2), expected)
+
+
+def test_angular_momentum_6():
+    r_coords = jnp.array([[1., 1., 1.0], [1.35, 1.8, 1.9]])
     c = jnp.sqrt(1. / 3.)
+    psi = lambda r: c * Y11(r[0]) * Y1m1(r[1]) + c * Y11(r[1]) * Y1m1(r[0]) - c * Y10(r[1]) * Y10(r[0])
+    computed = get_L_sqrd(psi, r_coords, use_auto_diff=True)
+    expected = jnp.array(2.)  # L^2 |psi> = l ( l + 1 ) |psi> thus  2 = l^2+l gives l=-2 or l=1 and we take the positive
+    assert jnp.array_equal(computed.round(2), expected)
 
-    def slater(r, psi1, psi2):
-        return psi1(r[0]) * psi2(r[1]) - psi1(r[1]) * psi2(r[0])
-
-    func = lambda r: c * slater(r, Y11, Y1m1) + c * slater(r, Y1m1, Y11) - c * slater(r, Y10, Y10)
-    # func = lambda r: slater(r, Y11, Y1m1) - slater(r, Y1m1, Y11)
-    z = get_particle_L_sqrd(func, r_coords, 0) + get_L_sqrd(func, r_coords, 1)
-    assert z.round(7) == 4.0
-
-
-def test_total_angular_momentum():
-    r_coords = jnp.array(np.random.random(size=(2, 3)))
-    c = jnp.sqrt(1. / 3.)
-
-    def slater(r, psi1, psi2):
-        return psi1(r[0]) * psi2(r[1]) - psi1(r[1]) * psi2(r[0])
-
-    func = lambda r: slater(r, Y11, Y1m1)
-    # func = lambda r: slater(r, Y11, Y1m1) - slater(r, Y1m1, Y11)
-    z = get_L_sqrd(func, r_coords)
-    assert z.round(3) == 4.0
-
-
-def test_get_angular_momentum_li():
-    n_proton = 3
-    n_neutron = 3
-    key = jax.random.PRNGKey(0)
-    key, orbital_psi, orbital_psi_params = build_wave_function(key
-                                                               , n_neutron
-                                                               , n_proton
-                                                               , 1
-                                                               , 1)
-    func = lambda r: orbital_psi(orbital_psi_params, r)
-    r_coords = jnp.array(np.random.random(size=(n_proton + n_neutron, 3)))
-    computed = get_L_sqrd(func, r_coords)
-    print(sum(computed))
 #
 #
 # def test_get_angular_momentum_Li():
