@@ -68,6 +68,38 @@ def L_sqrd_psi(psi, r_coords, div_function, ith_particle):
     return out.sum(axis=0)
 
 
+def get_Li_Lj_axis(psi, r_coords, ith_particle, jth_particle, div_func, axis):
+    def d_Lj(_r_coords):
+        return get_particle_L(psi, _r_coords, jth_particle, div_func, axis)
+
+    return get_particle_L(d_Lj, r_coords, ith_particle, div_func, axis)
+
+
+def get_Li_Lj(psi, r_coords, ith_particle, jth_particle, div_func):
+    axis = jnp.arange(3)
+    out = vmap(get_Li_Lj_axis, in_axes=(None, None, None, None, None, 0))(psi, r_coords, ith_particle, jth_particle,
+                                                                          div_func, axis)
+    return out.sum(axis=0)
+
+
+def L_sqrd_psi_total(psi, r_coords, div_squared_function, div_function, particle_paris):
+    """\sum_i L^2_i + 2 \sum_{i<j} L_i \cdot L_j"""
+
+    # sum L^2 term
+    particles = jnp.arange(r_coords.shape[0])
+    L2 = vmap(L_sqrd_psi, in_axes=(None, None, None, 0))(psi, r_coords, div_squared_function, particles)
+    L2 = L2.sum(axis=0)
+
+    # L_i_j term
+    if r_coords.shape[0] > 1:  # only for multiple particles
+        ith_particle = particle_paris[:, 0]
+        jth_particle = particle_paris[:, 1]
+        Lij = vmap(get_Li_Lj, in_axes=(None, None, 0, 0, None))(psi, r_coords, ith_particle, jth_particle, div_function)
+    else:
+        Lij = 0
+    return L2 + Lij
+
+
 ####################
 
 
@@ -88,16 +120,6 @@ def get_particle_L_sqrd(psi, r_coords, ith_particle, hessian_func):
 def get_particle_L(psi, r_coords, ith_particle, div_func, axis):
     L_psi = 1.j * div_func(psi, r_coords, ith_particle, axis)
     return L_psi
-
-
-def get_Li_Lj(psi, r_coords, ith_particle, jth_particle, div_func, axis):
-    # lj = get_particle_L(psi, r_coords, jth_particle, div_func, axis)
-    # li = get_particle_L(psi, r_coords, ith_particle, div_func, axis)
-    # return lj * li / psi(r_coords)
-    def d_Lj(_r_coords):
-        return get_particle_L(psi, _r_coords, jth_particle, div_func, axis)
-
-    return get_particle_L(d_Lj, r_coords, ith_particle, div_func, axis)
 
 
 def get_L_sqrd(psi, r_coords, use_auto_diff=True):
