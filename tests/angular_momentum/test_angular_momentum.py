@@ -36,3 +36,12 @@ def test_L_z_R1m1():
     computed = L_psi_axis(psi, r_coords, auto_diff_theta, 0, 2) / Y11(r_coords[0]) / -1.j
     expected = jnp.array(1.0 + 0.j)
     assert jnp.array_equal(computed.round(4), expected)
+
+
+def test_L_z_R10():
+    """L_z R_1_0 = 0 R_1_0"""
+    r_coords = jnp.array([np.random.random(size=(3,))])
+    psi = lambda r: Y10(r[0])
+    computed = L_psi_axis(psi, r_coords, auto_diff_theta, 0, 2)
+    expected = jnp.array(0.0 + 0.j)
+    assert jnp.array_equal(computed.round(4), expected)
