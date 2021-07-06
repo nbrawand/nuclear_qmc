@@ -95,6 +95,7 @@ def L_sqrd_psi_total(psi, r_coords, div_squared_function, div_function, particle
         ith_particle = particle_paris[:, 0]
         jth_particle = particle_paris[:, 1]
         Lij = vmap(get_Li_Lj, in_axes=(None, None, 0, 0, None))(psi, r_coords, ith_particle, jth_particle, div_function)
+        Lij = 2.0 * Lij
     else:
         Lij = 0
     return L2 + Lij

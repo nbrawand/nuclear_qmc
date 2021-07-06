@@ -47,3 +47,15 @@ def test_L_z_R10():
     computed = L_psi_axis(psi, r_coords, auto_diff_theta, 0, 2)
     expected = jnp.array(0.0 + 0.j)
     assert jnp.array_equal(computed.round(4), expected)
+
+
+def test_L_sqrd_2_real_harmonics():
+    """"""
+    r_coords = jnp.array(np.random.random(size=(2, 3)))
+    particle_pairs = jnp.array([[0, 1]])
+    c = jnp.sqrt(1. / 3.)
+    psi = lambda r: -c * Y11(r[0]) * Y11(r[1]) - c * Y1m1(r[0]) * Y1m1(r[1]) - c * Y10(r[0]) * Y10(r[1])
+    computed = L_sqrd_psi_total(psi, r_coords, auto_diff_hessian_theta, auto_diff_theta, particle_pairs) / psi(
+        r_coords)
+    expected = jnp.array([0. + 0.j])
+    assert jnp.array_equal(computed.round(4), expected)
