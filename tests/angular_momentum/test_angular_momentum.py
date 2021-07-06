@@ -10,27 +10,14 @@ from jax import vmap
 from nuclear_qmc.wave_function.spherical_harmonics import Y11, Y10, Y1m1, get_phi
 
 
-def test_L_sqrd_psi_axis():
+def test_L_sqrd_single_real_harmonic():
+    """L^2 R_l_m = l(l+1) R_l_m"""
     r_coords = jnp.array([np.random.random(size=(3,))])
-    psi = lambda r: jnp.cos(get_phi(r[0]))  # -> partial_theta_z^2 cos(theta) = - cos(theta)
-    computed = L_sqrd_psi_axis(psi, r_coords, auto_diff_hessian_theta, 0, 2) / psi(r_coords)
-    expected = jnp.array(1.)
-    assert jnp.array_equal(computed.round(4), expected)
-
-    psi = lambda r: Y10(r[0])
-    computed = L_sqrd_psi_axis(psi, r_coords, auto_diff_hessian_theta, 0, 2) / psi(r_coords)
-    expected = jnp.array(0.)
-    assert jnp.array_equal(computed, expected)
-
-    psi = lambda r: Y11(r[0])
-    computed = L_sqrd_psi_axis(psi, r_coords, auto_diff_hessian_theta, 0, 2) / psi(r_coords)
-    expected = jnp.array(1.)
-    assert jnp.array_equal(computed.round(4), expected)
-
-    psi = lambda r: Y1m1(r[0])
-    computed = L_sqrd_psi_axis(psi, r_coords, auto_diff_hessian_theta, 0, 2) / psi(r_coords)
-    expected = jnp.array(1.)
-    assert jnp.array_equal(computed.round(4), expected)
+    for sphere_func in [Y10, Y11, Y1m1]:
+        psi = lambda r: sphere_func(r[0])
+        computed = L_sqrd_psi(psi, r_coords, auto_diff_hessian_theta, 0) / psi(r_coords)
+        expected = jnp.array(2.)
+        assert jnp.array_equal(computed.round(4), expected)
 
 
 def test_L_psi_axis():
