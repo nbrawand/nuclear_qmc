@@ -2,7 +2,7 @@ from nuclear_qmc.wave_function.build_wave_function import build_wave_function
 from nuclear_qmc.wave_function.utility import get_wave_function_system
 from tests.angular_momentum.get_total_angular_momentum import get_L_sqrd, get_particle_L_sqrd, get_expected_value, \
     auto_diff_hessian_theta, get_particle_L, auto_diff_theta, get_Li_Lj, rotate_psi, L_sqrd_psi, L_sqrd_psi_axis, \
-    L_psi_axis, L_sqrd_psi_total
+    L_psi_axis, L_sqrd_psi_total, finite_diff_theta, finite_diff_hessian_theta
 from nuclear_qmc.sampling.sample import sample
 import jax.numpy as jnp
 import numpy as np
@@ -56,10 +56,10 @@ def test_L_sqrd_2_real_harmonics():
     particle_pairs = jnp.array([[0, 1]])
     c = jnp.sqrt(1. / 3.)
     psi = lambda r: -c * Y11(r[0]) * Y11(r[1]) - c * Y1m1(r[0]) * Y1m1(r[1]) - c * Y10(r[0]) * Y10(r[1])
-    computed = L_sqrd_psi_total(psi, r_coords, auto_diff_hessian_theta, auto_diff_theta, particle_pairs) / psi(
+    computed = L_sqrd_psi_total(psi, r_coords, finite_diff_hessian_theta, auto_diff_theta, particle_pairs) / psi(
         r_coords)
     expected = jnp.array([0. + 0.j])
-    assert jnp.array_equal(computed.round(4), expected)
+    assert jnp.array_equal(computed.round(2), expected)
 
 
 def test_L_sqrd_2_real_harmonics_2():
@@ -67,10 +67,10 @@ def test_L_sqrd_2_real_harmonics_2():
     r_coords = jnp.array(np.random.random(size=(2, 3)))
     particle_pairs = jnp.array([[0, 1]])
     psi = lambda r: - Y11(r[0]) * Y1m1(r[1]) + Y1m1(r[0]) * Y11(r[1])
-    computed = L_sqrd_psi_total(psi, r_coords, auto_diff_hessian_theta, auto_diff_theta, particle_pairs) / psi(
+    computed = L_sqrd_psi_total(psi, r_coords, finite_diff_hessian_theta, auto_diff_theta, particle_pairs) / psi(
         r_coords)
     expected = jnp.array([2. + 0.j])
-    assert jnp.array_equal(computed.round(4), expected)
+    assert jnp.array_equal(computed.round(2), expected)
 
 
 def test_L_sqrd_of_orbital_wfc():
@@ -82,12 +82,13 @@ def test_L_sqrd_of_orbital_wfc():
         n_pro, n_neu, also_return_binary_representation=True)
     key, psi, psi_params = build_wave_function(key, n_neu, n_pro, 1, 1)
     psi_r = lambda r: psi(psi_params, r)
-    computed = L_sqrd_psi_total(psi_r, r_coords, auto_diff_hessian_theta, auto_diff_theta, particle_pairs)
+    computed = L_sqrd_psi_total(psi_r, r_coords, finite_diff_hessian_theta, auto_diff_theta, particle_pairs)
     expected = jnp.array(np.zeros(shape=(1, 2, 4)), dtype=jnp.complex64)
     assert jnp.array_equal(computed, expected)
 
 
 def test_L_sqrd_of_orbital_wfc_li():
+    """L^2 |Li> = 0.0"""
     key = jax.random.PRNGKey(0)
     n_neu = 3
     n_pro = 3
@@ -96,5 +97,7 @@ def test_L_sqrd_of_orbital_wfc_li():
         n_pro, n_neu, also_return_binary_representation=True)
     key, psi, psi_params = build_wave_function(key, n_neu, n_pro, 1, 1)
     psi_r = lambda r: psi(psi_params, r)
-    computed = L_sqrd_psi_total(psi_r, r_coords, auto_diff_hessian_theta, auto_diff_theta, particle_pairs)
-    print(computed)
+    computed = L_sqrd_psi_total(psi_r, r_coords, finite_diff_hessian_theta, auto_diff_theta, particle_pairs)
+    computed_not_zero = computed[computed.round(2) != 0. + 0.j]
+    print(computed_not_zero)
+    assert len(computed_not_zero) == 0
