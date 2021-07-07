@@ -141,9 +141,9 @@ def create_wave_function(key
             , lambda p, r: radial_func(p, r) * Y11(r)
             , lambda p, r: radial_func(p, r) * Y10(r)
             , lambda p, r: radial_func(p, r) * Y1m1(r)]
-        p_orbital_indices = [['1', '3'], ['2', '2'], ['3', '1']]  # 1,-1  0,0  -1,1
+        p_orbital_indices = [['1', '1'], ['2', '2'], ['3', '3']]  # 1,1  0,0  -1,-1
         sqrt3 = 1. / jnp.sqrt(3.)
-        coef = jnp.array([sqrt3, -sqrt3, sqrt3], dtype=jnp.float64)  # 3 coefficients for each determinant
+        coef = jnp.array([-sqrt3, -sqrt3, -sqrt3], dtype=jnp.float64)  # 3 coefficients for each determinant
 
         # Replace orbital characters with indices A->p1, B->p2, S->0
         funcs = [lambda x: x.replace('A', p1).replace('B', p2).replace('S', '0') for p1, p2 in p_orbital_indices]
