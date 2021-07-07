@@ -24,7 +24,7 @@ def rotate_r(r_coords, theta, ith_particle, axis):
 
 
 def rotate_psi(func_3d, r_coords, theta, ith_particle, axis):
-    r_coords_prime = rotate_r(r_coords, theta, ith_particle, axis)
+    r_coords_prime = rotate_r(r_coords, -theta, ith_particle, axis)
     func_out_prime = func_3d(r_coords_prime)
     return func_out_prime
 
@@ -59,7 +59,7 @@ def L_sqrd_psi_axis(psi, r_coords, div_function, ith_particle, axis):
 
 
 def L_psi_axis(psi, r_coords, div_function, ith_particle, axis):
-    return - 1.j * div_function(psi, r_coords, ith_particle, axis)
+    return 1.j * div_function(psi, r_coords, ith_particle, axis)
 
 
 def L_sqrd_psi(psi, r_coords, div_function, ith_particle):

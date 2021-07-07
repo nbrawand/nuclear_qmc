@@ -50,7 +50,7 @@ def test_L_z_R10():
 
 
 def test_L_sqrd_2_real_harmonics():
-    """"""
+    """-Y11Y11-Y10Y10-Y1m1Y1m1 = 0.0"""
     r_coords = jnp.array(np.random.random(size=(2, 3)))
     particle_pairs = jnp.array([[0, 1]])
     c = jnp.sqrt(1. / 3.)
@@ -58,4 +58,15 @@ def test_L_sqrd_2_real_harmonics():
     computed = L_sqrd_psi_total(psi, r_coords, auto_diff_hessian_theta, auto_diff_theta, particle_pairs) / psi(
         r_coords)
     expected = jnp.array([0. + 0.j])
+    assert jnp.array_equal(computed.round(4), expected)
+
+
+def test_L_sqrd_2_real_harmonics_2():
+    """-Y11Y1m1+Y1m1Y11 = 2.0 |state> """
+    r_coords = jnp.array(np.random.random(size=(2, 3)))
+    particle_pairs = jnp.array([[0, 1]])
+    psi = lambda r: - Y11(r[0]) * Y1m1(r[1]) + Y1m1(r[0]) * Y11(r[1])
+    computed = L_sqrd_psi_total(psi, r_coords, auto_diff_hessian_theta, auto_diff_theta, particle_pairs) / psi(
+        r_coords)
+    expected = jnp.array([2. + 0.j])
     assert jnp.array_equal(computed.round(4), expected)
