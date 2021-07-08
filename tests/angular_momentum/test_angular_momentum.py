@@ -71,7 +71,7 @@ def test_L_sqrd_2_real_harmonics_2():
     computed = L_sqrd_psi_total(psi, r_coords, auto_diff_hessian_theta, auto_diff_theta, particle_pairs) / psi(
         r_coords)
     expected = jnp.array(2. + 0.j)
-    assert jnp.array_equal(computed.round(6), expected)
+    assert jnp.array_equal(computed.round(4), expected)
 
 
 def test_L_sqrd_of_orbital_wfc():

@@ -1,4 +1,5 @@
 import re
+from jax import jit
 from nuclear_qmc.wave_function.spherical_harmonics import Y1m1, Y10, Y11, build_radial_function
 from jax import vmap, numpy as jnp
 from sympy.combinatorics.permutations import Permutation
@@ -8,6 +9,7 @@ from nuclear_qmc.wave_function.spin.get_tables import get_number_of_isospin_stat
 from jax.ops import index, index_update
 from itertools import permutations as get_permutations
 from jax.lax import fori_loop
+from jax.ops import index_add
 
 
 def add_spin_str(state_str_list, spin='d'):
@@ -101,20 +103,12 @@ def create_wave_function(key
                          , orbital_index=0):
     n_particles = state_permutations.shape[-1]
 
-    def accumulate_2d(i, array_and_values):
-        array, values, = array_and_values
-        value = values[i]
-        array_index = signature_indices[i]
-        k, l = array_index[0], array_index[1]
-        array = index_update(array, index[k, l], value + array[k, l])
-        return array, values
-
+    @jit
     def accumulate_wave_function(terms):
         wave_function = jnp.zeros(shape=(n_iso_configs, n_spin_configs))
-        wave_function, terms = fori_loop(0
-                                         , len(signature_indices)
-                                         , accumulate_2d
-                                         , (wave_function, terms))
+        i = signature_indices[:, 0]
+        j = signature_indices[:, 1]
+        wave_function = index_add(wave_function, index[i, j], terms)
         return wave_function
 
     if n_particles <= 4:
