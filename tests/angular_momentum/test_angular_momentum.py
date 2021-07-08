@@ -1,8 +1,8 @@
 from nuclear_qmc.wave_function.build_wave_function import build_wave_function
 from nuclear_qmc.wave_function.jastro_neural_network_builder.neural_network import build_jastro_nn
 from nuclear_qmc.wave_function.utility import get_wave_function_system
-from tests.angular_momentum.get_total_angular_momentum import get_L_sqrd, get_particle_L_sqrd, get_expected_value, \
-    auto_diff_hessian_theta, get_particle_L, auto_diff_theta, get_Li_Lj, rotate_psi, L_sqrd_psi, L_sqrd_psi_axis, \
+from tests.angular_momentum.get_total_angular_momentum import auto_diff_hessian_theta, auto_diff_theta, get_Li_Lj, \
+    rotate_psi, L_sqrd_psi, L_sqrd_psi_axis, \
     L_psi_axis, L_sqrd_psi_total, finite_diff_theta, finite_diff_hessian_theta
 from nuclear_qmc.sampling.sample import sample
 import jax.numpy as jnp
@@ -21,7 +21,7 @@ def test_L_sqrd_single_real_harmonic():
         computed = L_sqrd_psi_total(psi, r_coords, auto_diff_hessian_theta, lambda x: None, particle_pairs) / psi(
             r_coords)
         expected = jnp.array(2.)
-        assert jnp.array_equal(computed.round(4), expected)
+        assert jnp.array_equal(computed.round(6), expected)
 
 
 def test_L_z_R11():
@@ -30,7 +30,7 @@ def test_L_z_R11():
     psi = lambda r: Y11(r[0])
     computed = L_psi_axis(psi, r_coords, auto_diff_theta, 0, 2) / Y1m1(r_coords[0]) / 1.j
     expected = jnp.array(1.0 + 0.j)
-    assert jnp.array_equal(computed.round(4), expected)
+    assert jnp.array_equal(computed.round(6), expected)
 
 
 def test_L_z_R1m1():
@@ -39,7 +39,7 @@ def test_L_z_R1m1():
     psi = lambda r: Y1m1(r[0])
     computed = L_psi_axis(psi, r_coords, auto_diff_theta, 0, 2) / Y11(r_coords[0]) / -1.j
     expected = jnp.array(1.0 + 0.j)
-    assert jnp.array_equal(computed.round(4), expected)
+    assert jnp.array_equal(computed.round(6), expected)
 
 
 def test_L_z_R10():
@@ -48,7 +48,7 @@ def test_L_z_R10():
     psi = lambda r: Y10(r[0])
     computed = L_psi_axis(psi, r_coords, auto_diff_theta, 0, 2)
     expected = jnp.array(0.0 + 0.j)
-    assert jnp.array_equal(computed.round(4), expected)
+    assert jnp.array_equal(computed.round(6), expected)
 
 
 def test_L_sqrd_2_real_harmonics():
@@ -57,10 +57,10 @@ def test_L_sqrd_2_real_harmonics():
     particle_pairs = jnp.array([[0, 1]])
     c = jnp.sqrt(1. / 3.)
     psi = lambda r: -c * Y11(r[0]) * Y11(r[1]) - c * Y1m1(r[0]) * Y1m1(r[1]) - c * Y10(r[0]) * Y10(r[1])
-    computed = L_sqrd_psi_total(psi, r_coords, finite_diff_hessian_theta, auto_diff_theta, particle_pairs) / psi(
+    computed = L_sqrd_psi_total(psi, r_coords, auto_diff_hessian_theta, auto_diff_theta, particle_pairs) / psi(
         r_coords)
-    expected = jnp.array([0. + 0.j])
-    assert jnp.array_equal(computed.round(2), expected)
+    expected = jnp.array(0. + 0.j)
+    assert jnp.array_equal(computed.round(6), expected)
 
 
 def test_L_sqrd_2_real_harmonics_2():
@@ -68,10 +68,10 @@ def test_L_sqrd_2_real_harmonics_2():
     r_coords = jnp.array(np.random.random(size=(2, 3)))
     particle_pairs = jnp.array([[0, 1]])
     psi = lambda r: - Y11(r[0]) * Y1m1(r[1]) + Y1m1(r[0]) * Y11(r[1])
-    computed = L_sqrd_psi_total(psi, r_coords, finite_diff_hessian_theta, auto_diff_theta, particle_pairs) / psi(
+    computed = L_sqrd_psi_total(psi, r_coords, auto_diff_hessian_theta, auto_diff_theta, particle_pairs) / psi(
         r_coords)
-    expected = jnp.array([2. + 0.j])
-    assert jnp.array_equal(computed.round(2), expected)
+    expected = jnp.array(2. + 0.j)
+    assert jnp.array_equal(computed.round(6), expected)
 
 
 def test_L_sqrd_of_orbital_wfc():
@@ -84,7 +84,7 @@ def test_L_sqrd_of_orbital_wfc():
     key, psi, psi_params = build_wave_function(key, n_neu, n_pro, 1, 1)
     psi_r = lambda r: psi(psi_params, r)
     computed = L_sqrd_psi_total(psi_r, r_coords, finite_diff_hessian_theta, auto_diff_theta, particle_pairs)
-    expected = jnp.array(np.zeros(shape=(1, 2, 4)), dtype=jnp.complex64)
+    expected = jnp.array(np.zeros(shape=(2, 4)), dtype=jnp.complex64)
     assert jnp.array_equal(computed, expected)
 
 
@@ -134,6 +134,7 @@ def test_L_sqrd_of_complete_wfc_2H():
     expected = jnp.array(np.zeros(shape=(2, 4)), dtype=jnp.complex64)
     assert jnp.array_equal(computed.round(6), expected)
 
+
 def test_L_sqrd_of_complete_wfc_li():
     """L^2 |2H> = 0.0"""
     key = jax.random.PRNGKey(0)
@@ -164,7 +165,7 @@ def test_L_sqrd_of_complete_wfc_li():
     for c, e in zip(computed.reshape(-1), expected.reshape(-1)):
         cr = np.real(c)
         er = np.real(e)
-        assert abs(cr-er) < 0.01
+        assert abs(cr - er) < 0.01
         cr = np.imag(c)
         er = np.imag(e)
-        assert abs(cr-er) < 0.01
+        assert abs(cr - er) < 0.01
