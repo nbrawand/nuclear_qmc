@@ -128,13 +128,22 @@ def create_wave_function(key
         state_permutations = apply_func(state_permutations, lambda x: x[orbital_index])
 
         # create radial functions
-        key, radial_func, params = build_radial_function(key, n_dense, n_hidden_layers, nn_wrapper_function=jnp.exp)
+        key, radial_func_p_shell, p_shell_params = build_radial_function(key
+                                                                         , n_dense
+                                                                         , n_hidden_layers
+                                                                         , nn_wrapper_function=jnp.exp)
+        key, radial_func_s_shell, s_shell_params = build_radial_function(key
+                                                                         , n_dense
+                                                                         , n_hidden_layers
+                                                                         , nn_wrapper_function=jnp.exp)
+        n_s_shell_params = len(s_shell_params)
+        params = jnp.concatenate((s_shell_params, p_shell_params))
 
         # setup orbital functions and indices to replace characters
-        functions = [lambda p, r: 1.0
-            , lambda p, r: radial_func(p, r) * Y11(r)
-            , lambda p, r: radial_func(p, r) * Y10(r)
-            , lambda p, r: radial_func(p, r) * Y1m1(r)]
+        functions = [lambda p, r: radial_func_s_shell(p[:n_s_shell_params], r)
+            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * Y11(r)
+            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * Y10(r)
+            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * Y1m1(r)]
         p_orbital_indices = [['1', '1'], ['2', '2'], ['3', '3']]  # 1,1  0,0  -1,-1
         sqrt3 = 1. / jnp.sqrt(3.)
         coef = jnp.array([-sqrt3, -sqrt3, -sqrt3], dtype=jnp.float64)  # 3 coefficients for each determinant
