@@ -12,11 +12,9 @@ def build_2b_jastro(func_2b, particle_pairs, include_distance_in_2b):
     def psi_function(in_params, in_r_coords):
         x = get_r_ij(in_r_coords, particle_pairs)
         if include_distance_in_2b:
-            r_mag = vmap(jnp.linalg.norm)(in_r_coords)
-            r_i_mag = r_mag[particle_pairs[:, 0]]
-            r_j_mag = r_mag[particle_pairs[:, 1]]
-            r_i_mag_plus_r_j_mag = vmap(add)(r_i_mag, r_j_mag)
-            x = jnp.column_stack((x, r_i_mag_plus_r_j_mag))
+            r_i_p_r_j = in_r_coords[particle_pairs[:, 0]] + in_r_coords[particle_pairs[:, 1]]
+            r_i_p_r_j = vmap(jnp.linalg.norm)(r_i_p_r_j)
+            x = jnp.column_stack((x, r_i_p_r_j))
         f_2b_ij = vmap(func_2b, in_axes=(None, 0))(in_params, x)
         psi = jnp.prod(f_2b_ij)
         return psi
