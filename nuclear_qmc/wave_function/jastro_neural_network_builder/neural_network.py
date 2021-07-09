@@ -73,13 +73,14 @@ def build_jastro_nn(
         n_sigma_tau = len(sigtau_params)
 
     if '2b' in jastro_list:
+        in_shape = (2,) if include_distance_in_2b else (1,)
         key, b2_func, b2_params = get_nn_jastro_func_and_params(key
                                                                 , n_dense
                                                                 , n_hidden_layers
                                                                 , build_2b_jastro
-                                                                , [particle_pairs]
+                                                                , [particle_pairs, include_distance_in_2b]
                                                                 , jnp.exp
-                                                                , include_distance_in_2b)
+                                                                , in_shape=in_shape)
         psi_parameters = jnp.concatenate((psi_parameters, b2_params))
         n_2b = len(b2_params)
 

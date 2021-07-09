@@ -8,7 +8,7 @@ def get_nn_jastro_func_and_params(key
                                   , jastro_builder
                                   , jastro_builder_args
                                   , nn_wrapper_function=jnp.exp
-                                  , include_distance_in_2b=False
+                                  , in_shape=(1,)
                                   ):
     """Build jastro function using a neural network
 
@@ -35,11 +35,8 @@ def get_nn_jastro_func_and_params(key
         The neural network parameters.
 
     """
-    if include_distance_in_2b:
-        key, nn, params = build_nn_wave_function(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers,
-                                                 in_shape=(2,))
-    else:
-        key, nn, params = build_nn_wave_function(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers)
+    key, nn, params = build_nn_wave_function(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers,
+                                             in_shape=in_shape)
     func = lambda p, x: nn_wrapper_function(nn(p, x))
-    jastro_func = jastro_builder(func, *jastro_builder_args, include_distance_in_2b=include_distance_in_2b)
+    jastro_func = jastro_builder(func, *jastro_builder_args)
     return key, jastro_func, params
