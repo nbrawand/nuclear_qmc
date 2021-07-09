@@ -5,12 +5,19 @@ from nuclear_qmc.operators.operators import sigma, sigma_psi_r, tau_psi_r, sigma
 from nuclear_qmc.utils.center_particles import center_particles
 from nuclear_qmc.utils.get_dr_ij import get_r_ij
 from nuclear_qmc.utils.get_particle_pairs_index import get_particle_pairs_index
+from operator import add
 
 
-def build_2b_jastro(func_2b, particle_pairs):
+def build_2b_jastro(func_2b, particle_pairs, include_distance_in_2b):
     def psi_function(in_params, in_r_coords):
-        r_ij = get_r_ij(in_r_coords, particle_pairs)
-        f_2b_ij = vmap(func_2b, in_axes=(None, 0))(in_params, r_ij)
+        x = get_r_ij(in_r_coords, particle_pairs)
+        if include_distance_in_2b:
+            r_mag = vmap(jnp.linalg.norm)(in_r_coords)
+            r_i_mag = r_mag[particle_pairs[:, 0]]
+            r_j_mag = r_mag[particle_pairs[:, 1]]
+            r_i_mag_plus_r_j_mag = vmap(add)(r_i_mag, r_j_mag)
+            x = jnp.column_stack((x, r_i_mag_plus_r_j_mag))
+        f_2b_ij = vmap(func_2b, in_axes=(None, 0))(in_params, x)
         psi = jnp.prod(f_2b_ij)
         return psi
 

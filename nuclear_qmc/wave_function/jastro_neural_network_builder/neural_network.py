@@ -30,9 +30,13 @@ def build_jastro_nn(
         , n_dense=6
         , n_hidden_layers=2
         , jastro_list=None
+        , include_distance_in_2b=False
 ):
     if jastro_list is None:
         jastro_list = ['2b', '3b']
+
+    if include_distance_in_2b and '2b' not in jastro_list:
+        raise RuntimeError('2b must be in jastro list if include_distance_in_2b is True.')
 
     psi_parameters = orbital_psi_params
 
@@ -70,7 +74,8 @@ def build_jastro_nn(
                                                                 , n_hidden_layers
                                                                 , build_2b_jastro
                                                                 , [particle_pairs]
-                                                                , jnp.exp)
+                                                                , jnp.exp
+                                                                , include_distance_in_2b)
         psi_parameters = jnp.concatenate((psi_parameters, b2_params))
 
     if '3b' in jastro_list:
