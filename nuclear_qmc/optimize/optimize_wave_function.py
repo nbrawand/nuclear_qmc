@@ -176,6 +176,7 @@ def optimize_wave_function(
         args = (jnp.zeros_like(psi_params), psi_params)
         args = fori_loop(0, n_blocks, sum_delta_params, args)
         delta_params_avg = args[0] / n_blocks
+        delta_params_avg = jnp.clip(delta_params_avg, -0.5, 0.5)
         psi_params += delta_params_avg
         jnp.save(psi_param_file, psi_params)
 
