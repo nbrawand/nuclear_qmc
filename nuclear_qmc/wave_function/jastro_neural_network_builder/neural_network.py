@@ -117,7 +117,7 @@ def build_jastro_nn(
             end += n_tau
             psi_out += tau_func(in_parameters[start:end], in_r_coords, orbitals_psi)
 
-        if 'sigtau' in jastro_list:
+        if 'sigma_tau' in jastro_list:
             start = end
             end += n_sigma_tau
             psi_out += sigtau_func(in_parameters[start:end], in_r_coords, orbitals_psi)
