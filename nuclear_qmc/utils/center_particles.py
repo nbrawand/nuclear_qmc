@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+from jax import vmap
 
 
 def center_particles(r_coords):
@@ -18,3 +19,9 @@ def center_particles(r_coords):
     rcm = jnp.mean(r_coords, axis=0)
     r_coords = r_coords - rcm[None, :]
     return r_coords
+
+
+def center_walkers(walkers):
+    """walkers [n_walkers, n_particles, n_dim]"""
+    walkers = vmap(center_particles)(walkers)
+    return walkers

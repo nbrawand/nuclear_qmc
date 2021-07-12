@@ -3,22 +3,7 @@ import jax.numpy as jnp
 from jax import random, jit, vmap
 from jax.ops import index, index_update
 from jax.lax import fori_loop
-
-
-def center_walkers(walkers):
-    """
-
-    Parameters
-    ----------
-    walkers: ndarray [n_walkers, n_particles, n_coordinates]
-
-    Returns
-    -------
-
-    """
-    cm = walkers.mean(axis=1)
-    walkers -= cm[:, None, :]
-    return walkers
+from nuclear_qmc.utils.center_particles import center_walkers
 
 
 def get_psi_psi_r(psi, psi_params, psi_vector, r_coords):
