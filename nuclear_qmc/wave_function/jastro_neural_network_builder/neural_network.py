@@ -10,6 +10,7 @@ from nuclear_qmc.wave_function.jastro import build_sigma_jastro, build_3b_jastro
 from nuclear_qmc.wave_function.jastro_neural_network_builder.get_nn_jastro_func_and_params import \
     get_nn_jastro_func_and_params
 from nuclear_qmc.wave_function.utility import apply_confining_potential
+from nuclear_qmc.utils.center_particles import center_particles
 
 
 def add_parentheses_if_needed(expr):
@@ -98,6 +99,8 @@ def build_jastro_nn(
             raise RuntimeError('3b jastro requires A>2')
 
     def psi_function(in_parameters, in_r_coords):
+        in_r_coords = center_particles(in_r_coords)
+
         psi_out = 0
 
         # apply orbitals
