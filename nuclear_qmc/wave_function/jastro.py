@@ -57,6 +57,31 @@ def build_3b_jastro(func_3b, particle_pairs, particle_triplets):
     return psi_function
 
 
+def build_3b_addition_jastro(func_3b, particle_pairs, particle_triplets):
+    triplet_cycles_for_all_triplets = vmap(get_cyclic_permutations)(
+        particle_triplets)  # dims = [n_particle_triplets, 4, 3]
+    pairs_index = get_particle_pairs_index(particle_pairs)
+
+    def f_ij_f_jk(f, triplet):
+        i, j, k = triplet
+        return f[pairs_index[i, j]] * f[pairs_index[j, k]]
+
+    def one_minus_sum_f_ij_f_jk(f, triplet_cycles):
+        terms = vmap(lambda triplet: f_ij_f_jk(f, triplet))(triplet_cycles)
+        result = jnp.sum(terms)
+        return 1.0 - result
+
+    def psi_function(in_params, in_r_coords):
+        r_ij = in_r_coords[particle_pairs[:, 0]] + in_r_coords[particle_pairs[:, 1]]
+        r_ij = vmap(jnp.vdot)(r_ij, r_ij)
+        f_3b_ij = vmap(func_3b, in_axes=(None, 0))(in_params, r_ij)
+        three_b_factors = vmap(one_minus_sum_f_ij_f_jk, in_axes=(None, 0))(f_3b_ij, triplet_cycles_for_all_triplets)
+        psi = jnp.prod(three_b_factors)
+        return psi
+
+    return psi_function
+
+
 def build_sigma_jastro(func_s, particle_pairs, spin_exchange_indices):
     """Returns the spin-isospin vector. Set psi_vector for calculation to 1.0.
 

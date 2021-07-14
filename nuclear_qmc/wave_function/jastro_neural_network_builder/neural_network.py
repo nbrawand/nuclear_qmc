@@ -6,7 +6,7 @@ import jax.numpy as jnp
 from nuclear_qmc.wave_function.build_angular_momentum_wave_function import build_angular_momentum_wave_function
 from nuclear_qmc.wave_function.combine_wave_functions import combine_wave_functions
 from nuclear_qmc.wave_function.jastro import build_sigma_jastro, build_3b_jastro, build_2b_jastro, build_tau_jastro, \
-    build_sigma_tau_jastro, build_2b_addition_jastro
+    build_sigma_tau_jastro, build_2b_addition_jastro, build_3b_addition_jastro
 from nuclear_qmc.wave_function.jastro_neural_network_builder.get_nn_jastro_func_and_params import \
     get_nn_jastro_func_and_params
 from nuclear_qmc.wave_function.utility import apply_confining_potential
@@ -38,6 +38,11 @@ def build_jastro_nn(
 
     if include_distance_in_2b and '2b' not in jastro_list:
         raise RuntimeError('2b must be in jastro list if include_distance_in_2b is True.')
+
+    supported_jastros = ['2b', '3b', 'sigma', 'tau', 'sigma_tau', 'add_2b', 'add_3b']
+    for jastro in jastro_list:
+        if jastro not in supported_jastros:
+            raise RuntimeError(f'jastro: {jastro} not supported.')
 
     psi_parameters = orbital_psi_params
     n_orbital_params = len(orbital_psi_params)
@@ -108,6 +113,19 @@ def build_jastro_nn(
         else:
             raise RuntimeError('3b jastro requires A>2')
 
+    if 'add_3b' in jastro_list:
+        if n_particles > 2:
+            key, add_b3_func, add_b3_params = get_nn_jastro_func_and_params(key
+                                                                            , n_dense
+                                                                            , n_hidden_layers
+                                                                            , build_3b_addition_jastro
+                                                                            , [particle_pairs, particle_triplets]
+                                                                            , jnp.exp)
+            psi_parameters = jnp.concatenate((psi_parameters, add_b3_params))
+            add_n_3b = len(add_b3_params)
+        else:
+            raise RuntimeError('3b addition jastro requires A>2')
+
     def psi_function(in_parameters, in_r_coords):
         in_r_coords = center_particles(in_r_coords)
 
@@ -150,6 +168,11 @@ def build_jastro_nn(
             start = end
             end += n_3b
             psi_out *= b3_func(in_parameters[start:end], in_r_coords)
+
+        if 'add_3b' in jastro_list:
+            start = end
+            end += add_n_3b
+            psi_out *= add_b3_func(in_parameters[start:end], in_r_coords)
 
         psi_out *= apply_confining_potential(in_r_coords)
 
