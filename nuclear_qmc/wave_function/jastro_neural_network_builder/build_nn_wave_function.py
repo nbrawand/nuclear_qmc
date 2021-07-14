@@ -8,14 +8,14 @@ from jax.flatten_util import ravel_pytree
 
 
 def build_nn_wave_function(ndense=4, key=None, params_file=None, in_shape=(1,), n_hidden_layers=2,
-                           dtype=jnp.float64):
+                           dtype=jnp.float64, output_size=1):
     if key is None:
         key = random.PRNGKey(0)
 
     hidden_layers = n_hidden_layers * [Dense(ndense), Tanh, ]
     phi_a_init, phi_a_apply = stax.serial(
         *hidden_layers,
-        Dense(1),
+        Dense(output_size),
     )
 
     if params_file is not None:
