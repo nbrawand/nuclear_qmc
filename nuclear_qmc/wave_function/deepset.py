@@ -15,7 +15,7 @@ def get_deep_set(key, n_dense, n_hidden_layers, in_shape, out_shape):
         latent = jax.vmap(nn1, in_axes=(None, 0))(params[:n_p], r)
         latent = latent.sum(axis=0)
         out = nn2(params[n_p:], latent)
-        return out
+        return out.reshape()
 
     params = jnp.concatenate((params1, params2))
 

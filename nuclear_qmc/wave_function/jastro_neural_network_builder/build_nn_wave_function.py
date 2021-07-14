@@ -30,7 +30,7 @@ def build_nn_wave_function(ndense=4, key=None, params_file=None, in_shape=(1,), 
     def psi_prefactor(flat_params_in, nn_input):
         unflat_params = unflatten_params_function(flat_params_in)
         psi_out = phi_a_apply(unflat_params, nn_input)
-        return psi_out.reshape()
+        return psi_out
 
     return key, psi_prefactor, flat_params
 
