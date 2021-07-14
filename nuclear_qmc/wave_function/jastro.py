@@ -8,6 +8,17 @@ from nuclear_qmc.utils.get_particle_pairs_index import get_particle_pairs_index
 from operator import add
 
 
+def build_2b_addition_jastro(func_2b, particle_pairs):
+    def psi_function(in_params, in_r_coords):
+        x = in_r_coords[particle_pairs[:, 0]] + in_r_coords[particle_pairs[:, 1]]
+        x = vmap(jnp.vdot)(x, x)
+        f_2b_ij = vmap(func_2b, in_axes=(None, 0))(in_params, x)
+        psi = jnp.prod(f_2b_ij)
+        return psi
+
+    return psi_function
+
+
 def build_2b_jastro(func_2b, particle_pairs, include_distance_in_2b):
     def psi_function(in_params, in_r_coords):
         x = get_r_ij(in_r_coords, particle_pairs)

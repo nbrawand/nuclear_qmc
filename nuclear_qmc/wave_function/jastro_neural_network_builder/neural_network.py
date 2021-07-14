@@ -6,7 +6,7 @@ import jax.numpy as jnp
 from nuclear_qmc.wave_function.build_angular_momentum_wave_function import build_angular_momentum_wave_function
 from nuclear_qmc.wave_function.combine_wave_functions import combine_wave_functions
 from nuclear_qmc.wave_function.jastro import build_sigma_jastro, build_3b_jastro, build_2b_jastro, build_tau_jastro, \
-    build_sigma_tau_jastro
+    build_sigma_tau_jastro, build_2b_addition_jastro
 from nuclear_qmc.wave_function.jastro_neural_network_builder.get_nn_jastro_func_and_params import \
     get_nn_jastro_func_and_params
 from nuclear_qmc.wave_function.utility import apply_confining_potential
@@ -85,6 +85,16 @@ def build_jastro_nn(
         psi_parameters = jnp.concatenate((psi_parameters, b2_params))
         n_2b = len(b2_params)
 
+    if 'add_2b' in jastro_list:
+        key, add_b2_func, add_b2_params = get_nn_jastro_func_and_params(key
+                                                                        , n_dense
+                                                                        , n_hidden_layers
+                                                                        , build_2b_addition_jastro
+                                                                        , [particle_pairs]
+                                                                        , jnp.exp)
+        psi_parameters = jnp.concatenate((psi_parameters, add_b2_params))
+        add_n_2b = len(add_b2_params)
+
     if '3b' in jastro_list:
         if n_particles > 2:
             key, b3_func, b3_params = get_nn_jastro_func_and_params(key
@@ -130,6 +140,11 @@ def build_jastro_nn(
             start = end
             end += n_2b
             psi_out *= b2_func(in_parameters[start:end], in_r_coords)
+
+        if 'add_2b' in jastro_list:
+            start = end
+            end += add_n_2b
+            psi_out *= add_b2_func(in_parameters[start:end], in_r_coords)
 
         if '3b' in jastro_list:
             start = end
