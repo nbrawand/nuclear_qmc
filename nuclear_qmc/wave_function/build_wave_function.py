@@ -12,39 +12,6 @@ from jax.lax import fori_loop
 from jax.ops import index_add
 
 
-def get_s_p_particle_numbers(state_permutations):
-    # get number list
-    # Get just the S and Ps from state permutation
-    extract_state = lambda x: x[0]
-    states = apply_func(state_permutations, extract_state)
-    # [S_numbers, P_numbers]
-    # example:
-    # [S,S,P,S,S,P] -> [[0,1,3,4 , 2,5]  # last numbers are Ps
-    s_p_particle_numbers = np.array([np.concatenate([np.where(s == 'S')[0], np.where(s == 'P')[0]]) for s in states])
-    return jnp.array(s_p_particle_numbers)
-
-
-def f_s_p_12(func, params, r_coords, i, j):
-    return func(params, jnp.linalg.norm(r_coords[i] - r_coords[j]))
-
-
-def f_s_p_row(func, params, r_coords, s_states, p_states):
-    def myf(i, j):
-        return f_s_p_12(func, params, r_coords, i, j)
-
-    sub_prod_func = lambda p_state_j: vmap(myf, in_axes=(0, None))(s_states, p_state_j).prod(axis=0)
-    out = vmap(sub_prod_func)(p_states).prod(axis=0)
-    return out
-
-
-def f_s_p(func, params, r_coords, s_p_states):
-    def myf(states):
-        return f_s_p_row(func, params, r_coords, states[:4], states[4:])
-
-    out = vmap(myf)(s_p_states)
-    return out
-
-
 def add_spin_str(state_str_list, spin='d'):
     for i in range(len(state_str_list)):
         state_str_list[i] = spin + state_str_list[i]
@@ -153,7 +120,6 @@ def create_wave_function(key
 
         return key, psi, jnp.array([])
     elif n_particles == 6:
-        s_p_particle_numbers = get_s_p_particle_numbers(state_permutations)  # n_permutation, n_particles
         # Create orbitals, only works for Li
         # replace the Pneutron->A and Pproton->B
         state_permutations = apply_func(state_permutations, lambda x: re.sub('P.n', 'A', x))
@@ -193,19 +159,10 @@ def create_wave_function(key
 
         particles = jnp.arange(n_particles)
 
-        key, func_s_p, s_p_params = build_radial_function(key
-                                                          , n_dense
-                                                          , n_hidden_layers
-                                                          , nn_wrapper_function=jnp.exp)
-        n_orbital_params = len(params)
-        params = jnp.concatenate((params, s_p_params))
-
         def psi(in_params, r_coords):
             # apply every function to each particle coordinate
-            orbital_params = in_params[:n_orbital_params]
             orbital_i_r_j = jnp.array(
-                [vmap(func, in_axes=(None, 0))(orbital_params, r_coords) for func in
-                 functions])  # n_functions, n_particles
+                [vmap(func, in_axes=(None, 0))(in_params, r_coords) for func in functions])  # n_functions, n_particles
             # expand orbital values for each permutation
             orbitals = orbital_i_r_j[
                 function_indices[:, :, particles], particles]  # n_determinant, n_permutation, n_particles
@@ -214,8 +171,6 @@ def create_wave_function(key
             # sum over determinants
             orbitals = jnp.einsum('i,ij', coef, orbitals)  # n_permutation
             orbitals *= permutation_signatures
-            _s_p_params = in_params[n_orbital_params:]
-            orbitals *= f_s_p(func_s_p, _s_p_params, r_coords, s_p_particle_numbers)
             wave_function = accumulate_wave_function(orbitals)
             return wave_function
 
