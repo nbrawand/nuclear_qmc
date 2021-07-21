@@ -8,7 +8,7 @@ from jax.flatten_util import ravel_pytree
 
 
 def build_nn_wave_function(ndense=4, key=None, params_file=None, in_shape=(1,), n_hidden_layers=2,
-                           dtype=jnp.float64, output_size=1):
+                           dtype=jnp.float64, output_size=1, reshape_output=True):
     if key is None:
         key = random.PRNGKey(0)
 
@@ -30,7 +30,9 @@ def build_nn_wave_function(ndense=4, key=None, params_file=None, in_shape=(1,), 
     def psi_prefactor(flat_params_in, nn_input):
         unflat_params = unflatten_params_function(flat_params_in)
         psi_out = phi_a_apply(unflat_params, nn_input)
-        return psi_out.reshape()
+        if reshape_output:
+            psi_out = psi_out.reshape()
+        return psi_out
 
     return key, psi_prefactor, flat_params
 
