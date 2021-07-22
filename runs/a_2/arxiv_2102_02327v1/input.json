@@ -1,12 +1,15 @@
 {
-  "n_proton": 1,
-  "n_neutron": 1,
+  "n_proton": 2,
+  "n_neutron": 2,
   "wave_function": {
     "seed": 0,
     "n_dense": 6,
-    "n_hidden_layers": 2,
+    "n_hidden_layers": 1,
     "jastro_list": [
-      "2b"
+      "sigma",
+      "tau",
+      "sigma_tau",
+      "deepset"
     ],
     "wave_function_file": "wave_function_parameters_0.npy",
     "L_total": 0,
@@ -23,7 +26,7 @@
     "n_dimensions": 3,
     "n_blocks": 2,
     "n_equilibrium_blocks": 2,
-    "n_walkers": 1000,
+    "n_walkers": 500,
     "n_void_steps": 200,
     "walker_step_size": 0.2,
     "initial_walker_standard_deviation": 1.0,

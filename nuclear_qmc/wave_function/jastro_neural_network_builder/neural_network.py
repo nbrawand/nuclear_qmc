@@ -5,6 +5,7 @@ import jax.numpy as jnp
 
 from nuclear_qmc.wave_function.build_angular_momentum_wave_function import build_angular_momentum_wave_function
 from nuclear_qmc.wave_function.combine_wave_functions import combine_wave_functions
+from nuclear_qmc.wave_function.deepset import get_deepset_jastro
 from nuclear_qmc.wave_function.jastro import build_sigma_jastro, build_3b_jastro, build_2b_jastro, build_tau_jastro, \
     build_sigma_tau_jastro, build_2b_addition_jastro, build_3b_addition_jastro
 from nuclear_qmc.wave_function.jastro_neural_network_builder.get_nn_jastro_func_and_params import \
@@ -39,7 +40,7 @@ def build_jastro_nn(
     if include_distance_in_2b and '2b' not in jastro_list:
         raise RuntimeError('2b must be in jastro list if include_distance_in_2b is True.')
 
-    supported_jastros = ['2b', '3b', 'sigma', 'tau', 'sigma_tau', 'add_2b', 'add_3b']
+    supported_jastros = ['2b', '3b', 'sigma', 'tau', 'sigma_tau', 'add_2b', 'add_3b', 'deepset']
     for jastro in jastro_list:
         if jastro not in supported_jastros:
             raise RuntimeError(f'jastro: {jastro} not supported.')
@@ -126,6 +127,12 @@ def build_jastro_nn(
         else:
             raise RuntimeError('3b addition jastro requires A>2')
 
+    if 'deepset' in jastro_list:
+        key, deepset_func, deepset_params = get_deepset_jastro(key, n_dense, n_hidden_layers
+                                                               , particle_pairs, latent_shape=6)
+        psi_parameters = jnp.concatenate((psi_parameters, deepset_params))
+        n_deepset = len(deepset_params)
+
     def psi_function(in_parameters, in_r_coords):
         in_r_coords = center_particles(in_r_coords)
 
@@ -173,6 +180,11 @@ def build_jastro_nn(
             start = end
             end += add_n_3b
             psi_out *= add_b3_func(in_parameters[start:end], in_r_coords)
+
+        if 'deepset' in jastro_list:
+            start = end
+            end += n_deepset
+            psi_out *= deepset_func(in_parameters[start:end], in_r_coords)
 
         psi_out *= apply_confining_potential(in_r_coords)
 
