@@ -9,7 +9,6 @@ from nuclear_qmc.wave_function.jastro import build_sigma_jastro, build_3b_jastro
     build_sigma_tau_jastro, build_2b_addition_jastro, build_3b_addition_jastro
 from nuclear_qmc.wave_function.jastro_neural_network_builder.get_nn_jastro_func_and_params import \
     get_nn_jastro_func_and_params
-from nuclear_qmc.wave_function.utility import apply_confining_potential
 from nuclear_qmc.utils.center_particles import center_particles
 
 
@@ -173,8 +172,6 @@ def build_jastro_nn(
             start = end
             end += add_n_3b
             psi_out *= add_b3_func(in_parameters[start:end], in_r_coords)
-
-        psi_out *= apply_confining_potential(in_r_coords)
 
         return psi_out
 

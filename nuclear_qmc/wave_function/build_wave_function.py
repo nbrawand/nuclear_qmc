@@ -10,6 +10,7 @@ from jax.ops import index, index_update
 from itertools import permutations as get_permutations
 from jax.lax import fori_loop
 from jax.ops import index_add
+from nuclear_qmc.wave_function.utility import apply_confining_potential
 
 
 def add_spin_str(state_str_list, spin='d'):
@@ -116,7 +117,7 @@ def create_wave_function(key
         wave_function = accumulate_wave_function(permutation_signatures)
 
         def psi(p, r):
-            return wave_function
+            return wave_function * apply_confining_potential(r)
 
         return key, psi, jnp.array([])
     elif n_particles == 6:
@@ -139,11 +140,15 @@ def create_wave_function(key
         n_s_shell_params = len(s_shell_params)
         params = jnp.concatenate((s_shell_params, p_shell_params))
 
+        def decay_func(_r, decay_strength):
+            mag_r = jnp.linalg.norm(_r) ** 2
+            return jnp.exp(-decay_strength * mag_r)
+
         # setup orbital functions and indices to replace characters
-        functions = [lambda p, r: radial_func_s_shell(p[:n_s_shell_params], r)
-            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * Y11(r)
-            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * Y10(r)
-            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * Y1m1(r)]
+        functions = [lambda p, r: radial_func_s_shell(p[:n_s_shell_params], r) * decay_func(r, 0.02)
+            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * decay_func(r, 0.01) * Y11(r)
+            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * decay_func(r, 0.01) * Y10(r)
+            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * decay_func(r, 0.01) * Y1m1(r)]
         p_orbital_indices = [['1', '1'], ['2', '2'], ['3', '3']]  # 1,1  0,0  -1,-1
         sqrt3 = 1. / jnp.sqrt(3.)
         coef = jnp.array([-sqrt3, -sqrt3, -sqrt3], dtype=jnp.float64)  # 3 coefficients for each determinant
