@@ -19,7 +19,7 @@ def build_2b_addition_jastro(func_2b, particle_pairs):
     return psi_function
 
 
-def build_2b_jastro(func_2b, particle_pairs, include_distance_in_2b):
+def build_2b_jastro(func_2b, particle_pairs, include_distance_in_2b=False):
     def psi_function(in_params, in_r_coords):
         x = get_r_ij(in_r_coords, particle_pairs)
         if include_distance_in_2b:
@@ -33,7 +33,7 @@ def build_2b_jastro(func_2b, particle_pairs, include_distance_in_2b):
     return psi_function
 
 
-def build_3b_jastro(func_3b, particle_pairs, particle_triplets):
+def build_3b_jastro(func_3b, particle_pairs, particle_triplets, include_distance_in_2b=False):
     triplet_cycles_for_all_triplets = vmap(get_cyclic_permutations)(
         particle_triplets)  # dims = [n_particle_triplets, 4, 3]
     pairs_index = get_particle_pairs_index(particle_pairs)
@@ -48,8 +48,12 @@ def build_3b_jastro(func_3b, particle_pairs, particle_triplets):
         return 1.0 - result
 
     def psi_function(in_params, in_r_coords):
-        r_ij = get_r_ij(in_r_coords, particle_pairs)
-        f_3b_ij = vmap(func_3b, in_axes=(None, 0))(in_params, r_ij)
+        x = get_r_ij(in_r_coords, particle_pairs)
+        if include_distance_in_2b:
+            r_i_p_r_j = in_r_coords[particle_pairs[:, 0]] + in_r_coords[particle_pairs[:, 1]]
+            r_i_p_r_j = vmap(jnp.vdot)(r_i_p_r_j, r_i_p_r_j)
+            x = jnp.column_stack((x, r_i_p_r_j))
+        f_3b_ij = vmap(func_3b, in_axes=(None, 0))(in_params, x)
         three_b_factors = vmap(one_minus_sum_f_ij_f_jk, in_axes=(None, 0))(f_3b_ij, triplet_cycles_for_all_triplets)
         psi = jnp.prod(three_b_factors)
         return psi
@@ -57,7 +61,7 @@ def build_3b_jastro(func_3b, particle_pairs, particle_triplets):
     return psi_function
 
 
-def build_3b_addition_jastro(func_3b, particle_pairs, particle_triplets):
+def build_3b_addition_jastro(func_3b, particle_pairs, particle_triplets, include_distance_in_2b=False):
     triplet_cycles_for_all_triplets = vmap(get_cyclic_permutations)(
         particle_triplets)  # dims = [n_particle_triplets, 4, 3]
     pairs_index = get_particle_pairs_index(particle_pairs)
@@ -82,7 +86,7 @@ def build_3b_addition_jastro(func_3b, particle_pairs, particle_triplets):
     return psi_function
 
 
-def build_sigma_jastro(func_s, particle_pairs, spin_exchange_indices):
+def build_sigma_jastro(func_s, particle_pairs, spin_exchange_indices, include_distance_in_2b=False):
     """Returns the spin-isospin vector. Set psi_vector for calculation to 1.0.
 
     Parameters
@@ -99,15 +103,19 @@ def build_sigma_jastro(func_s, particle_pairs, spin_exchange_indices):
     """
 
     def psi_function(in_params, in_r_coords, psi):
-        r_ij = get_r_ij(in_r_coords, particle_pairs)
-        f_s_ij = vmap(func_s, in_axes=(None, 0))(in_params, r_ij)
+        x = get_r_ij(in_r_coords, particle_pairs)
+        if include_distance_in_2b:
+            r_i_p_r_j = in_r_coords[particle_pairs[:, 0]] + in_r_coords[particle_pairs[:, 1]]
+            r_i_p_r_j = vmap(jnp.vdot)(r_i_p_r_j, r_i_p_r_j)
+            x = jnp.column_stack((x, r_i_p_r_j))
+        f_s_ij = vmap(func_s, in_axes=(None, 0))(in_params, x)
         sum_ij_sigma = sigma_psi_r(psi, spin_exchange_indices, f_s_ij)
         return sum_ij_sigma
 
     return psi_function
 
 
-def build_tau_jastro(func_tau, particle_pairs, isospin_exchange_indices):
+def build_tau_jastro(func_tau, particle_pairs, isospin_exchange_indices, include_distance_in_2b=False):
     """Returns the spin-isospin vector. Set psi_vector for calculation to 1.0.
 
     Parameters
@@ -124,8 +132,12 @@ def build_tau_jastro(func_tau, particle_pairs, isospin_exchange_indices):
     """
 
     def psi_function(in_params, in_r_coords, psi):
-        r_ij = get_r_ij(in_r_coords, particle_pairs)
-        f_tau_ij = vmap(func_tau, in_axes=(None, 0))(in_params, r_ij)
+        x = get_r_ij(in_r_coords, particle_pairs)
+        if include_distance_in_2b:
+            r_i_p_r_j = in_r_coords[particle_pairs[:, 0]] + in_r_coords[particle_pairs[:, 1]]
+            r_i_p_r_j = vmap(jnp.vdot)(r_i_p_r_j, r_i_p_r_j)
+            x = jnp.column_stack((x, r_i_p_r_j))
+        f_tau_ij = vmap(func_tau, in_axes=(None, 0))(in_params, x)
         sum_ij_tau = tau_psi_r(psi, isospin_exchange_indices, f_tau_ij)
         return sum_ij_tau
 
@@ -133,7 +145,7 @@ def build_tau_jastro(func_tau, particle_pairs, isospin_exchange_indices):
 
 
 def build_sigma_tau_jastro(func_sigma_tau, particle_pairs, spin_exchange_indices,
-                           isospin_exchange_indices):
+                           isospin_exchange_indices, include_distance_in_2b=False):
     """Returns the spin-isospin vector. Set psi_vector for calculation to 1.0.
 
     Parameters
@@ -150,8 +162,12 @@ def build_sigma_tau_jastro(func_sigma_tau, particle_pairs, spin_exchange_indices
     """
 
     def psi_function(in_params, in_r_coords, psi):
-        r_ij = get_r_ij(in_r_coords, particle_pairs)
-        f_ij = vmap(func_sigma_tau, in_axes=(None, 0))(in_params, r_ij)
+        x = get_r_ij(in_r_coords, particle_pairs)
+        if include_distance_in_2b:
+            r_i_p_r_j = in_r_coords[particle_pairs[:, 0]] + in_r_coords[particle_pairs[:, 1]]
+            r_i_p_r_j = vmap(jnp.vdot)(r_i_p_r_j, r_i_p_r_j)
+            x = jnp.column_stack((x, r_i_p_r_j))
+        f_ij = vmap(func_sigma_tau, in_axes=(None, 0))(in_params, x)
         sum_ij_tau = sigma_tau_psi_r(psi, spin_exchange_indices, isospin_exchange_indices, f_ij)
         return sum_ij_tau
 
