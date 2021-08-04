@@ -161,64 +161,23 @@ def build_jastro_nn(
         n_total_deepset_params = len(total_deepset_params)
         psi_parameters = jnp.concatenate((psi_parameters, total_deepset_params))
 
+    from NeuralWavefunction import Wavefunction, read
+    wfc = Wavefunction(ndim=3, npart=6, conf=0.01, key=key, mix=0.0, spin=[]
+                       , ip=particle_pairs[:, 0], jp=particle_pairs[:, 1])
+    _psi_params = wfc.build()
+    _psi_params = wfc.flatten_params(_psi_params)
+    n_psi_params = len(_psi_params)
+    psi_parameters = jnp.concatenate((psi_parameters, _psi_params))
+
     def psi_function(in_parameters, in_r_coords):
         in_r_coords = center_particles(in_r_coords)
-
         psi_out = 0
-
-        # apply orbitals
         start = 0
         end = n_orbital_params
         orbitals_psi = orbital_psi(in_parameters[start:end], in_r_coords)
         psi_out += orbitals_psi
-
-        # linear operators act on orbitals and are added to the original wave function
-        if 'sigma' in jastro_list:
-            start = end
-            end += n_sigma
-            psi_out += sigma_func(in_parameters[start:end], in_r_coords, orbitals_psi)
-
-        if 'tau' in jastro_list:
-            start = end
-            end += n_tau
-            psi_out += tau_func(in_parameters[start:end], in_r_coords, orbitals_psi)
-
-        if 'sigma_tau' in jastro_list:
-            start = end
-            end += n_sigma_tau
-            psi_out += sigtau_func(in_parameters[start:end], in_r_coords, orbitals_psi)
-
-        # multiply by 2b and 3b jastros
-        if '2b' in jastro_list:
-            start = end
-            end += n_2b
-            psi_out *= b2_func(in_parameters[start:end], in_r_coords)
-
-        if 'add_2b' in jastro_list:
-            start = end
-            end += add_n_2b
-            psi_out *= add_b2_func(in_parameters[start:end], in_r_coords)
-
-        if '3b' in jastro_list:
-            start = end
-            end += n_3b
-            psi_out *= b3_func(in_parameters[start:end], in_r_coords)
-
-        if 'add_3b' in jastro_list:
-            start = end
-            end += add_n_3b
-            psi_out *= add_b3_func(in_parameters[start:end], in_r_coords)
-
-        if 'deepset' in jastro_list:
-            start = end
-            end += n_deepset_params
-            psi_out *= deepset_func(in_parameters[start:end], in_r_coords)
-
-        if 'total_deepset' in jastro_list:
-            start = end
-            end += n_total_deepset_params
-            psi_out = total_deepset_func(in_parameters[start:end], in_r_coords, psi_out)
-
+        _p = wfc.unflatten_params(in_parameters[end:])
+        psi_out *= wfc.psi(_p, in_r_coords)
         return psi_out
 
     psi_vector = 1.0
