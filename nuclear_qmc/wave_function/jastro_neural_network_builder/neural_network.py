@@ -2,7 +2,9 @@ from operator import add, mul
 from copy import deepcopy
 from collections import OrderedDict
 import jax.numpy as jnp
+from jax import vmap
 
+from nuclear_qmc.operators.operators import sigma_psi_r, tau_psi_r, sigma_tau_psi_r
 from nuclear_qmc.wave_function.build_angular_momentum_wave_function import build_angular_momentum_wave_function
 from nuclear_qmc.wave_function.combine_wave_functions import combine_wave_functions
 from nuclear_qmc.wave_function.deepset import get_deep_set
@@ -39,7 +41,7 @@ def build_jastro_nn(
     if include_distance_in_2b and '2b' not in jastro_list:
         raise RuntimeError('2b must be in jastro list if include_distance_in_2b is True.')
 
-    supported_jastros = ['2b', '3b', 'sigma', 'tau', 'sigma_tau', 'add_2b', 'add_3b', 'deepset']
+    supported_jastros = ['2b', '3b', 'sigma', 'tau', 'sigma_tau', 'add_2b', 'add_3b', 'deepset', 'total_deepset']
     for jastro in jastro_list:
         if jastro not in supported_jastros:
             raise RuntimeError(f'jastro: {jastro} not supported.')
@@ -137,6 +139,28 @@ def build_jastro_nn(
         n_deepset_params = len(deepset_params)
         psi_parameters = jnp.concatenate((psi_parameters, deepset_params))
 
+    if 'total_deepset' in jastro_list:
+        n_pairs = len(particle_pairs)
+        key, total_deepset_nn_func, total_deepset_params = get_deep_set(key
+                                                                        , n_dense
+                                                                        , n_hidden_layers
+                                                                        , out_shape=3 * n_pairs + 1
+                                                                        , in_shape=(3,)
+                                                                        , latent_shape=6
+                                                                        , wrapper_func=jnp.exp)
+
+        def total_deepset_func(_p, _r, _psi):
+            x = total_deepset_nn_func(_p, _r)
+            x = jnp.tanh(jnp.log(x[:3 * n_pairs]))
+            sum_ij_sigma = sigma_psi_r(_psi, spin_exchange_indices, x[:n_pairs])
+            sum_ij_tau = tau_psi_r(_psi, isospin_exchange_indices, x[n_pairs:2 * n_pairs])
+            sum_ij_sigma_tau = sigma_tau_psi_r(_psi, spin_exchange_indices, isospin_exchange_indices,
+                                               x[2 * n_pairs:3 * n_pairs])
+            return sum_ij_sigma + sum_ij_tau + sum_ij_sigma_tau + _psi
+
+        n_total_deepset_params = len(total_deepset_params)
+        psi_parameters = jnp.concatenate((psi_parameters, total_deepset_params))
+
     def psi_function(in_parameters, in_r_coords):
         in_r_coords = center_particles(in_r_coords)
 
@@ -189,6 +213,11 @@ def build_jastro_nn(
             start = end
             end += n_deepset_params
             psi_out *= deepset_func(in_parameters[start:end], in_r_coords)
+
+        if 'total_deepset' in jastro_list:
+            start = end
+            end += n_total_deepset_params
+            psi_out = total_deepset_func(in_parameters[start:end], in_r_coords, psi_out)
 
         return psi_out
 

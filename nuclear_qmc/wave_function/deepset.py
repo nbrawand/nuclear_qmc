@@ -9,7 +9,7 @@ def get_deep_set(key, n_dense, n_hidden_layers, out_shape, in_shape=(3,), latent
                                                in_shape=in_shape, output_size=latent_shape, reshape_output=False)
     n_p = len(params1)
     key, nn2, params2 = build_nn_wave_function(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers,
-                                               in_shape=(latent_shape,), output_size=out_shape, reshape_output=True)
+                                               in_shape=(latent_shape,), output_size=out_shape, reshape_output=False)
 
     def psi(params, r):
         latent = jax.vmap(nn1, in_axes=(None, 0))(params[:n_p], r)
