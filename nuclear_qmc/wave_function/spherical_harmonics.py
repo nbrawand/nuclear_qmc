@@ -70,17 +70,17 @@ def get_phi(r):
 
 def Y1m1(r):
     sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
-    return sq34pi * r[1] / jnp.linalg.norm(r)
+    return sq34pi * r[1]
 
 
 def Y11(r):
     sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
-    return sq34pi * r[0] / jnp.linalg.norm(r)
+    return sq34pi * r[0]
 
 
 def Y10(r):
     sq34pi = jnp.sqrt(3. / (4. * jnp.pi))
-    return sq34pi * r[2] / jnp.linalg.norm(r)
+    return sq34pi * r[2]
 
 
 def get_spherical_harmonic_function(L, L_z):
