@@ -41,8 +41,8 @@ class Wavefunction(object):
         self.jp = jp
         self.npair = len(ip)
         self.k = jnp.arange(npart)
-        self.ndense = 32
-        self.nlat = 32  ## 1 * (self.ndim * self.npart + 4)
+        self.ndense = 12
+        self.nlat = 12  ## 1 * (self.ndim * self.npart + 4)
         #        self.activation = Tanh
         self.activation = Tanh
         self.a = 8

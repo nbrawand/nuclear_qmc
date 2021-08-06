@@ -162,9 +162,11 @@ def build_jastro_nn(
         psi_parameters = jnp.concatenate((psi_parameters, total_deepset_params))
 
     from NeuralWavefunction import Wavefunction, read
-    wfc = Wavefunction(ndim=3, npart=6, conf=0.01, key=key, mix=0.0, spin=[]
+    wfc = Wavefunction(ndim=3, npart=4, conf=0.01, key=key, mix=0.0, spin=[]
                        , ip=particle_pairs[:, 0], jp=particle_pairs[:, 1])
     _psi_params = wfc.build()
+    # import pickle
+    # _psi_params = pickle.load(open('full.model', 'rb'))
     _psi_params = wfc.flatten_params(_psi_params)
     n_psi_params = len(_psi_params)
     psi_parameters = jnp.concatenate((psi_parameters, _psi_params))
