@@ -151,12 +151,11 @@ def build_jastro_nn(
 
         def total_deepset_func(_p, _r, _psi):
             x = total_deepset_nn_func(_p, _r)
-            x = jnp.tanh(jnp.log(x[:3 * n_pairs]))
             sum_ij_sigma = sigma_psi_r(_psi, spin_exchange_indices, x[:n_pairs])
             sum_ij_tau = tau_psi_r(_psi, isospin_exchange_indices, x[n_pairs:2 * n_pairs])
             sum_ij_sigma_tau = sigma_tau_psi_r(_psi, spin_exchange_indices, isospin_exchange_indices,
                                                x[2 * n_pairs:3 * n_pairs])
-            return sum_ij_sigma + sum_ij_tau + sum_ij_sigma_tau + _psi
+            return x[-1] * (sum_ij_sigma + sum_ij_tau + sum_ij_sigma_tau + _psi)
 
         n_total_deepset_params = len(total_deepset_params)
         psi_parameters = jnp.concatenate((psi_parameters, total_deepset_params))
