@@ -41,7 +41,7 @@ def build_jastro_nn(
     if include_distance_in_2b and '2b' not in jastro_list:
         raise RuntimeError('2b must be in jastro list if include_distance_in_2b is True.')
 
-    supported_jastros = ['2b', '3b', 'sigma', 'tau', 'sigma_tau', 'add_2b', 'add_3b', 'deepset', 'total_deepset']
+    supported_jastros = ['2b', '3b', 'sigma', 'tau', 'sigma_tau', 'add_2b', 'add_3b', 'deepset', 'total_deepset', 'ale']
     for jastro in jastro_list:
         if jastro not in supported_jastros:
             raise RuntimeError(f'jastro: {jastro} not supported.')
@@ -128,6 +128,16 @@ def build_jastro_nn(
         else:
             raise RuntimeError('3b addition jastro requires A>2')
 
+    if 'ale' in jastro_list:
+        from nuclear_qmc.wave_function.ale_wfc import Wavefunction
+        ale_wfc = Wavefunction(ndim=3, npart=n_particles, conf=0.02, key=key, mix=0.0, spin=particle_pairs)
+        # import pickle
+        # with open('', 'rb') as file:
+        #    ale_params = pickle.load(file)
+        ale_params = ale_wfc.build()
+        n_ale_params = len(ale_params)
+        psi_parameters = jnp.concatenate((psi_parameters, ale_params))
+
     if 'deepset' in jastro_list:
         key, deepset_func, deepset_params = get_deep_set(key
                                                          , n_dense
@@ -207,6 +217,11 @@ def build_jastro_nn(
             start = end
             end += add_n_3b
             psi_out *= add_b3_func(in_parameters[start:end], in_r_coords)
+
+        if 'ale' in jastro_list:
+            start = end
+            end += n_ale_params
+            psi_out *= ale_wfc.psi(in_parameters[start:end], in_r_coords)
 
         if 'deepset' in jastro_list:
             start = end

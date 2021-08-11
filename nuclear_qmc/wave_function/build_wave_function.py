@@ -128,27 +128,15 @@ def create_wave_function(key
         # strip just the orbital information
         state_permutations = apply_func(state_permutations, lambda x: x[orbital_index])
 
-        # create radial functions
-        key, radial_func_p_shell, p_shell_params = build_radial_function(key
-                                                                         , n_dense
-                                                                         , n_hidden_layers
-                                                                         , nn_wrapper_function=jnp.exp)
-        key, radial_func_s_shell, s_shell_params = build_radial_function(key
-                                                                         , n_dense
-                                                                         , n_hidden_layers
-                                                                         , nn_wrapper_function=jnp.exp)
-        n_s_shell_params = len(s_shell_params)
-        params = jnp.concatenate((s_shell_params, p_shell_params))
-
         def decay_func(_r, decay_strength):
-            mag_r = jnp.linalg.norm(_r) ** 2
+            mag_r = jnp.sum(_r ** 2)
             return jnp.exp(-decay_strength * mag_r)
 
         # setup orbital functions and indices to replace characters
-        functions = [lambda p, r: radial_func_s_shell(p[:n_s_shell_params], r) * decay_func(r, 0.02)
-            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * decay_func(r, 0.01) * Y11(r)
-            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * decay_func(r, 0.01) * Y10(r)
-            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * decay_func(r, 0.01) * Y1m1(r)]
+        functions = [lambda p, r: decay_func(r, 0.02)
+            , lambda p, r: decay_func(r, 0.02) * Y11(r)
+            , lambda p, r: decay_func(r, 0.02) * Y10(r)
+            , lambda p, r: decay_func(r, 0.02) * Y1m1(r)]
         p_orbital_indices = [['1', '1'], ['2', '2'], ['3', '3']]  # 1,1  0,0  -1,-1
         sqrt3 = 1. / jnp.sqrt(3.)
         coef = jnp.array([-sqrt3, -sqrt3, -sqrt3], dtype=jnp.float64)  # 3 coefficients for each determinant
@@ -179,7 +167,7 @@ def create_wave_function(key
             wave_function = accumulate_wave_function(orbitals)
             return wave_function
 
-        return key, psi, params
+        return key, psi, jnp.array([])
     else:
         raise RuntimeError('build_orbital_wave_function requires n_particles <= 4 or == 6')
 
