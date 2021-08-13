@@ -22,7 +22,8 @@ def build_arxiv_2102_02327v1(particle_pairs
                              , isospin_exchange_indices
                              , isospin_binary_representation
                              , model_string='o'
-                             , R3=1.5):
+                             , R3=1.5
+                             , include_3body=True):
     """
 
     Parameters
@@ -136,7 +137,7 @@ def build_arxiv_2102_02327v1(particle_pairs
         out += v_sigma_r(r_ij, psi_r)
         out += v_sigma_tau_r(r_ij, psi_r)
         out *= H_BAR
-        if particle_triplets.shape[0] > 0:
+        if particle_triplets.shape[0] > 0 and include_3body:
             out += three_body(r_coords, psi_r)
         out += v_coulomb_proton_proton(r_ij, psi_r)
         return out
