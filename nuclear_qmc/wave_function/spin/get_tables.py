@@ -54,8 +54,9 @@ def get_spin_exchange_index(state_index, particle_pair, package):
 
 def get_spin_exchange_indices(particle_pairs, state_indices, as_jax_array=True):
     package = jnp if as_jax_array else np
+    pairs_indices_in_binary_rep = convert_particle_index_to_binary_index(particle_pairs, package)
     return package.array([get_spin_exchange_index(state_indices, particle_pair, package)
-                          for particle_pair in particle_pairs], dtype=package.int32).T
+                          for particle_pair in pairs_indices_in_binary_rep], dtype=package.int32).T
 
 
 def get_number_of_isospin_states(mass_number, proton_number):
@@ -70,6 +71,9 @@ def get_isospin_state_indices(mass_number, proton_number, as_jax_array=True):
     number_of_isospin_states = get_number_of_isospin_states(mass_number, proton_number)
     return package.array(package.arange(number_of_isospin_states), dtype=package.int32)
 
+def convert_particle_index_to_binary_index(arr, package):
+    max_particle_index = arr.max()
+    return package.abs(arr - max_particle_index)
 
 def get_isospin_exchange_index(particle_pairs, mass_number, proton_number, as_jax_array=True,
                                also_return_binary_representation=False):
