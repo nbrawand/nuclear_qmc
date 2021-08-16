@@ -4,8 +4,8 @@ from math import factorial
 import numpy as np
 
 
-def get_tables(mass_number, as_jax_array=True, proton_number=None
-               , also_return_binary_representation=False, include_iso_spin=True):
+def get_spin_isospin_tables(mass_number, as_jax_array=True, proton_number=None
+                            , also_return_binary_representation=False, include_iso_spin=True):
     if not proton_number:
         proton_number = mass_number // 2
 

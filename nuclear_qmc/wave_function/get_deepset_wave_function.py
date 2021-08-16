@@ -1,10 +1,10 @@
-from nuclear_qmc.wave_function.jastro_neural_network_builder.build_nn_wave_function import build_nn_wave_function
+from nuclear_qmc.wave_function.neural_network_jastro_builder.build_nn_wave_function import build_nn_wave_function
 
 import jax.numpy as jnp
 import jax
 
 
-def get_deep_set(key, n_dense, n_hidden_layers, out_shape, in_shape=(3,), latent_shape=6, wrapper_func=jnp.tanh):
+def get_deepset_wave_function(key, n_dense, n_hidden_layers, out_shape, in_shape=(3,), latent_shape=6, wrapper_func=jnp.tanh):
     key, nn1, params1 = build_nn_wave_function(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers,
                                                in_shape=in_shape, output_size=latent_shape, reshape_output=False)
     n_p = len(params1)

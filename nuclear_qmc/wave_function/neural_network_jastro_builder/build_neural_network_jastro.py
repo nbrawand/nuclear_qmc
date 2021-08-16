@@ -1,16 +1,9 @@
-from operator import add, mul
-from copy import deepcopy
-from collections import OrderedDict
 import jax.numpy as jnp
-from jax import vmap
-
 from nuclear_qmc.operators.operators import sigma_psi_r, tau_psi_r, sigma_tau_psi_r
-from nuclear_qmc.wave_function.build_angular_momentum_wave_function import build_angular_momentum_wave_function
-from nuclear_qmc.wave_function.combine_wave_functions import combine_wave_functions
-from nuclear_qmc.wave_function.deepset import get_deep_set
+from nuclear_qmc.wave_function.get_deepset_wave_function import get_deepset_wave_function
 from nuclear_qmc.wave_function.jastro import build_sigma_jastro, build_3b_jastro, build_2b_jastro, build_tau_jastro, \
     build_sigma_tau_jastro, build_2b_addition_jastro, build_3b_addition_jastro
-from nuclear_qmc.wave_function.jastro_neural_network_builder.get_nn_jastro_func_and_params import \
+from nuclear_qmc.wave_function.neural_network_jastro_builder.get_nn_jastro_func_and_params import \
     get_nn_jastro_func_and_params
 from nuclear_qmc.utils.center_particles import center_particles
 
@@ -21,7 +14,7 @@ def add_parentheses_if_needed(expr):
     return expr
 
 
-def build_jastro_nn(
+def build_neural_network_jastro(
         key
         , orbital_psi
         , orbital_psi_params
@@ -129,25 +122,25 @@ def build_jastro_nn(
             raise RuntimeError('3b addition jastro requires A>2')
 
     if 'deepset' in jastro_list:
-        key, deepset_func, deepset_params = get_deep_set(key
-                                                         , n_dense
-                                                         , n_hidden_layers
-                                                         , out_shape=1
-                                                         , in_shape=(3,)
-                                                         , latent_shape=6
-                                                         , wrapper_func=jnp.exp)
+        key, deepset_func, deepset_params = get_deepset_wave_function(key
+                                                                      , n_dense
+                                                                      , n_hidden_layers
+                                                                      , out_shape=1
+                                                                      , in_shape=(3,)
+                                                                      , latent_shape=6
+                                                                      , wrapper_func=jnp.exp)
         n_deepset_params = len(deepset_params)
         psi_parameters = jnp.concatenate((psi_parameters, deepset_params))
 
     if 'total_deepset' in jastro_list:
         n_pairs = len(particle_pairs)
-        key, total_deepset_nn_func, total_deepset_params = get_deep_set(key
-                                                                        , n_dense
-                                                                        , n_hidden_layers
-                                                                        , out_shape=3 * n_pairs + 1
-                                                                        , in_shape=(3,)
-                                                                        , latent_shape=6
-                                                                        , wrapper_func=jnp.exp)
+        key, total_deepset_nn_func, total_deepset_params = get_deepset_wave_function(key
+                                                                                     , n_dense
+                                                                                     , n_hidden_layers
+                                                                                     , out_shape=3 * n_pairs + 1
+                                                                                     , in_shape=(3,)
+                                                                                     , latent_shape=6
+                                                                                     , wrapper_func=jnp.exp)
 
         def total_deepset_func(_p, _r, _psi):
             x = total_deepset_nn_func(_p, _r)

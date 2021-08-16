@@ -4,7 +4,7 @@ from scipy.special import sph_harm
 import numpy as np
 from sympy import S
 
-from nuclear_qmc.wave_function.jastro_neural_network_builder.build_nn_wave_function import build_nn_wave_function
+from nuclear_qmc.wave_function.neural_network_jastro_builder.build_nn_wave_function import build_nn_wave_function
 
 
 def sigmoid(x):

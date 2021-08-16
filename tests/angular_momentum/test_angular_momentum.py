@@ -1,5 +1,5 @@
 from nuclear_qmc.wave_function.build_wave_function import build_wave_function
-from nuclear_qmc.wave_function.jastro_neural_network_builder.neural_network import build_jastro_nn
+from nuclear_qmc.wave_function.neural_network_jastro_builder.build_neural_network_jastro import build_neural_network_jastro
 from nuclear_qmc.wave_function.utility import get_wave_function_system
 from tests.angular_momentum.get_total_angular_momentum import auto_diff_hessian_theta, auto_diff_theta, get_Li_Lj, \
     rotate_psi, L_sqrd_psi, L_sqrd_psi_axis, \
@@ -116,7 +116,7 @@ def test_L_sqrd_of_complete_wfc_2H():
     particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_wave_function_system(
         n_pro, n_neu, also_return_binary_representation=True)
     key, orbital_psi, orbital_psi_params = build_wave_function(key, n_neu, n_pro, 1, 1)
-    key, psi_prefactor, psi_params, psi_vector = build_jastro_nn(
+    key, psi_prefactor, psi_params, psi_vector = build_neural_network_jastro(
         key
         , orbital_psi
         , orbital_psi_params
