@@ -1,6 +1,6 @@
 from nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy import get_proton_proton_projection
 import jax.numpy as jnp
-from nuclear_qmc.wave_function.utility import get_wave_function_system
+from nuclear_qmc.wave_function.get_spin_isospin_tables.get_tables import get_wave_function_system
 
 
 def test_get_proton_proton_projection():

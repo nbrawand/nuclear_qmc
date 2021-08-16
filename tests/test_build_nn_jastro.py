@@ -1,7 +1,7 @@
 from jax.random import PRNGKey
 
 from nuclear_qmc.wave_function.neural_network_jastro_builder.build_neural_network_jastro import build_neural_network_jastro
-from nuclear_qmc.wave_function.utility import get_wave_function_system
+from nuclear_qmc.wave_function.get_spin_isospin_tables.get_tables import get_wave_function_system
 import jax.numpy as jnp
 from nuclear_qmc.wave_function.build_wave_function import build_wave_function
 

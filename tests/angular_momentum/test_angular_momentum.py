@@ -1,6 +1,6 @@
 from nuclear_qmc.wave_function.build_wave_function import build_wave_function
 from nuclear_qmc.wave_function.neural_network_jastro_builder.build_neural_network_jastro import build_neural_network_jastro
-from nuclear_qmc.wave_function.utility import get_wave_function_system
+from nuclear_qmc.wave_function.get_spin_isospin_tables.get_tables import get_wave_function_system
 from tests.angular_momentum.get_total_angular_momentum import auto_diff_hessian_theta, auto_diff_theta, get_Li_Lj, \
     rotate_psi, L_sqrd_psi, L_sqrd_psi_axis, \
     L_psi_axis, L_sqrd_psi_total, finite_diff_theta, finite_diff_hessian_theta

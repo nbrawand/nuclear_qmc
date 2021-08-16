@@ -7,7 +7,7 @@ from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonia
 from nuclear_qmc.optimize.optimize_wave_function import optimize_wave_function
 from nuclear_qmc.utils.get_new_file_name import get_new_file_name
 from nuclear_qmc.wave_function.neural_network_jastro_builder.build_neural_network_jastro import build_neural_network_jastro
-from nuclear_qmc.wave_function.utility import get_wave_function_system
+from nuclear_qmc.wave_function.get_spin_isospin_tables.get_tables import get_wave_function_system
 import os
 from jax import random
 import logging
