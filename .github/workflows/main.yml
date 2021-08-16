@@ -1,4 +1,4 @@
-name: nuclear_qmc tests
+name: tests
 
 on:
   push:
