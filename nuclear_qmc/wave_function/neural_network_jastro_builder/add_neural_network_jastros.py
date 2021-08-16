@@ -14,7 +14,7 @@ def add_parentheses_if_needed(expr):
     return expr
 
 
-def build_neural_network_jastro(
+def add_neural_network_jastros(
         key
         , orbital_psi
         , orbital_psi_params

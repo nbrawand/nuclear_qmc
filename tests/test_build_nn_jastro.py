@@ -1,6 +1,6 @@
 from jax.random import PRNGKey
 
-from nuclear_qmc.wave_function.neural_network_jastro_builder.build_neural_network_jastro import build_neural_network_jastro
+from nuclear_qmc.wave_function.neural_network_jastro_builder.add_neural_network_jastros import add_neural_network_jastros
 from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
 import jax.numpy as jnp
 from nuclear_qmc.wave_function.build_wave_function import build_wave_function
@@ -14,7 +14,7 @@ key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 2, 1, 1)
 
 def test_build_jastro_nn_sigma_open_spin_channels():
     key = PRNGKey(0)
-    key, psi, psi_parameters, psi_vector = build_neural_network_jastro(
+    key, psi, psi_parameters, psi_vector = add_neural_network_jastros(
         key
         , orbital_psi
         , orbital_psi_params
@@ -36,7 +36,7 @@ def test_build_jastro_nn_sigma_open_spin_channels():
 
 def test_build_jastro_nn_sigma_open_tau_channels():
     key = PRNGKey(0)
-    key, psi, psi_parameters, psi_vector = build_neural_network_jastro(
+    key, psi, psi_parameters, psi_vector = add_neural_network_jastros(
         key
         , orbital_psi
         , orbital_psi_params
@@ -58,7 +58,7 @@ def test_build_jastro_nn_sigma_open_tau_channels():
 
 def test_build_jastro_nn_correct_channels():
     key = PRNGKey(0)
-    key, psi, psi_parameters, psi_vector = build_neural_network_jastro(
+    key, psi, psi_parameters, psi_vector = add_neural_network_jastros(
         key
         , orbital_psi
         , orbital_psi_params
