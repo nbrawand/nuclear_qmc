@@ -6,7 +6,8 @@ from nuclear_qmc.wave_function.build_wave_function import build_wave_function
 from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonian
 from nuclear_qmc.optimize.optimize_wave_function import optimize_wave_function
 from nuclear_qmc.utils.get_new_file_name import get_new_file_name
-from nuclear_qmc.wave_function.neural_network_jastro_builder.add_neural_network_jastros import add_neural_network_jastros
+from nuclear_qmc.wave_function.neural_network_jastro_builder.add_neural_network_jastros import \
+    add_neural_network_jastros
 from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
 import os
 from jax import random
@@ -103,18 +104,3 @@ optimize_wave_function(
     , hamiltonian
     , **input_json['optimization']
 )
-"""
-    , seed=input_json['optimization_seed']
-    , n_dimensions=input_json['n_dimensions']
-    , psi_param_file=psi_param_file
-    , n_blocks=input_json['n_blocks']
-    , n_equilibrium_blocks=input_json['n_equilibrium_blocks']
-    , n_walkers=input_json['n_walkers']
-    , n_void_steps=input_json['n_void_steps']
-    , walker_step_size=input_json['walker_step_size']
-    , initial_walker_standard_deviation=input_json['initial_walker_standard_deviation']
-    , n_optimization_steps=input_json['n_optimization_steps']
-    , learning_rate=input_json['learning_rate']
-    , epsilon_sr=input_json['epsilon_sr']
-    , print_local_energy=input_json['print_local_energy']
-"""
