@@ -6,32 +6,6 @@ import numpy as np
 from nuclear_qmc.utils.get_triplets import get_triplets
 
 
-def get_spin_isospin_tables(mass_number, as_jax_array=True, proton_number=None
-                            , also_return_binary_representation=False, include_iso_spin=True):
-    if not proton_number:
-        proton_number = mass_number // 2
-
-    tables = {'particle_pairs': get_spin_particle_pairs(mass_number, as_jax_array)}
-
-    tables['spin_exchange_indices'] = get_spin_exchange_indices(tables['particle_pairs']
-                                                                , get_spin_state_indices(mass_number, as_jax_array)
-                                                                , as_jax_array)
-
-    if include_iso_spin:
-        tables['isospin_exchange_indices'] = get_isospin_exchange_index(tables['particle_pairs']
-                                                                        , mass_number
-                                                                        , proton_number
-                                                                        , as_jax_array=as_jax_array
-                                                                        ,
-                                                                        also_return_binary_representation=also_return_binary_representation)
-
-        if also_return_binary_representation:
-            tables['isospin_exchange_indices'], tables['isospin_binary_representation'] = tables[
-                'isospin_exchange_indices']
-
-    return tables
-
-
 def get_number_of_spin_states(n_particles):
     return 2 ** n_particles
 
@@ -73,9 +47,11 @@ def get_isospin_state_indices(mass_number, proton_number, as_jax_array=True):
     number_of_isospin_states = get_number_of_isospin_states(mass_number, proton_number)
     return package.array(package.arange(number_of_isospin_states), dtype=package.int32)
 
+
 def convert_particle_index_to_binary_index(arr, package):
     max_particle_index = arr.max()
     return package.abs(arr - max_particle_index)
+
 
 def get_isospin_exchange_index(particle_pairs, mass_number, proton_number, as_jax_array=True,
                                also_return_binary_representation=False):
@@ -127,7 +103,7 @@ def get_wave_function_system(n_protons, n_neutrons, dtype=jnp.float64, as_jax_ar
     spin_exchange_indices = get_spin_exchange_indices(particle_pairs
                                                       , get_spin_state_indices(mass_number, as_jax_array)
                                                       , as_jax_array)
-    #spin = get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=dtype)
+    # spin = get_spin_isospin_wave_function(n_protons, n_neutrons, dtype=dtype)
     isospin_exchange_indices = get_isospin_exchange_index(particle_pairs
                                                           , mass_number
                                                           , n_protons
@@ -136,6 +112,6 @@ def get_wave_function_system(n_protons, n_neutrons, dtype=jnp.float64, as_jax_ar
                                                           also_return_binary_representation=also_return_binary_representation)
     if also_return_binary_representation:
         isospin_exchange_indices, isospin_binary_representation = isospin_exchange_indices
-        return particle_pairs, particle_triplets,  spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation
+        return particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation
     else:
-        return particle_pairs, particle_triplets,  spin_exchange_indices, isospin_exchange_indices
+        return particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices
