@@ -1,7 +1,7 @@
 from nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy import build_arxiv_2102_02327v1
 import jax.numpy as jnp
 from jax import config
-from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_spin_isospin_indices
 from nuclear_qmc.utils.get_expectation import get_expectation
 from nuclear_qmc.constants.constants import H_BAR
 

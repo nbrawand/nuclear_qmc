@@ -1,14 +1,13 @@
 import re
 from jax import jit
-from nuclear_qmc.wave_function.spherical_harmonics import Y1m1, Y10, Y11, build_radial_function
+from nuclear_qmc.wave_function.wave_function_builder.spherical_harmonics import Y1m1, Y10, Y11, build_radial_function
 from jax import vmap, numpy as jnp
 from sympy.combinatorics.permutations import Permutation
 from scipy.stats import rankdata
 import numpy as np
-from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_number_of_isospin_states, get_number_of_spin_states
-from jax.ops import index, index_update
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_number_of_isospin_states, get_number_of_spin_states
+from jax.ops import index
 from itertools import permutations as get_permutations
-from jax.lax import fori_loop
 from jax.ops import index_add
 from nuclear_qmc.wave_function.utility import apply_confining_potential
 

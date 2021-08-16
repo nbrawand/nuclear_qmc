@@ -4,7 +4,7 @@ import jax.numpy as jnp
 import jax
 
 
-def get_deepset_wave_function(key, n_dense, n_hidden_layers, out_shape, in_shape=(3,), latent_shape=6, wrapper_func=jnp.tanh):
+def get_deepset_jastro(key, n_dense, n_hidden_layers, out_shape, in_shape=(3,), latent_shape=6, wrapper_func=jnp.tanh):
     key, nn1, params1 = build_nn_wave_function(ndense=n_dense, key=key, n_hidden_layers=n_hidden_layers,
                                                in_shape=in_shape, output_size=latent_shape, reshape_output=False)
     n_p = len(params1)

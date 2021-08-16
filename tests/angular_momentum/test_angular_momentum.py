@@ -1,15 +1,11 @@
-from nuclear_qmc.wave_function.build_wave_function import build_wave_function
+from nuclear_qmc.wave_function.wave_function_builder.build_wave_function import build_wave_function
 from nuclear_qmc.wave_function.neural_network_jastro_builder.add_neural_network_jastros import add_neural_network_jastros
-from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
-from tests.angular_momentum.get_total_angular_momentum import auto_diff_hessian_theta, auto_diff_theta, get_Li_Lj, \
-    rotate_psi, L_sqrd_psi, L_sqrd_psi_axis, \
-    L_psi_axis, L_sqrd_psi_total, finite_diff_theta, finite_diff_hessian_theta
-from nuclear_qmc.sampling.sample import sample
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_spin_isospin_indices
+from tests.angular_momentum.get_total_angular_momentum import auto_diff_hessian_theta, auto_diff_theta, L_psi_axis, L_sqrd_psi_total
 import jax.numpy as jnp
 import numpy as np
 import jax
-from jax import vmap
-from nuclear_qmc.wave_function.spherical_harmonics import Y11, Y10, Y1m1, get_phi
+from nuclear_qmc.wave_function.wave_function_builder.spherical_harmonics import Y11, Y10, Y1m1
 
 
 def test_L_sqrd_single_real_harmonic():

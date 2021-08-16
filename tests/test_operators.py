@@ -1,7 +1,7 @@
 import jax.numpy as jnp
-from nuclear_qmc.wave_function.build_wave_function import build_wave_function
+from nuclear_qmc.wave_function.wave_function_builder.build_wave_function import build_wave_function
 import jax
-from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_spin_isospin_indices
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
 from nuclear_qmc.operators.operators import sigma_psi_r, kinetic_energy_psi, tau_psi_r, sigma_tau_psi_r
 

@@ -2,13 +2,13 @@ from jax.config import config
 import jax.numpy as jnp
 import json
 
-from nuclear_qmc.wave_function.build_wave_function import build_wave_function
+from nuclear_qmc.wave_function.wave_function_builder.build_wave_function import build_wave_function
 from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonian
 from nuclear_qmc.optimize.optimize_wave_function import optimize_wave_function
 from nuclear_qmc.utils.get_new_file_name import get_new_file_name
 from nuclear_qmc.wave_function.neural_network_jastro_builder.add_neural_network_jastros import \
     add_neural_network_jastros
-from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_spin_isospin_indices
 import os
 from jax import random
 import logging

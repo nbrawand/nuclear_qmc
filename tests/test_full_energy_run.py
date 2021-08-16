@@ -5,7 +5,7 @@ from nuclear_qmc.operators.hamiltonian.get_local_energy import get_local_energy
 from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonian
 from nuclear_qmc.wave_function.legacy_wave_function_for_testing.test_neural_network import build_test_nn_wfc
 from nuclear_qmc.sampling.sample import sample
-from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_spin_isospin_indices
 
 config.update("jax_enable_x64", True)
 

@@ -1,6 +1,6 @@
 from nuclear_qmc.operators.hamiltonian.get_local_energy import get_local_energy
 from jax import random
-from nuclear_qmc.wave_function.build_wave_function import build_wave_function
+from nuclear_qmc.wave_function.wave_function_builder.build_wave_function import build_wave_function
 from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonian
 import jax.numpy as jnp
 
@@ -12,7 +12,7 @@ from nuclear_qmc.utils.get_dr_ij import get_r_ij_sqrd, get_r_ik_r_ij_cycles
 from nuclear_qmc.wave_function.jastro import exponential_jastro as exp_psi
 
 from nuclear_qmc.wave_function.legacy_wave_function_for_testing.test_neural_network import build_test_nn_wfc
-from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_spin_isospin_indices
 
 config.update("jax_enable_x64", True)
 

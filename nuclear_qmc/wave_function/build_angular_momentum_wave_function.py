@@ -1,7 +1,7 @@
 from jax import vmap, jit
 from jax.ops import index, index_update
 import jax.numpy as jnp
-from nuclear_qmc.wave_function.spherical_harmonics import get_spherical_harmonic_functions, get_spherical_harmonic_systems
+from nuclear_qmc.wave_function.wave_function_builder.spherical_harmonics import get_spherical_harmonic_systems
 
 
 def build_angular_momentum_wave_function(key, n_particles
