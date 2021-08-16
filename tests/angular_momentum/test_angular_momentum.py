@@ -83,7 +83,7 @@ def test_L_sqrd_of_orbital_wfc():
         n_pro, n_neu, also_return_binary_representation=True)
     key, psi, psi_params = build_wave_function(key, n_neu, n_pro, 1, 1)
     psi_r = lambda r: psi(psi_params, r)
-    computed = L_sqrd_psi_total(psi_r, r_coords, finite_diff_hessian_theta, auto_diff_theta, particle_pairs)
+    computed = L_sqrd_psi_total(psi_r, r_coords, auto_diff_hessian_theta, auto_diff_theta, particle_pairs)
     expected = jnp.array(np.zeros(shape=(2, 4)), dtype=jnp.complex64)
     assert jnp.array_equal(computed, expected)
 

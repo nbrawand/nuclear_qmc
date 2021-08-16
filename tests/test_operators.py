@@ -50,9 +50,10 @@ class TestOperators:
         key, orbital_psi, orbital_psi_params = build_wave_function(key, 2, 1, 1, 1)
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(3, 3)))
         computed = tau_psi_r(spin, isospin_exchange_indices, pairs)
-        expected = -jnp.array([[0., -2., 1., 0., 1., 0., 0., 0.],
-                              [0., -5., 4., 0., 1., 0., 0., 0.],
-                              [0., 7., -5., 0., -2., 0., 0., 0.]], dtype=jnp.float64)
+        expected = jnp.array([[0., -2., -5., 0., 7., 0., 0., 0.]
+                                 , [0., 1., 4., 0., -5., 0., 0., 0.]
+                                 , [0., 1., 1., 0., -2., 0., 0., 0.]],
+                             dtype=jnp.float64)
         assert jnp.array_equal(expected, computed)
 
     def test_sigma_tau_psi_r(self):

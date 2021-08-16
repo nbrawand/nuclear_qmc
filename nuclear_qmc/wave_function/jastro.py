@@ -19,7 +19,7 @@ def build_2b_addition_jastro(func_2b, particle_pairs):
     return psi_function
 
 
-def build_2b_jastro(func_2b, particle_pairs, include_distance_in_2b):
+def build_2b_jastro(func_2b, particle_pairs, include_distance_in_2b=False):
     def psi_function(in_params, in_r_coords):
         x = get_r_ij(in_r_coords, particle_pairs)
         if include_distance_in_2b:
