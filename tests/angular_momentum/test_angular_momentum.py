@@ -1,6 +1,6 @@
 from nuclear_qmc.wave_function.build_wave_function import build_wave_function
 from nuclear_qmc.wave_function.neural_network_jastro_builder.build_neural_network_jastro import build_neural_network_jastro
-from nuclear_qmc.wave_function.get_spin_isospin_tables.get_tables import get_wave_function_system
+from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
 from tests.angular_momentum.get_total_angular_momentum import auto_diff_hessian_theta, auto_diff_theta, get_Li_Lj, \
     rotate_psi, L_sqrd_psi, L_sqrd_psi_axis, \
     L_psi_axis, L_sqrd_psi_total, finite_diff_theta, finite_diff_hessian_theta
@@ -79,7 +79,7 @@ def test_L_sqrd_of_orbital_wfc():
     n_neu = 1
     n_pro = 1
     r_coords = jnp.array(np.random.random(size=(n_neu + n_pro, 3)))
-    particle_pairs, _, _, _, _ = get_wave_function_system(
+    particle_pairs, _, _, _, _ = get_spin_isospin_indices(
         n_pro, n_neu, also_return_binary_representation=True)
     key, psi, psi_params = build_wave_function(key, n_neu, n_pro, 1, 1)
     psi_r = lambda r: psi(psi_params, r)
@@ -113,7 +113,7 @@ def test_L_sqrd_of_complete_wfc_2H():
     n_neu = 1
     n_pro = 1
     r_coords = jnp.array(np.random.random(size=(n_neu + n_pro, 3)))
-    particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_wave_function_system(
+    particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_spin_isospin_indices(
         n_pro, n_neu, also_return_binary_representation=True)
     key, orbital_psi, orbital_psi_params = build_wave_function(key, n_neu, n_pro, 1, 1)
     key, psi_prefactor, psi_params, psi_vector = build_neural_network_jastro(

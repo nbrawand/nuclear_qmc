@@ -7,7 +7,7 @@ from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonia
 from nuclear_qmc.optimize.optimize_wave_function import optimize_wave_function
 from nuclear_qmc.utils.get_new_file_name import get_new_file_name
 from nuclear_qmc.wave_function.neural_network_jastro_builder.build_neural_network_jastro import build_neural_network_jastro
-from nuclear_qmc.wave_function.get_spin_isospin_tables.get_tables import get_wave_function_system
+from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
 import os
 from jax import random
 import logging
@@ -41,7 +41,7 @@ logging.info(json.dumps(input_json, indent=4, sort_keys=True))
 logging.info("```")
 
 logging.info('## Building Wave Function System')
-particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_wave_function_system(
+particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_spin_isospin_indices(
     input_json['n_proton'], input_json['n_neutron'], also_return_binary_representation=True)
 key = random.PRNGKey(input_json['wave_function']['seed'])
 key, orbital_psi, orbital_psi_params = build_wave_function(key

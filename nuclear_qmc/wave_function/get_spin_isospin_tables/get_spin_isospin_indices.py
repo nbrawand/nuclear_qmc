@@ -95,7 +95,7 @@ def get_isospin_exchange_index(particle_pairs, mass_number, proton_number, as_ja
         return package.array(exchange_indices)
 
 
-def get_wave_function_system(n_protons, n_neutrons, dtype=jnp.float64, as_jax_array=True,
+def get_spin_isospin_indices(n_protons, n_neutrons, dtype=jnp.float64, as_jax_array=True,
                              also_return_binary_representation=False):
     mass_number = n_protons + n_neutrons
     particle_pairs = get_spin_particle_pairs(mass_number, as_jax_array)

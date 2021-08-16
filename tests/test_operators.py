@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from nuclear_qmc.wave_function.build_wave_function import build_wave_function
 import jax
-from nuclear_qmc.wave_function.get_spin_isospin_tables.get_tables import get_wave_function_system
+from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
 from nuclear_qmc.constants.constants import H_BAR_SQRD_OVER_2_M
 from nuclear_qmc.operators.operators import sigma_psi_r, kinetic_energy_psi, tau_psi_r, sigma_tau_psi_r
 
@@ -43,7 +43,7 @@ class TestOperators:
         assert expected == computed
 
     def test_tau_r(self):
-        particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+        particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_spin_isospin_indices(
             1, 2)
         pairs = jnp.array([0, 1, 2])
         key = jax.random.PRNGKey(0)
@@ -57,7 +57,7 @@ class TestOperators:
         assert jnp.array_equal(expected, computed)
 
     def test_sigma_tau_psi_r(self):
-        particle_pairs, particle_triplets, spin_xi, iso_xi = get_wave_function_system(
+        particle_pairs, particle_triplets, spin_xi, iso_xi = get_spin_isospin_indices(
             1, 2)
         pairs = jnp.array([0, 1, 2])
         key = jax.random.PRNGKey(0)
@@ -72,7 +72,7 @@ class TestOperators:
         key = jax.random.PRNGKey(0)
         key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(2, 3)))
-        particle_pairs, particle_triplets, spin_xi, iso_xi = get_wave_function_system(1, 1)
+        particle_pairs, particle_triplets, spin_xi, iso_xi = get_spin_isospin_indices(1, 1)
         pairs = jnp.array([1])
         computed = sigma_tau_psi_r(spin, spin_xi, iso_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
@@ -82,7 +82,7 @@ class TestOperators:
         key = jax.random.PRNGKey(0)
         key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(2, 3)))
-        particle_pairs, particle_triplets, spin_xi, iso_xi = get_wave_function_system(1, 1)
+        particle_pairs, particle_triplets, spin_xi, iso_xi = get_spin_isospin_indices(1, 1)
         pairs = jnp.array([-2.0])
         computed = sigma_tau_psi_r(spin, spin_xi, iso_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
@@ -92,7 +92,7 @@ class TestOperators:
         key = jax.random.PRNGKey(0)
         key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(2, 3)))
-        particle_pairs, particle_triplets, spin_xi, iso_xi = get_wave_function_system(1, 1)
+        particle_pairs, particle_triplets, spin_xi, iso_xi = get_spin_isospin_indices(1, 1)
         pairs = jnp.array([1])
         computed = sigma_psi_r(spin, spin_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
@@ -102,7 +102,7 @@ class TestOperators:
         key = jax.random.PRNGKey(0)
         key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(2, 3)))
-        particle_pairs, particle_triplets, spin_xi, iso_xi = get_wave_function_system(1, 1)
+        particle_pairs, particle_triplets, spin_xi, iso_xi = get_spin_isospin_indices(1, 1)
         pairs = jnp.array([1])
         computed = tau_psi_r(spin, iso_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)
@@ -112,7 +112,7 @@ class TestOperators:
         key = jax.random.PRNGKey(0)
         key, orbital_psi, orbital_psi_params = build_wave_function(key, 2, 1, 1, 1)
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(3, 3)))
-        particle_pairs, particle_triplets, spin_xi, iso_xi = get_wave_function_system(1, 2)
+        particle_pairs, particle_triplets, spin_xi, iso_xi = get_spin_isospin_indices(1, 2)
         pairs = jnp.array([1, 1, 1])
         computed = sigma_psi_r(spin, spin_xi, pairs)
         computed = jnp.vdot(spin, computed) / jnp.vdot(spin, spin)

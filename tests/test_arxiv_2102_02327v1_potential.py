@@ -1,13 +1,13 @@
 from nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy import build_arxiv_2102_02327v1
 import jax.numpy as jnp
 from jax import config
-from nuclear_qmc.wave_function.get_spin_isospin_tables.get_tables import get_wave_function_system
+from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
 from nuclear_qmc.utils.get_expectation import get_expectation
 from nuclear_qmc.constants.constants import H_BAR
 
 config.update("jax_enable_x64", True)
 
-particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, iso_bin_rep = get_wave_function_system(
+particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, iso_bin_rep = get_spin_isospin_indices(
     1,
     1, also_return_binary_representation=True)
 

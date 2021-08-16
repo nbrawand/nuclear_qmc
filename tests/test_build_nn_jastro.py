@@ -1,11 +1,11 @@
 from jax.random import PRNGKey
 
 from nuclear_qmc.wave_function.neural_network_jastro_builder.build_neural_network_jastro import build_neural_network_jastro
-from nuclear_qmc.wave_function.get_spin_isospin_tables.get_tables import get_wave_function_system
+from nuclear_qmc.wave_function.get_spin_isospin_tables.get_spin_isospin_indices import get_spin_isospin_indices
 import jax.numpy as jnp
 from nuclear_qmc.wave_function.build_wave_function import build_wave_function
 
-particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_wave_function_system(
+particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_spin_isospin_indices(
     1, 2)
 
 key = PRNGKey(0)
