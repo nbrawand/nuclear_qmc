@@ -121,10 +121,14 @@ def create_wave_function(key
     radial_functions_param_indices = {}
     params = jnp.array([])
     for radial_func_name in set([elm for lst in radial_orbitals for elm in lst]):
-        key, radial_func, radial_params = build_radial_function(key
-                                                                , n_dense
-                                                                , n_hidden_layers
-                                                                , nn_wrapper_function=jnp.exp)
+        if radial_func_name == 0:
+            radial_func = lambda _p, _r: 1.0
+            radial_params = jnp.array([])
+        else:
+            key, radial_func, radial_params = build_radial_function(key
+                                                                    , n_dense
+                                                                    , n_hidden_layers
+                                                                    , nn_wrapper_function=jnp.exp)
         radial_functions[radial_func_name] = radial_func
         radial_functions_param_indices[radial_func_name] = [len(params), len(params) + len(radial_params)]
         params = jnp.concatenate((params, radial_params))

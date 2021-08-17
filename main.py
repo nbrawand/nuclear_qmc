@@ -88,6 +88,7 @@ else:
     else:
         # create new file with name from input
         logging.info(f'creating wave function parameters file: {input_json["wave_function"]["wave_function_file"]}')
+logging.info(f'number of wave function parameters: {len(psi_params)}')
 
 logging.info('## Hamiltonian')
 hamiltonian = build_hamiltonian(input_json['potential_energy']

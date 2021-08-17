@@ -11,8 +11,8 @@
     "wave_function_file": "wave_function_parameters_0.npy",
     "radial_orbitals": [
       [
-        0,
-        0
+        1,
+        1
       ]
     ],
     "angular_orbitals": [
