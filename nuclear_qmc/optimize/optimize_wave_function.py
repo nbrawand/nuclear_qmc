@@ -57,7 +57,7 @@ def optimize_wave_function(
         , psi_vector
         , psi_param_file
         , hamiltonian
-        , seed=0
+        , key
         , n_dimensions=3
         , n_blocks=10
         , n_equilibrium_blocks=10
@@ -126,7 +126,6 @@ def optimize_wave_function(
     logging.info("Search String | Step | Energy | Error")
     logging.info("------------- | ---- | ------ | -----")
     # begin optimization loop
-    key = random.PRNGKey(seed)
     n_particles = n_proton + n_neutron
     for n_opt in range(n_optimization_steps):
         key, r_coord_samples = sample(

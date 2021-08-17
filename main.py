@@ -44,12 +44,16 @@ logging.info("```")
 logging.info('## Building Wave Function System')
 particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_spin_isospin_indices(
     input_json['n_proton'], input_json['n_neutron'], also_return_binary_representation=True)
-key = random.PRNGKey(input_json['wave_function']['seed'])
+key = random.PRNGKey(input_json['seed'])
 key, orbital_psi, orbital_psi_params = build_wave_function(key
                                                            , input_json['n_neutron']
                                                            , input_json['n_proton']
                                                            , input_json['wave_function']['n_dense']
-                                                           , input_json['wave_function']['n_hidden_layers'])
+                                                           , input_json['wave_function']['n_hidden_layers']
+                                                           , input_json['wave_function']['radial_orbitals']
+                                                           , input_json['wave_function']['angular_orbitals']
+                                                           , input_json['wave_function']['coefficients']
+                                                           )
 key, psi_prefactor, psi_params, psi_vector = add_neural_network_jastros(
     key
     , orbital_psi
@@ -102,5 +106,6 @@ optimize_wave_function(
     , psi_vector
     , input_json['wave_function']['wave_function_file']
     , hamiltonian
+    , key
     , **input_json['optimization']
 )

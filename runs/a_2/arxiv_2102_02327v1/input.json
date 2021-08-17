@@ -1,25 +1,35 @@
 {
   "n_proton": 1,
   "n_neutron": 1,
+  "seed": 0,
   "wave_function": {
-    "seed": 0,
     "n_dense": 6,
     "n_hidden_layers": 2,
     "jastro_list": [
       "2b"
     ],
     "wave_function_file": "wave_function_parameters_0.npy",
-    "L_total": 0,
-    "L_z": 0,
-    "L_1": 0,
-    "L_2": 0
+    "radial_orbitals": [
+      [
+        0,
+        0
+      ]
+    ],
+    "angular_orbitals": [
+      [
+        "Y00",
+        "Y00"
+      ]
+    ],
+    "coefficients": [
+      1.0
+    ]
   },
   "potential_energy": "arxiv_2102_02327v1",
   "potential_kwargs": {
     "model_string": "o"
   },
   "optimization": {
-    "seed": 0,
     "n_dimensions": 3,
     "n_blocks": 2,
     "n_equilibrium_blocks": 2,
