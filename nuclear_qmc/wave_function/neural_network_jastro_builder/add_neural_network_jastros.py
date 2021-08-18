@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+from nuclear_qmc.wave_function.pair_deepset import PairDeepset
 from nuclear_qmc.operators.operators import sigma_psi_r, tau_psi_r, sigma_tau_psi_r
 from nuclear_qmc.wave_function.neural_network_jastro_builder.get_deepset_jastro import get_deepset_jastro
 from nuclear_qmc.wave_function.jastro import build_sigma_jastro, build_3b_jastro, build_2b_jastro, build_tau_jastro, \
@@ -34,7 +35,8 @@ def add_neural_network_jastros(
     if include_distance_in_2b and '2b' not in jastro_list:
         raise RuntimeError('2b must be in jastro list if include_distance_in_2b is True.')
 
-    supported_jastros = ['2b', '3b', 'sigma', 'tau', 'sigma_tau', 'add_2b', 'add_3b', 'deepset', 'total_deepset']
+    supported_jastros = ['2b', '3b', 'sigma', 'tau', 'sigma_tau', 'add_2b', 'add_3b', 'pair_deepset', 'deepset',
+                         'total_deepset']
     for jastro in jastro_list:
         if jastro not in supported_jastros:
             raise RuntimeError(f'jastro: {jastro} not supported.')
@@ -121,6 +123,15 @@ def add_neural_network_jastros(
         else:
             raise RuntimeError('3b addition jastro requires A>2')
 
+    if 'pair_deepset' in jastro_list:
+        pair_deepset_wfc = PairDeepset(ndim=3, npart=n_particles, conf=0.10, key=key, mix=0.0, spin=particle_pairs)
+        # import pickle
+        # with open('', 'rb') as file:
+        # pair_deepset_params = pickle.load(file)
+        pair_deepset_params = pair_deepset_wfc.build()
+        n_pair_deepset_params = len(pair_deepset_params)
+        psi_parameters = jnp.concatenate((psi_parameters, pair_deepset_params))
+
     if 'deepset' in jastro_list:
         key, deepset_func, deepset_params = get_deepset_jastro(key
                                                                , n_dense
@@ -200,6 +211,11 @@ def add_neural_network_jastros(
             start = end
             end += add_n_3b
             psi_out *= add_b3_func(in_parameters[start:end], in_r_coords)
+
+        if 'pair_deepset' in jastro_list:
+            start = end
+            end += n_pair_deepset_params
+            psi_out *= pair_deepset_wfc.psi(in_parameters[start:end], in_r_coords)
 
         if 'deepset' in jastro_list:
             start = end
