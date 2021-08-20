@@ -1,11 +1,14 @@
 import re
+import copy
 from jax import jit
-from nuclear_qmc.wave_function.wave_function_builder.spherical_harmonics import Y1m1, Y10, Y11, build_radial_function
+from nuclear_qmc.wave_function.wave_function_builder.spherical_harmonics import Y1m1, Y10, Y11, build_radial_function, \
+    SPHERICAL_HARMONICS
 from jax import vmap, numpy as jnp
 from sympy.combinatorics.permutations import Permutation
 from scipy.stats import rankdata
 import numpy as np
-from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_number_of_isospin_states, get_number_of_spin_states
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_number_of_isospin_states, \
+    get_number_of_spin_states
 from jax.ops import index
 from itertools import permutations as get_permutations
 from jax.ops import index_add
@@ -81,7 +84,7 @@ def apply_func(matrix, func):
 
 def get_indices(state_permutations, state_position_index, str_to_int_rules, use_rank=True):
     # extract state str at given index
-    replace_state = lambda x: str_to_int_rules[x[state_position_index]]
+    replace_state = lambda x: str_to_int_rules[x.split('_')[state_position_index]]
     states = apply_func(state_permutations, replace_state)
     states = [''.join(lst) for lst in states]
     if use_rank:
@@ -100,90 +103,85 @@ def create_wave_function(key
                          , permutation_signatures
                          , n_dense
                          , n_hidden_layers
-                         , orbital_index=0):
+                         , coefficients):
     n_particles = state_permutations.shape[-1]
+    params = jnp.array([])
+    signature_indices = signature_indices.reshape(-1, 2)
+    coefficients = jnp.array(coefficients).reshape(-1, 1)
 
     @jit
     def accumulate_wave_function(terms):
         wave_function = jnp.zeros(shape=(n_iso_configs, n_spin_configs))
+        terms = terms.reshape(-1)
         i = signature_indices[:, 0]
         j = signature_indices[:, 1]
         wave_function = index_add(wave_function, index[i, j], terms)
         return wave_function
 
-    if n_particles <= 4:
-        # just S wave return 1.0
-        wave_function = accumulate_wave_function(permutation_signatures)
+    def decay_func(_r, decay_strength):
+        mag_r = jnp.linalg.norm(_r) ** 2
+        return jnp.exp(-decay_strength * mag_r)
 
-        def psi(p, r):
-            return wave_function * apply_confining_potential(r)
+    # Create orbitals, only works for Li
+    # replace the Pneutron->A and Pproton->B
+    orbitals = apply_func(state_permutations, lambda x: '_'.join(x.split('_')[:2]))
 
-        return key, psi, jnp.array([])
-    elif n_particles == 6:
-        # Create orbitals, only works for Li
-        # replace the Pneutron->A and Pproton->B
-        state_permutations = apply_func(state_permutations, lambda x: re.sub('P.n', 'A', x))
-        state_permutations = apply_func(state_permutations, lambda x: re.sub('P.p', 'B', x))
-        # strip just the orbital information
-        state_permutations = apply_func(state_permutations, lambda x: x[orbital_index])
+    unique_orbitals = np.unique(orbitals)
 
-        # create radial functions
-        key, radial_func_p_shell, p_shell_params = build_radial_function(key
-                                                                         , n_dense
-                                                                         , n_hidden_layers
-                                                                         , nn_wrapper_function=jnp.exp)
-        key, radial_func_s_shell, s_shell_params = build_radial_function(key
-                                                                         , n_dense
-                                                                         , n_hidden_layers
-                                                                         , nn_wrapper_function=jnp.exp)
-        n_s_shell_params = len(s_shell_params)
-        params = jnp.concatenate((s_shell_params, p_shell_params))
+    functions = []
+    radial_functions = []
+    function_param_start_stop = []
+    seen_radial_orbitals = []
+    function_dict = {}
+    i = 0
 
-        def decay_func(_r, decay_strength):
-            mag_r = jnp.linalg.norm(_r) ** 2
-            return jnp.exp(-decay_strength * mag_r)
+    def make_function(indx, start, stop, y):
+        return lambda _p, _r: radial_functions[indx](_p[start:stop], _r) * SPHERICAL_HARMONICS[y](_r) * decay_func(_r,
+                                                                                                                   0.1)
 
-        # setup orbital functions and indices to replace characters
-        functions = [lambda p, r: radial_func_s_shell(p[:n_s_shell_params], r) * decay_func(r, 0.02)
-            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * decay_func(r, 0.01) * Y11(r)
-            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * decay_func(r, 0.01) * Y10(r)
-            , lambda p, r: radial_func_p_shell(p[n_s_shell_params:], r) * decay_func(r, 0.01) * Y1m1(r)]
-        p_orbital_indices = [['1', '1'], ['2', '2'], ['3', '3']]  # 1,1  0,0  -1,-1
-        sqrt3 = 1. / jnp.sqrt(3.)
-        coef = jnp.array([-sqrt3, -sqrt3, -sqrt3], dtype=jnp.float64)  # 3 coefficients for each determinant
+    for orbital in unique_orbitals:
+        r = orbital.split('_')[0]
+        if r not in seen_radial_orbitals:
+            key, radial_func, radial_params = build_radial_function(key
+                                                                    , n_dense
+                                                                    , n_hidden_layers
+                                                                    , nn_wrapper_function=jnp.exp)
+            radial_functions.append(radial_func)
+            start = len(params)
+            stop = start + len(radial_params)
+            function_param_start_stop.append([start, stop])
+            params = jnp.concatenate((params, radial_params))
+            seen_radial_orbitals.append(r)
 
-        # Replace orbital characters with indices A->p1, B->p2, S->0
-        funcs = [lambda x: x.replace('A', p1).replace('B', p2).replace('S', '0') for p1, p2 in p_orbital_indices]
-        # n_determinant, n_permutation, n_particles
-        function_indices = np.array([apply_func(state_permutations.copy()
-                                                , lambda x: x.replace('A', p1).replace('B', p2).replace('S', '0')) for
-                                     p1, p2 in p_orbital_indices])
-        function_indices = apply_func(function_indices, lambda x: int(x))
-        function_indices = jnp.array(function_indices)
+        indx = seen_radial_orbitals.index(r)
+        start, stop = function_param_start_stop[indx]
 
-        particles = jnp.arange(n_particles)
+        y = orbital.split('_')[-1]
+        functions.append(make_function(indx, start, stop, y))
+        function_dict[orbital] = i
+        i += 1
 
-        def psi(in_params, r_coords):
-            # apply every function to each particle coordinate
-            orbital_i_r_j = jnp.array(
-                [vmap(func, in_axes=(None, 0))(in_params, r_coords) for func in functions])  # n_functions, n_particles
-            # expand orbital values for each permutation
-            orbitals = orbital_i_r_j[
-                function_indices[:, :, particles], particles]  # n_determinant, n_permutation, n_particles
-            # multiply all orbitals together
-            orbitals = jnp.prod(orbitals, axis=-1)  # n_determinant, n_permutation
-            # sum over determinants
-            orbitals = jnp.einsum('i,ij', coef, orbitals)  # n_permutation
-            orbitals *= permutation_signatures
-            wave_function = accumulate_wave_function(orbitals)
-            return wave_function
+    function_indices = jnp.array([apply_func(orbs, lambda x: function_dict[x]) for orbs in orbitals])
 
-        return key, psi, params
-    else:
-        raise RuntimeError('build_orbital_wave_function requires n_particles <= 4 or == 6')
+    particles = jnp.arange(n_particles)
+
+    def psi(in_params, r_coords):
+        # apply every function to each particle coordinate
+        orbital_i_r_j = jnp.array(
+            [vmap(func, in_axes=(None, 0))(in_params, r_coords) for func in functions])  # n_functions, n_particles
+        # expand orbital values for each permutation
+        orbitals = orbital_i_r_j[
+            function_indices[:, :, particles], particles]  # n_determinant, n_permutation, n_particles
+        # multiply all orbitals together
+        orbitals = jnp.prod(orbitals, axis=-1)  # n_determinant, n_permutation
+        orbitals = coefficients * orbitals * permutation_signatures
+        wave_function = accumulate_wave_function(orbitals)
+        return wave_function
+
+    return key, psi, params
 
 
-def build_wave_function(key, n_neutron, n_proton, n_dense, n_hidden_layers):
+def build_wave_function(key, n_neutron, n_proton, n_dense, n_hidden_layers, states, coefficients):
     # build initial wave function
     n_particles = n_neutron + n_proton
     n_iso_configs = get_number_of_isospin_states(n_particles, n_proton)
@@ -191,12 +189,13 @@ def build_wave_function(key, n_neutron, n_proton, n_dense, n_hidden_layers):
 
     # get indices for permutation signatures
     coordinate_permutations = jnp.array(list(get_permutations(range(n_particles))))
-    states = get_states(n_proton, n_neutron)
-    state_permutations = get_state_permutations(states, coordinate_permutations, n_particles)
+    # states = get_states(n_proton, n_neutron)
+    states = np.array(states)
+    state_permutations = np.array([get_state_permutations(s, coordinate_permutations, n_particles) for s in states])
 
     # orbital_indices = get_indices(state_permutations, 0, {'S': '0', 'P': '1'}, use_rank=True)
-    spin_indices = get_indices(state_permutations, 1, {'d': '0', 'u': '1'}, use_rank=False)
-    iso_indices = get_indices(state_permutations, 2, {'n': '0', 'p': '1'}, use_rank=True)
+    spin_indices = np.array([get_indices(s, -2, {'d': '0', 'u': '1'}, use_rank=False) for s in state_permutations])
+    iso_indices = np.array([get_indices(s, -1, {'n': '0', 'p': '1'}, use_rank=True) for s in state_permutations])
     indices = jnp.stack((iso_indices, spin_indices), axis=-1)
 
     # fill wfc with values that enforce antisymmetry (permutation signatures)
@@ -211,7 +210,7 @@ def build_wave_function(key, n_neutron, n_proton, n_dense, n_hidden_layers):
                                                 , permutation_signatures
                                                 , n_dense
                                                 , n_hidden_layers
-                                                , orbital_index=0
+                                                , coefficients
                                                 )
 
     return key, psi, psi_params

@@ -83,6 +83,13 @@ def Y10(r):
     return sq34pi * r[2]
 
 
+def Y00(r):
+    return 1.0
+
+
+SPHERICAL_HARMONICS = {'Y11': Y11, 'Y1m1': Y1m1, 'Y10': Y10, 'Y00': Y00}
+
+
 def get_spherical_harmonic_function(L, L_z):
     sq12pi = jnp.sqrt(1. / jnp.pi) / 2.
     sq34pi = jnp.sqrt(3. / (4. * jnp.pi))

@@ -49,7 +49,9 @@ key, orbital_psi, orbital_psi_params = build_wave_function(key
                                                            , input_json['n_neutron']
                                                            , input_json['n_proton']
                                                            , input_json['wave_function']['n_dense']
-                                                           , input_json['wave_function']['n_hidden_layers'])
+                                                           , input_json['wave_function']['n_hidden_layers']
+                                                           , input_json['wave_function']['orbitals']
+                                                           , input_json['wave_function']['coefficients'])
 key, psi_prefactor, psi_params, psi_vector = add_neural_network_jastros(
     key
     , orbital_psi
@@ -92,7 +94,6 @@ hamiltonian = build_hamiltonian(input_json['potential_energy']
                                 , spin_exchange_indices, isospin_exchange_indices
                                 , isospin_binary_representation
                                 , input_json['potential_kwargs'])
-
 logging.info('## Optimization')
 optimize_wave_function(
     input_json['n_proton']
