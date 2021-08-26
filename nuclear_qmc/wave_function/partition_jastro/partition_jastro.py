@@ -10,16 +10,14 @@ def get_partition(orbitals):
     return [np.where(orbitals == d)[0] for d in distinct]
 
 
-def get_partitions(single_particle_radial_orbitals, coordinate_permutations, unique=True):
-    permutations = single_particle_radial_orbitals[coordinate_permutations]
+def get_partitions(permutations, unique=True):
     if unique:
         permutations = np.unique(permutations, axis=0)
     partitions = [get_partition(p) for p in permutations]
     return partitions
 
 
-def get_partition_indices(single_particle_radial_orbitals, coordinate_permutations):
-    permutations = single_particle_radial_orbitals[coordinate_permutations]
+def get_partition_indices(permutations):
     permutations = np.array([''.join(p) for p in permutations])
 
     unique_permutations = np.unique(permutations, axis=0)
@@ -82,12 +80,11 @@ def make_function_with_param_slice(slice_start, slice_stop, func):
 
 
 def get_partition_jastro(key
-                         , single_particle_radial_orbitals
-                         , coordinate_permutations
+                         , radial_orbital_permutations
                          , n_dense
                          , n_hidden_layers, latent_shape=6, debug=False):
-    partitions = get_partitions(single_particle_radial_orbitals, coordinate_permutations, unique=True)
-    partition_indices = get_partition_indices(single_particle_radial_orbitals, coordinate_permutations)
+    partitions = get_partitions(radial_orbital_permutations, unique=True)
+    partition_indices = get_partition_indices(radial_orbital_permutations)
     # partition_pair_indices = get_partition_pair_indices(partitions)
     # partitions = transform_partitions_to_matrix_format(partitions)
     # particle_indices = partitions[:, 0]

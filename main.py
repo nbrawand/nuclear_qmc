@@ -26,7 +26,7 @@ input_json_directory = os.path.dirname(os.path.realpath(input_file.name))
 log_file = os.path.join(input_json_directory, 'nuclear_qmc.md')
 logging.basicConfig(filename=log_file
                     , format='%(message)s'
-                    , level=logging.INFO)
+                    , level=logging.DEBUG)
 
 logging.info('# Nuclear QMC Run')
 logging.info('## Log File')
@@ -37,6 +37,8 @@ if 'potential_energy' not in input_json.keys():
     input_json['potential_energy'] = 'arxiv_2007_14282v2'
 if 'potential_kwargs' not in input_json.keys():
     input_json['potential_kwargs'] = None
+if 'add_partition_jastro' not in input_json['wave_function'].keys():
+    input_json['wave_function']['add_partition_jastro'] = False
 logging.info("```json")
 logging.info(json.dumps(input_json, indent=4, sort_keys=True))
 logging.info("```")
@@ -51,7 +53,8 @@ key, orbital_psi, orbital_psi_params = build_wave_function(key
                                                            , input_json['wave_function']['n_dense']
                                                            , input_json['wave_function']['n_hidden_layers']
                                                            , input_json['wave_function']['orbitals']
-                                                           , input_json['wave_function']['coefficients'])
+                                                           , input_json['wave_function']['coefficients']
+                                                           , input_json['wave_function']['add_partition_jastro'])
 key, psi_prefactor, psi_params, psi_vector = add_neural_network_jastros(
     key
     , orbital_psi

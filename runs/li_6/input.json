@@ -2,6 +2,7 @@
   "n_proton": 3,
   "n_neutron": 3,
   "wave_function": {
+    "add_partition_jastro": false,
     "seed": 0,
     "n_dense": 4,
     "n_hidden_layers": 1,

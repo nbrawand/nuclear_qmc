@@ -1,6 +1,8 @@
 import re
 import copy
 from jax import jit
+
+from nuclear_qmc.wave_function.partition_jastro.partition_jastro import get_partition_jastro
 from nuclear_qmc.wave_function.wave_function_builder.spherical_harmonics import Y1m1, Y10, Y11, build_radial_function, \
     SPHERICAL_HARMONICS
 from jax import vmap, numpy as jnp
@@ -95,6 +97,13 @@ def get_indices(state_permutations, state_position_index, str_to_int_rules, use_
     return jnp.array(states)
 
 
+def build_slice_func(func, start, stop):
+    def f(x, y):
+        return func(x[start:stop], y)
+
+    return f
+
+
 def create_wave_function(key
                          , n_iso_configs
                          , n_spin_configs
@@ -103,7 +112,9 @@ def create_wave_function(key
                          , permutation_signatures
                          , n_dense
                          , n_hidden_layers
-                         , coefficients):
+                         , coefficients
+                         , add_partition_jastro=False
+                         ):
     n_particles = state_permutations.shape[-1]
     params = jnp.array([])
     signature_indices = signature_indices.reshape(-1, 2)
@@ -165,15 +176,35 @@ def create_wave_function(key
 
     particles = jnp.arange(n_particles)
 
+    n_orbital_params = len(params)
+
+    if add_partition_jastro:
+        get_r_orbs = lambda x: x.split('_')[0]
+        partition_psis = []
+        for state_perms_per_det in state_permutations:
+            key, partition_psi, partition_params = get_partition_jastro(key
+                                                                        , apply_func(state_perms_per_det, get_r_orbs)
+                                                                        , n_dense
+                                                                        , n_hidden_layers, latent_shape=4, debug=False)
+            start = len(params)
+            params = jnp.concatenate((params, partition_params))
+            stop = len(params)
+            func = build_slice_func(partition_psi, start, stop)
+            partition_psis.append(func)
+
     def psi(in_params, r_coords):
         # apply every function to each particle coordinate
         orbital_i_r_j = jnp.array(
-            [vmap(func, in_axes=(None, 0))(in_params, r_coords) for func in functions])  # n_functions, n_particles
+            [vmap(func, in_axes=(None, 0))(in_params[:n_orbital_params], r_coords) for func in
+             functions])  # n_functions, n_particles
         # expand orbital values for each permutation
         orbitals = orbital_i_r_j[
             function_indices[:, :, particles], particles]  # n_determinant, n_permutation, n_particles
         # multiply all orbitals together
         orbitals = jnp.prod(orbitals, axis=-1)  # n_determinant, n_permutation
+        if add_partition_jastro:
+            partition_jastro = jnp.array([p_psi(in_params, r_coords).reshape(-1) for p_psi in partition_psis])
+            orbitals = orbitals * partition_jastro
         orbitals = coefficients * orbitals * permutation_signatures
         wave_function = accumulate_wave_function(orbitals)
         return wave_function
@@ -181,7 +212,8 @@ def create_wave_function(key
     return key, psi, params
 
 
-def build_wave_function(key, n_neutron, n_proton, n_dense, n_hidden_layers, states, coefficients):
+def build_wave_function(key, n_neutron, n_proton, n_dense, n_hidden_layers, states, coefficients
+                        , add_partition_jastro=False):
     # build initial wave function
     n_particles = n_neutron + n_proton
     n_iso_configs = get_number_of_isospin_states(n_particles, n_proton)
@@ -211,6 +243,7 @@ def build_wave_function(key, n_neutron, n_proton, n_dense, n_hidden_layers, stat
                                                 , n_dense
                                                 , n_hidden_layers
                                                 , coefficients
+                                                , add_partition_jastro
                                                 )
 
     return key, psi, psi_params
