@@ -100,7 +100,7 @@ def get_partition_jastro(key
         if not debug:
             key, deepset_func, deepset_params = get_deepset_jastro(key, n_dense, n_hidden_layers, out_shape=1,
                                                                    in_shape=(3,), latent_shape=latent_shape,
-                                                                   wrapper_func=jnp.tanh)
+                                                                   wrapper_func=jnp.exp)
         else:
             deepset_func, deepset_params = lambda _p, _r: _r.sum(), jnp.array([])
 
