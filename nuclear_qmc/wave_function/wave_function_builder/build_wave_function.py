@@ -114,6 +114,7 @@ def create_wave_function(key
                          , n_hidden_layers
                          , coefficients
                          , add_partition_jastro=False
+                         , confining_factor=0.1
                          ):
     n_particles = state_permutations.shape[-1]
     params = jnp.array([])
@@ -148,7 +149,7 @@ def create_wave_function(key
 
     def make_function(indx, start, stop, y):
         return lambda _p, _r: radial_functions[indx](_p[start:stop], _r) * SPHERICAL_HARMONICS[y](_r) * decay_func(_r,
-                                                                                                                   0.1)
+                                                                                                                   confining_factor)
 
     for orbital in unique_orbitals:
         r = orbital.split('_')[0]
@@ -213,7 +214,7 @@ def create_wave_function(key
 
 
 def build_wave_function(key, n_neutron, n_proton, n_dense, n_hidden_layers, states, coefficients
-                        , add_partition_jastro=False):
+                        , add_partition_jastro=False, confining_factor=0.1):
     # build initial wave function
     n_particles = n_neutron + n_proton
     n_iso_configs = get_number_of_isospin_states(n_particles, n_proton)
@@ -244,6 +245,7 @@ def build_wave_function(key, n_neutron, n_proton, n_dense, n_hidden_layers, stat
                                                 , n_hidden_layers
                                                 , coefficients
                                                 , add_partition_jastro
+                                                , confining_factor
                                                 )
 
     return key, psi, psi_params

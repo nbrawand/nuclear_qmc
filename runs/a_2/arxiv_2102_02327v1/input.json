@@ -2,6 +2,7 @@
   "n_proton": 1,
   "n_neutron": 1,
   "wave_function": {
+    "confining_factor": 0.01,
     "add_partition_jastro": false,
     "seed": 0,
     "n_dense": 6,
@@ -39,7 +40,10 @@
     "print_local_energy": true,
     "plot_local_energy": true,
     "local_energy_plot_limits": [
-      null,
+      [
+        0,
+        16
+      ],
       [
         -10,
         2
