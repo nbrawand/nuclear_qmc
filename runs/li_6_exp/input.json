@@ -1,0 +1,68 @@
+{
+  "n_proton": 3,
+  "n_neutron": 3,
+  "wave_function": {
+    "add_partition_jastro": true,
+    "seed": 0,
+    "n_dense": 4,
+    "n_hidden_layers": 1,
+    "jastro_list": [
+      "2b",
+      "3b",
+      "sigma",
+      "tau",
+      "sigma_tau"
+    ],
+    "wave_function_file": "wave_function_parameters_0.npy",
+    "coefficients": [
+      0.3333,
+      0.3333,
+      0.3333
+    ],
+    "orbitals": [
+      [
+        "R0_Y00_d_n",
+        "R0_Y00_u_n",
+        "R1_Y11_d_n",
+        "R0_Y00_d_p",
+        "R0_Y00_u_p",
+        "R1_Y11_d_p"
+      ],
+      [
+        "R0_Y00_d_n",
+        "R0_Y00_u_n",
+        "R1_Y10_d_n",
+        "R0_Y00_d_p",
+        "R0_Y00_u_p",
+        "R1_Y10_d_p"
+      ],
+      [
+        "R0_Y00_d_n",
+        "R0_Y00_u_n",
+        "R1_Y1m1_d_n",
+        "R0_Y00_d_p",
+        "R0_Y00_u_p",
+        "R1_Y1m1_d_p"
+      ]
+    ]
+  },
+  "potential_energy": "arxiv_2102_02327v1",
+  "potential_kwargs": {
+    "model_string": "o",
+    "R3": 1.0,
+    "include_3body":false
+  },
+  "optimization": {
+    "n_dimensions": 3,
+    "n_blocks": 32,
+    "n_equilibrium_blocks": 16,
+    "n_walkers": 50,
+    "n_void_steps": 200,
+    "walker_step_size": 0.2,
+    "initial_walker_standard_deviation": 1.0,
+    "n_optimization_steps": 1000000,
+    "learning_rate": 0.001,
+    "epsilon_sr": 0.0001,
+    "print_local_energy": true
+  }
+}

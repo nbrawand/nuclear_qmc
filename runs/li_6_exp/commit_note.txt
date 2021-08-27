@@ -1,0 +1,6 @@
+(base) nbrawand@gpulogin2:~/nuclear_qmc/runs/li_6_exp$ git log
+commit c9e48623f501713a395d69a6d1de3a31f010f984 (HEAD -> main, origin/main, origin/HEAD)
+Author: Nicholas Brawand <nicholasbrawand@gmail.com>
+Date:   Thu Aug 26 16:02:36 2021 -0400
+
+    change parition jastro from tanh to exp
