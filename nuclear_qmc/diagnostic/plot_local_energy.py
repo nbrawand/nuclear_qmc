@@ -47,9 +47,11 @@ def plot_local_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, block_
     # plot average local energy
     min_x = average_distance_from_center.min()
     max_x = average_distance_from_center.max()
-    plt.hlines(local_energy_values.mean(), min_x, max_x, colors='r', label='average local energy')
-    plt.hlines(local_energy_values.mean() + local_energy_values.std(), min_x, max_x, colors='r', ls='--')
-    plt.hlines(local_energy_values.mean() - local_energy_values.std(), min_x, max_x, colors='r', ls='--')
+    mean_local = local_energy_values.mean()
+    plt.hlines(mean_local, min_x, max_x, colors='r', label='average local energy')
+    plt.hlines(mean_local + local_energy_values.std(), min_x, max_x, colors='r', ls='--')
+    plt.hlines(mean_local - local_energy_values.std(), min_x, max_x, colors='r', ls='--')
+    plt.text(min_x + 0.05 * (max_x - min_x), mean_local+1.03, f'{mean_local.round(3)}')
 
     plt.xlabel('Average Distance From Center [fm]')
     plt.ylabel('Energy [MeV]')
