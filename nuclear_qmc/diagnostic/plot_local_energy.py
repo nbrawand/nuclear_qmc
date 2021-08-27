@@ -12,7 +12,9 @@ def get_average_distance_from_center(r_coords):
     return out
 
 
-def plot_local_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, block_samples, plot_title_str):
+def plot_local_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, block_samples
+                      , local_energy_plot_limits=None
+                      , plot_title_str=''):
     # get local energy
     local_energy_values = jnp.array([vmap(get_local_energy, in_axes=(None, None, None, 0, None))(psi_prefactor
                                                                                                  , psi_params
@@ -42,9 +44,16 @@ def plot_local_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, block_
     xs = np.linspace(mn, mx, numx)
     density._compute_covariance()
     y = density(xs)
-    y_range = y.max() - y.min()
-    y *= 0.8 * (local_energy_values.max() - local_energy_values.min()) / y_range
-    y -= y.min() - local_energy_values.min()
+
+    # position density plot
+    if local_energy_plot_limits is not None and local_energy_plot_limits[1] is not None:
+        new_range = local_energy_plot_limits[1][1] - local_energy_plot_limits[1][0]
+        new_min = local_energy_plot_limits[1][0]
+    else:
+        new_range = local_energy_values.max() - local_energy_values.min()
+        new_min = local_energy_values.min()
+    y *= 0.8 * new_range / (y.max() - y.min())
+    y -= y.min() - new_min
     plt.plot(xs, y, label='sample density', ls='--')
 
     # plot average local energy
@@ -56,6 +65,12 @@ def plot_local_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, block_
     plt.hlines(mean_local + std_local, min_x, max_x, colors='r', ls='--')
     plt.hlines(mean_local - std_local, min_x, max_x, colors='r', ls='--')
     plt.text(min_x + 0.05 * (max_x - min_x), mean_local + 1.03, f'{mean_local.round(3)} +/- {std_local.round(3)}')
+
+    if local_energy_plot_limits is not None:
+        if local_energy_plot_limits[0] is not None:
+            plt.xlim(local_energy_plot_limits[0][0], local_energy_plot_limits[0][1])
+        if local_energy_plot_limits[1] is not None:
+            plt.ylim(local_energy_plot_limits[1][0], local_energy_plot_limits[1][1])
 
     plt.xlabel('Average Distance From Center [fm]')
     plt.ylabel('Energy [MeV]')
