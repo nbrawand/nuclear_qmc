@@ -161,7 +161,8 @@ def optimize_wave_function(
             logging.info(f'optimization step | {n_opt} | {local_energy} | {local_energy_error}')
 
         if plot_local_energy:
-            plt_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, r_coord_samples, f'local_energy_{n_opt}.png')
+            plt_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, r_coord_samples,
+                       f'local_energy_{n_opt:05}.png')
 
         # compute average wave function parameter update over each block
         def sum_delta_params(i, args):

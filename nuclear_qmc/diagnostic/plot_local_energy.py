@@ -27,6 +27,9 @@ def plot_local_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, block_
         [vmap(get_average_distance_from_center)(samples) for samples in block_samples])
     average_distance_from_center = average_distance_from_center.reshape(-1)
 
+    # plot
+    plt.clf()
+
     plt.scatter(average_distance_from_center, local_energy_values, label='local energy')
 
     # sample density
@@ -51,7 +54,7 @@ def plot_local_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, block_
     plt.hlines(mean_local, min_x, max_x, colors='r', label='average local energy')
     plt.hlines(mean_local + local_energy_values.std(), min_x, max_x, colors='r', ls='--')
     plt.hlines(mean_local - local_energy_values.std(), min_x, max_x, colors='r', ls='--')
-    plt.text(min_x + 0.05 * (max_x - min_x), mean_local+1.03, f'{mean_local.round(3)}')
+    plt.text(min_x + 0.05 * (max_x - min_x), mean_local + 1.03, f'{mean_local.round(3)}')
 
     plt.xlabel('Average Distance From Center [fm]')
     plt.ylabel('Energy [MeV]')
