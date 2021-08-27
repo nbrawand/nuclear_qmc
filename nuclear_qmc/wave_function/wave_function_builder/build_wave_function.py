@@ -154,10 +154,13 @@ def create_wave_function(key
     for orbital in unique_orbitals:
         r = orbital.split('_')[0]
         if r not in seen_radial_orbitals:
-            key, radial_func, radial_params = build_radial_function(key
-                                                                    , n_dense
-                                                                    , n_hidden_layers
-                                                                    , nn_wrapper_function=jnp.exp)
+            if r == '1':
+                radial_func, radial_params = lambda _p, _r: 1.0, jnp.array([])
+            else:
+                key, radial_func, radial_params = build_radial_function(key
+                                                                        , n_dense
+                                                                        , n_hidden_layers
+                                                                        , nn_wrapper_function=jnp.exp)
             radial_functions.append(radial_func)
             start = len(params)
             stop = start + len(radial_params)
