@@ -6,6 +6,7 @@ import jax.numpy as jnp
 from jax import vmap
 from nuclear_qmc.sampling.sample import sample
 from nuclear_qmc.optimize.low_memory_optimize import get_delta_params
+from nuclear_qmc.diagnostic.plot_local_energy import plot_local_energy as plt_energy
 
 
 def get_local_energy_for_block(
@@ -69,6 +70,7 @@ def optimize_wave_function(
         , learning_rate=0.0001
         , epsilon_sr=0.0001
         , print_local_energy=True
+        , plot_local_energy=False
 
 ):
     """
@@ -157,6 +159,9 @@ def optimize_wave_function(
             local_energy_error = jnp.std(local_energy_per_block, ddof=ddof)
             local_energy_error = local_energy_error / jnp.sqrt(n_blocks)
             logging.info(f'optimization step | {n_opt} | {local_energy} | {local_energy_error}')
+
+        if plot_local_energy:
+            plt_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, r_coord_samples, f'local_energy_{n_opt}.png')
 
         # compute average wave function parameter update over each block
         def sum_delta_params(i, args):
