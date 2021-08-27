@@ -32,7 +32,7 @@ def plot_local_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, block_
     # plot
     plt.clf()
 
-    plt.scatter(average_distance_from_center, local_energy_values, label='local energy')
+    plt.scatter(average_distance_from_center, local_energy_values, label='local energy', alpha=0.1)
 
     # sample density
     density = gaussian_kde(average_distance_from_center)
@@ -57,14 +57,19 @@ def plot_local_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, block_
     plt.plot(xs, y, label='sample density', ls='--')
 
     # plot average local energy
-    min_x = average_distance_from_center.min()
-    max_x = average_distance_from_center.max()
+    if local_energy_plot_limits is not None and local_energy_plot_limits[0] is not None:
+        min_x = local_energy_plot_limits[0][0]
+        max_x = local_energy_plot_limits[0][1]
+    else:
+        min_x = average_distance_from_center.min()
+        max_x = average_distance_from_center.max()
+
     mean_local = local_energy_values.mean()
     std_local = local_energy_values.std()
-    plt.hlines(mean_local, min_x, max_x, colors='r', label='average local energy')
+    plt.hlines(mean_local, min_x, max_x, colors='r',
+               label=f'avg. energy: {mean_local:.3f} +/- {std_local:.3f}')
     plt.hlines(mean_local + std_local, min_x, max_x, colors='r', ls='--')
     plt.hlines(mean_local - std_local, min_x, max_x, colors='r', ls='--')
-    plt.text(min_x + 0.05 * (max_x - min_x), mean_local + 1.03, f'{mean_local.round(3)} +/- {std_local.round(3)}')
 
     if local_energy_plot_limits is not None:
         if local_energy_plot_limits[0] is not None:
