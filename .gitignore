@@ -2,6 +2,7 @@ results/*
 *.npy
 *.npy.bk
 runs/*
+*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
