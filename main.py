@@ -26,7 +26,7 @@ input_json_directory = os.path.dirname(os.path.realpath(input_file.name))
 log_file = os.path.join(input_json_directory, 'nuclear_qmc.md')
 logging.basicConfig(filename=log_file
                     , format='%(message)s'
-                    , level=logging.DEBUG)
+                    , level=logging.INFO)
 
 logging.info('# Nuclear QMC Run')
 logging.info('## Log File')

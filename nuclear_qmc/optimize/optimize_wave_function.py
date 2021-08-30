@@ -72,7 +72,7 @@ def optimize_wave_function(
         , print_local_energy=True
         , plot_local_energy=False
         , local_energy_plot_limits=None
-
+        , local_energy_plot_start_number=0
 ):
     """
     Optimizes psi_parameters.
@@ -163,7 +163,7 @@ def optimize_wave_function(
 
         if plot_local_energy:
             plt_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, r_coord_samples, local_energy_plot_limits,
-                       f'local_energy_{n_opt:05}.png')
+                       f'local_energy_{n_opt + local_energy_plot_start_number:05}.png')
 
         # compute average wave function parameter update over each block
         def sum_delta_params(i, args):
