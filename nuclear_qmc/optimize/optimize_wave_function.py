@@ -1,53 +1,10 @@
-from nuclear_qmc.operators.hamiltonian.get_local_energy import get_local_energy
 import logging
 from jax import random
-from jax.lax import fori_loop
 import jax.numpy as jnp
 from jax import vmap, pmap
 from nuclear_qmc.sampling.sample import sample
 from nuclear_qmc.optimize.low_memory_optimize import get_delta_params
 from nuclear_qmc.diagnostic.plot_local_energy import plot_local_energy as plt_energy
-
-
-def get_local_energy_for_block(
-        psi_prefactor
-        , psi_params
-        , psi_vector
-        , r_coords_for_block
-        , hamiltonian
-):
-    """Calculate the average local energy.
-
-    Parameters
-    ----------
-    psi_prefactor: function
-        The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
-    psi_params: ndarray
-        1D array containing wave function parameters.
-    psi_vector: ndarray
-        2D array containing wave function spin isospin components.
-    r_coords_for_block: ndarray
-        [n_walkers, n_particles, n_dimensions]
-    particle_pairs: ndarray
-        [n_pairs, 2] particle indices for each pair.
-    particle_triplets: ndarray
-        [n_triplets, 3] particle indices for each pair.
-    spin_exchange_indices:
-        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
-
-    Returns
-    -------
-    local_energy: float
-        The local energy.
-
-    """
-    local_energy_values = vmap(get_local_energy, in_axes=(None, None, None, 0, None))(psi_prefactor
-                                                                                      , psi_params
-                                                                                      , psi_vector
-                                                                                      , r_coords_for_block
-                                                                                      , hamiltonian)
-    local_energy = local_energy_values.mean()
-    return local_energy
 
 
 def optimize_wave_function(
