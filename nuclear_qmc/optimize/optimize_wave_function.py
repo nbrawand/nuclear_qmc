@@ -184,7 +184,7 @@ def optimize_wave_function(
 
         # compute average wave function parameter update over each block
         if number_of_parallel_devices > 0:
-            def sum_delta_params(r, p):
+            def map_get_delta_params(r, p):
                 return get_delta_params(
                     psi_prefactor
                     , p
@@ -200,28 +200,23 @@ def optimize_wave_function(
                 start = i * number_of_parallel_devices
                 end = (i + 1) * number_of_parallel_devices
                 delta_params_avg.append(
-                    pmap(sum_delta_params, in_axes=(0, None))(r_coord_samples[start:end], psi_params)
+                    pmap(map_get_delta_params, in_axes=(0, None))(r_coord_samples[start:end], psi_params)
                 )
             delta_params_avg = jnp.concatenate(delta_params_avg)
             delta_params_avg = delta_params_avg.mean(axis=0)
         else:
-            def sum_delta_params(i, args):
-                _delta_params_sum = args[0]
-                _params = args[1]
-                _delta_params_sum += get_delta_params(
-                    psi_prefactor
-                    , _params
-                    , psi_vector
-                    , r_coord_samples[i]
-                    , learning_rate
-                    , hamiltonian
-                    , return_loss=False
-                    , eps=epsilon_sr)
-                return _delta_params_sum, _params
-
-            args = (jnp.zeros_like(psi_params), psi_params)
-            args = fori_loop(0, n_blocks, sum_delta_params, args)
-            delta_params_avg = args[0] / n_blocks
+            delta_params_avg = vmap(get_delta_params, in_axes=(None, None, None, 0, None, None, None, None, None))(
+                psi_prefactor
+                , psi_params
+                , psi_vector
+                , r_coord_samples
+                , learning_rate
+                , hamiltonian
+                , True
+                , False
+                , epsilon_sr
+            )
+            delta_params_avg = delta_params_avg.mean(axis=0)
 
         psi_params += delta_params_avg
         jnp.save(psi_param_file, psi_params)
