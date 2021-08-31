@@ -149,35 +149,6 @@ def optimize_wave_function(
         )
 
         # compute and print the local energy
-        if print_local_energy:
-            if number_of_parallel_devices > 0:
-                def pmap_energy(r, p):
-                    return get_local_energy_for_block(psi_prefactor, p
-                                                      , psi_vector
-                                                      , r
-                                                      , hamiltonian)
-
-                local_energy_per_block = []
-                for i in range(0, len(r_coord_samples) // number_of_parallel_devices):
-                    start = i * number_of_parallel_devices
-                    end = (i + 1) * number_of_parallel_devices
-                    local_energy_per_block.append(
-                        pmap(pmap_energy, in_axes=(0, None))(r_coord_samples[start:end], psi_params)
-                    )
-                local_energy_per_block = jnp.concatenate(local_energy_per_block)
-            else:
-                local_energy_per_block = vmap(get_local_energy_for_block
-                                              , in_axes=(None, None, None, 0, None))(psi_prefactor
-                                                                                     , psi_params
-                                                                                     , psi_vector
-                                                                                     , r_coord_samples
-                                                                                     , hamiltonian)
-            local_energy = local_energy_per_block.mean()
-            ddof = 1 if n_blocks > 1 else 0
-            local_energy_error = jnp.std(local_energy_per_block, ddof=ddof)
-            local_energy_error = local_energy_error / jnp.sqrt(n_blocks)
-            logging.info(f'optimization step | {n_opt} | {local_energy} | {local_energy_error}')
-
         if plot_local_energy:
             plt_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, r_coord_samples, local_energy_plot_limits,
                        f'local_energy_{n_opt + local_energy_plot_start_number:05}.png')
@@ -192,20 +163,26 @@ def optimize_wave_function(
                     , r
                     , learning_rate
                     , hamiltonian
-                    , return_loss=False
+                    , return_loss=True
                     , eps=epsilon_sr)
 
             delta_params_avg = []
+            if print_local_energy:
+                local_energy_lst = []
             for i in range(0, len(r_coord_samples) // number_of_parallel_devices):
                 start = i * number_of_parallel_devices
                 end = (i + 1) * number_of_parallel_devices
-                delta_params_avg.append(
-                    pmap(map_get_delta_params, in_axes=(0, None))(r_coord_samples[start:end], psi_params)
-                )
+                delta_params, local_energy = pmap(map_get_delta_params, in_axes=(0, None))(r_coord_samples[start:end],
+                                                                                           psi_params)
+                delta_params_avg.append(delta_params)
             delta_params_avg = jnp.concatenate(delta_params_avg)
-            delta_params_avg = delta_params_avg.mean(axis=0)
+            if print_local_energy:
+                local_energy_lst.append(local_energy)
+                local_energy_per_block = jnp.concatenate(local_energy_lst)
         else:
-            delta_params_avg = vmap(get_delta_params, in_axes=(None, None, None, 0, None, None, None, None, None))(
+            delta_params_avg, local_energy_per_block = vmap(get_delta_params,
+                                                            in_axes=(
+                                                                None, None, None, 0, None, None, None, None, None))(
                 psi_prefactor
                 , psi_params
                 , psi_vector
@@ -213,12 +190,19 @@ def optimize_wave_function(
                 , learning_rate
                 , hamiltonian
                 , True
-                , False
+                , True
                 , epsilon_sr
             )
-            delta_params_avg = delta_params_avg.mean(axis=0)
 
+        delta_params_avg = delta_params_avg.mean(axis=0)
         psi_params += delta_params_avg
         jnp.save(psi_param_file, psi_params)
+
+        if print_local_energy:
+            local_energy = local_energy_per_block.mean()
+            ddof = 1 if n_blocks > 1 else 0
+            local_energy_error = jnp.std(local_energy_per_block, ddof=ddof)
+            local_energy_error = local_energy_error / jnp.sqrt(n_blocks)
+            logging.info(f'optimization step | {n_opt} | {local_energy} | {local_energy_error}')
 
     return key, psi_params
