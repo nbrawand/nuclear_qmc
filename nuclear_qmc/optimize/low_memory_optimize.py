@@ -8,7 +8,7 @@ def get_d_psi_psi(d_psi, psi_r):
     return vmap(jnp.vdot, in_axes=(0, None))(d_psi, psi_r)  # [n_params]
 
 
-def get_psi_r(psi, psi_params, psi_vector, r_coords):
+def get_psi_r(psi, psi_params, r_coords):
     """
 
     Parameters
@@ -17,8 +17,6 @@ def get_psi_r(psi, psi_params, psi_vector, r_coords):
         The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
     psi_params: ndarray
         1D array containing wave function parameters.
-    psi_vector: ndarray
-        2D array containing wave function spin isospin components.
     r_coords: ndarray
         [n_particles, n_dimensions] coordinates of the particles.
 
@@ -28,7 +26,7 @@ def get_psi_r(psi, psi_params, psi_vector, r_coords):
         [spin_isospin] psi evaluated at `r_coords`.
 
     """
-    psi_r = psi(psi_params, r_coords) * psi_vector
+    psi_r = psi(psi_params, r_coords)
     return psi_r
 
 
@@ -36,15 +34,13 @@ def get_d_psi_h_psi(d_psi, h_psi):
     return vmap(jnp.vdot, in_axes=(0, None))(d_psi, h_psi)  # [n_params]
 
 
-def get_d_psi(psi, psi_params, psi_vector, r_coords):
+def get_d_psi(psi, psi_params, r_coords):
     """
 
     psi: function
         The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
     psi_params: ndarray
         1D array containing wave function parameters.
-    psi_vector: ndarray
-        2D array containing wave function spin isospin components.
     r_coords: ndarray
         [n_particles, n_dimensions] coordinates of the particles.
 
@@ -55,8 +51,7 @@ def get_d_psi(psi, psi_params, psi_vector, r_coords):
 
     """
     d_psi = jax.jacfwd(psi, argnums=0)(psi_params, r_coords)  # [psi_output_dimensions, n_params]
-    d_psi = jnp.moveaxis(d_psi, -1, 0)  # make [n_params, si_output_dimensions]
-    d_psi = jnp.tensordot(d_psi, psi_vector, axes=0)  # [n_params, n_spin_isospin]
+    d_psi = jnp.moveaxis(d_psi, -1, 0)  # make [n_params, psi_output_dimensions]
     return d_psi
 
 
@@ -108,7 +103,6 @@ def get_d_psi_d_psi_avg(d_psi, psi_psi, psi_param_len):
 def get_delta_params(
         psi
         , psi_params
-        , psi_vector
         , r_coords
         , learning_rate
         , hamiltonian
@@ -122,8 +116,6 @@ def get_delta_params(
         The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
     psi_params: ndarray
         1D array containing wave function parameters.
-    psi_vector: ndarray
-        2D array containing wave function spin isospin components.
     r_coords: ndarray
         [n_walkers, n_particles, n_dimensions] coordinates of the walkers.
     particle_pairs: ndarray
@@ -131,7 +123,7 @@ def get_delta_params(
     particle_triplets: ndarray
         [n_triplets, 3] particle indices for each pair.
     spin_exchange_indices:
-        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
+        2D array containing the indices after applying :math:`\\sigma_{ij}` to psi.
     learning_rate: float, optional
         Size of learning rate for updating `psi_params`.
     hamiltonian: function, optional
@@ -151,17 +143,16 @@ def get_delta_params(
 
     """
     walker_axis = 0
-    h_psi = vmap(hamiltonian, in_axes=(None, None, None, walker_axis))(psi
-                                                                       , psi_params
-                                                                       , psi_vector
-                                                                       , r_coords)
+    h_psi = vmap(hamiltonian, in_axes=(None, None, walker_axis))(psi
+                                                                 , psi_params
+                                                                 , r_coords)
     # n_walkers n_spin_isospin
-    psi_r = vmap(get_psi_r, in_axes=(None, None, None, walker_axis))(psi, psi_params, psi_vector, r_coords)
+    psi_r = vmap(get_psi_r, in_axes=(None, None, walker_axis))(psi, psi_params, r_coords)
     psi_psi = vmap(lambda x: jnp.vdot(x, x))(psi_r)  # [n_walkers]
     psi_h_psi = vmap(lambda p, h: jnp.vdot(p, h))(psi_r, h_psi)  # n_walkers
     psi_h_psi_avg = (psi_h_psi / psi_psi).mean(axis=walker_axis)
     # [n_walkers, n_params, spin_isospin]
-    d_psi = vmap(get_d_psi, in_axes=(None, None, None, walker_axis))(psi, psi_params, psi_vector, r_coords)
+    d_psi = vmap(get_d_psi, in_axes=(None, None, walker_axis))(psi, psi_params, r_coords)
     d_psi_psi = vmap(get_d_psi_psi)(d_psi, psi_r)
     d_psi_psi_avg = (d_psi_psi / psi_psi[:, None]).mean(axis=walker_axis)
     d_psi_h_psi = vmap(get_d_psi_h_psi)(d_psi, h_psi)

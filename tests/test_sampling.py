@@ -12,7 +12,7 @@ def test_psi_psi_vector():
 
     one = jnp.array(1.)
 
-    computed = get_psi_psi_r(psi, one, one, one)
+    computed = get_psi_psi_r(psi, one, one)
     expected = jnp.array([1.])
     jnp.array_equal(computed, expected)
 
@@ -22,7 +22,7 @@ def test_psi_psi_scalar():
         return jnp.array([1.])
 
     one = jnp.array(1.)
-    computed = get_psi_psi_r(psi, one, one, one)
+    computed = get_psi_psi_r(psi, one, one)
     expected = jnp.array([1.])
     jnp.array_equal(computed, expected)
 

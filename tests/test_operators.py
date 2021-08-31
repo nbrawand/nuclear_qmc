@@ -47,7 +47,11 @@ class TestOperators:
             1, 2)
         pairs = jnp.array([0, 1, 2])
         key = jax.random.PRNGKey(0)
-        key, orbital_psi, orbital_psi_params = build_wave_function(key, 2, 1, 1, 1)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 2, 1, 1, 1
+                                                                   , states=[['1_1_d_n', '1_1_u_n', '1_1_d_p']]
+                                                                   , coefficients=jnp.array([1.])
+                                                                   , confining_factor=0.
+                                                                   )
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(3, 3)))
         computed = tau_psi_r(spin, isospin_exchange_indices, pairs)
         expected = jnp.array([[0., -2., -5., 0., 7., 0., 0., 0.]
@@ -61,7 +65,11 @@ class TestOperators:
             1, 2)
         pairs = jnp.array([0, 1, 2])
         key = jax.random.PRNGKey(0)
-        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 2, 1, 1)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 2, 1, 1
+                                                                   , states=[['1_1_d_n', '1_1_u_n', '1_1_d_p']]
+                                                                   , coefficients=jnp.array([1.])
+                                                                   , confining_factor=0.
+                                                                   )
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(3, 3)))
         computed = sigma_tau_psi_r(spin, spin_xi, iso_xi, pairs)
         tau_ij = jnp.array([tau_psi_r(spin, iso_xi[:, i].reshape(-1, 1), pairs[i]) for i in range(3)])
@@ -70,7 +78,11 @@ class TestOperators:
 
     def test_sigma_tau_psi_r_deuteron(self):
         key = jax.random.PRNGKey(0)
-        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1
+                                                                   , states=[['1_1_d_n', '1_1_d_p']]
+                                                                   , coefficients=jnp.array([1.])
+                                                                   , confining_factor=0.
+                                                                   )
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(2, 3)))
         particle_pairs, particle_triplets, spin_xi, iso_xi = get_spin_isospin_indices(1, 1)
         pairs = jnp.array([1])
@@ -80,7 +92,11 @@ class TestOperators:
 
     def test_sigma_tau_psi_r_deuteron_with_prefactor(self):
         key = jax.random.PRNGKey(0)
-        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1
+                                                                   , states=[['1_1_d_n', '1_1_d_p']]
+                                                                   , coefficients=jnp.array([1.])
+                                                                   , confining_factor=0.
+                                                                   )
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(2, 3)))
         particle_pairs, particle_triplets, spin_xi, iso_xi = get_spin_isospin_indices(1, 1)
         pairs = jnp.array([-2.0])
@@ -90,7 +106,11 @@ class TestOperators:
 
     def test_sigma_psi_r_deuteron(self):
         key = jax.random.PRNGKey(0)
-        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1
+                                                                   , states=[['1_1_d_n', '1_1_d_p']]
+                                                                   , coefficients=jnp.array([1.])
+                                                                   , confining_factor=0.
+                                                                   )
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(2, 3)))
         particle_pairs, particle_triplets, spin_xi, iso_xi = get_spin_isospin_indices(1, 1)
         pairs = jnp.array([1])
@@ -100,7 +120,11 @@ class TestOperators:
 
     def test_tau_psi_r_deuteron(self):
         key = jax.random.PRNGKey(0)
-        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 1, 1, 1, 1
+                                                                   , states=[['1_1_d_n', '1_1_d_p']]
+                                                                   , coefficients=jnp.array([1.])
+                                                                   , confining_factor=0.
+                                                                   )
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(2, 3)))
         particle_pairs, particle_triplets, spin_xi, iso_xi = get_spin_isospin_indices(1, 1)
         pairs = jnp.array([1])
@@ -110,7 +134,11 @@ class TestOperators:
 
     def test_sigma_and_tau_psi_r_triton(self):
         key = jax.random.PRNGKey(0)
-        key, orbital_psi, orbital_psi_params = build_wave_function(key, 2, 1, 1, 1)
+        key, orbital_psi, orbital_psi_params = build_wave_function(key, 2, 1, 1, 1
+                                                                   , states=[['1_1_d_n', '1_1_u_n', '1_1_d_p']]
+                                                                   , coefficients=jnp.array([1.])
+                                                                   , confining_factor=0.
+                                                                   )
         spin = orbital_psi(orbital_psi_params, jnp.zeros(shape=(3, 3)))
         particle_pairs, particle_triplets, spin_xi, iso_xi = get_spin_isospin_indices(1, 2)
         pairs = jnp.array([1, 1, 1])

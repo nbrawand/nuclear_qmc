@@ -33,9 +33,9 @@ def test_full_energy_run():
         [1., 0., 0., 0.],
         [-1., 0., 0., 0.]
     ])
-    key, r_coord_samples = sample(psi_prefactor
+    psi = lambda p, r: psi_prefactor(p, r) * psi_vector
+    key, r_coord_samples = sample(psi
                                   , psi_params
-                                  , psi_vector
                                   , N_STEPS
                                   , WALKER_STEP_SIZE
                                   , N_WALKERS
@@ -48,11 +48,10 @@ def test_full_energy_run():
                                   )
 
     r_coords = r_coord_samples.reshape(-1, N_PROTON + N_NEUTRON, N_DIMENSIONS)
-    local_energy = vmap(get_local_energy, in_axes=(None, None, None, 0, None))(psi_prefactor
-                                                                               , psi_params
-                                                                               , psi_vector
-                                                                               , r_coords
-                                                                               , hamiltonian)
+    local_energy = vmap(get_local_energy, in_axes=(None, None, 0, None))(psi
+                                                                         , psi_params
+                                                                         , r_coords
+                                                                         , hamiltonian)
     computed = local_energy.mean().round(8)
     expected = jnp.array(-2.20467771, dtype=jnp.float64).round(8)  # changed after updating mass and hbar
     assert jnp.array_equal(expected, computed)

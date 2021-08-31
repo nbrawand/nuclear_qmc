@@ -28,16 +28,16 @@ def build_hamiltonian(potential_energy_expression, particle_pairs, particle_trip
     args = potentials[potential_energy_expression]['args']
     potential_energy = builder(*args, **potential_kwargs)
 
-    def hamiltonian(psi, psi_params, psi_vector, r_coords):
+    def hamiltonian(psi, psi_params, r_coords):
         if use_finite_diff:
             i = jnp.arange(r_coords.shape[0])
             j = jnp.arange(r_coords.shape[1])
             my_psi = lambda r: psi(psi_params, r)
-            ke_psi = kinetic_energy(my_psi, r_coords, i, j) * psi_vector
+            ke_psi = kinetic_energy(my_psi, r_coords, i, j)
         else:
-            ke_psi = kinetic_energy_psi(psi, psi_params, r_coords) * psi_vector
+            ke_psi = kinetic_energy_psi(psi, psi_params, r_coords)
 
-        v_psi = potential_energy(psi, psi_params, psi_vector, r_coords)
+        v_psi = potential_energy(psi, psi_params, r_coords)
         h_psi = ke_psi + v_psi
         return h_psi
 

@@ -19,8 +19,6 @@ def build_arxiv_2007_14282v2(particle_pairs, particle_triplets,
         The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
     psi_params: ndarray
         1D array containing wave function parameters.
-    psi_vector: ndarray
-        2D array containing wave function spin isospin components.
     r_coords: ndarray
         [n_particles, n_dimensions] particle coordinates.
     particle_pairs: ndarray
@@ -28,7 +26,7 @@ def build_arxiv_2007_14282v2(particle_pairs, particle_triplets,
     particle_triplets: ndarray
         [n_triplets, 3] particle indices for each pair.
     spin_exchange_indices:
-        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
+        2D array containing the indices after applying :math:`\\sigma_{ij}` psi.
 
     Returns
     -------
@@ -36,7 +34,7 @@ def build_arxiv_2007_14282v2(particle_pairs, particle_triplets,
 
     """
 
-    def potential(psi, psi_params, psi_vector, r_coords):
+    def potential(psi, psi_params, r_coords):
         r_ij_sqrd = get_r_ij_sqrd(r_coords, particle_pairs)
         exp_neg_r_lambda_4 = jnp.exp(-r_ij_sqrd * ultraviolet_cutoff ** 2 / 4.)
         first_term_coefficient = C_1 * exp_neg_r_lambda_4.sum()
@@ -49,9 +47,9 @@ def build_arxiv_2007_14282v2(particle_pairs, particle_triplets,
         else:
             third_term_coefficient = 0.0
 
-        psi_r = psi(psi_params, r_coords) * psi_vector
+        psi_r = psi(psi_params, r_coords)
         v_psi = (first_term_coefficient + third_term_coefficient) * psi_r
-        v_psi += sigma(psi, psi_params, psi_vector, r_coords, spin_exchange_indices, second_term_coefficients)
+        v_psi += sigma(psi, psi_params, r_coords, spin_exchange_indices, second_term_coefficients)
         return v_psi
 
     return potential

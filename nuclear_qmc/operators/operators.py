@@ -57,7 +57,7 @@ def kinetic_energy_psi(psi, psi_params, r_coords):
     return ke
 
 
-def tau(psi, psi_params, psi_vector, r_coords, iso_spin_exchange_indices, pair_coefficients):
+def tau(psi, psi_params, r_coords, iso_spin_exchange_indices, pair_coefficients):
     """Evaluate sum_ij tau_ij on psi_r first evaluate psi_r using vector and psi
 
     Parameters
@@ -66,12 +66,10 @@ def tau(psi, psi_params, psi_vector, r_coords, iso_spin_exchange_indices, pair_c
         The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
     psi_params: ndarray
         1D array containing wave function parameters.
-    psi_vector: ndarray
-        2D array containing wave function spin isospin components.
     r_coords: ndarray
         [n_particles, n_dimensions] particle coordinates.
     iso_spin_exchange_indices: ndarray
-        2D array containing the indices after applying :math:`\\tau_{ij}` to `psi_vector`.
+        2D array containing the indices after applying :math:`\\tau_{ij}` to psi.
     pair_coefficients: ndarray
         Coefficients :math:`c_{ij}` for each :math:`\\tau_{ij}`.
 
@@ -81,11 +79,11 @@ def tau(psi, psi_params, psi_vector, r_coords, iso_spin_exchange_indices, pair_c
         [spin_isospin] :math:`\\sum_{i<j} c_{ij} \\tau_{ij} |\\Psi(R)\\rangle.
 
     """
-    psi_r = get_psi_r(psi, psi_params, r_coords, psi_vector)
+    psi_r = get_psi_r(psi, psi_params, r_coords)
     return tau_psi_r(psi_r, iso_spin_exchange_indices, pair_coefficients)
 
 
-def sigma(psi, psi_params, psi_vector, r_coords, spin_exchange_indices, pair_coefficients):
+def sigma(psi, psi_params, r_coords, spin_exchange_indices, pair_coefficients):
     """Evaluate sum_ij sigma_ij on psi_r first evaluate psi_r using vector and psi
 
     Parameters
@@ -94,12 +92,10 @@ def sigma(psi, psi_params, psi_vector, r_coords, spin_exchange_indices, pair_coe
         The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
     psi_params: ndarray
         1D array containing wave function parameters.
-    psi_vector: ndarray
-        2D array containing wave function spin isospin components.
     r_coords: ndarray
         [n_particles, n_dimensions] particle coordinates.
     spin_exchange_indices: ndarray
-        2D array containing the indices after applying :math:`\\sigma_{ij}` to `psi_vector`.
+        2D array containing the indices after applying :math:`\\sigma_{ij}` psi.
     pair_coefficients: ndarray
         Coefficients :math:`c_{ij}` for each :math:`\\simga_{ij}`.
 
@@ -109,7 +105,7 @@ def sigma(psi, psi_params, psi_vector, r_coords, spin_exchange_indices, pair_coe
         [spin_isospin] :math:`\\sum_{i<j} c_{ij} \\simga_{ij} |\\Psi(R)\\rangle.
 
     """
-    psi_r = get_psi_r(psi, psi_params, r_coords, psi_vector)
+    psi_r = get_psi_r(psi, psi_params, r_coords)
     return sigma_psi_r(psi_r, spin_exchange_indices, pair_coefficients)
 
 

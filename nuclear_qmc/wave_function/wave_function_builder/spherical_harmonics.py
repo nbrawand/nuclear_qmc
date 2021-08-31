@@ -87,7 +87,7 @@ def Y00(r):
     return 1.0
 
 
-SPHERICAL_HARMONICS = {'Y11': Y11, 'Y1m1': Y1m1, 'Y10': Y10, 'Y00': Y00}
+SPHERICAL_HARMONICS = {'Y11': Y11, 'Y1m1': Y1m1, 'Y10': Y10, 'Y00': Y00, '1': lambda r: 1.0}
 
 
 def get_spherical_harmonic_function(L, L_z):

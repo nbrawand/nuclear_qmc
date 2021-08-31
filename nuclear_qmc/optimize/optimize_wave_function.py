@@ -12,7 +12,6 @@ def optimize_wave_function(
         , n_neutron
         , psi_prefactor
         , psi_params
-        , psi_vector
         , psi_param_file
         , hamiltonian
         , seed=0
@@ -45,8 +44,6 @@ def optimize_wave_function(
         The prefactor of the wave function taking two arguments psi_params and array of particle coordinates.
     psi_params: ndarray
         1D array containing wave function parameters.
-    psi_vector: ndarray
-        2D array containing wave function spin isospin components.
     hamiltonian: function
         Returns H|psi> given `psi_prefactor`, `psi_params`, `psi_vector`, and r_coords.
     seed: int
@@ -93,7 +90,6 @@ def optimize_wave_function(
         key, r_coord_samples = sample(
             psi_prefactor
             , psi_params
-            , psi_vector
             , n_blocks
             , walker_step_size
             , n_walkers
@@ -107,7 +103,7 @@ def optimize_wave_function(
 
         # compute and print the local energy
         if plot_local_energy:
-            plt_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, r_coord_samples, local_energy_plot_limits,
+            plt_energy(psi_prefactor, psi_params, hamiltonian, r_coord_samples, local_energy_plot_limits,
                        f'local_energy_{n_opt + local_energy_plot_start_number:05}.png')
 
         # compute average wave function parameter update over each block
@@ -116,7 +112,6 @@ def optimize_wave_function(
                 return get_delta_params(
                     psi_prefactor
                     , p
-                    , psi_vector
                     , r
                     , learning_rate
                     , hamiltonian
@@ -139,10 +134,9 @@ def optimize_wave_function(
         else:
             delta_params_avg, local_energy_per_block = vmap(get_delta_params,
                                                             in_axes=(
-                                                                None, None, None, 0, None, None, None, None, None))(
+                                                                None, None, 0, None, None, None, None, None))(
                 psi_prefactor
                 , psi_params
-                , psi_vector
                 , r_coord_samples
                 , learning_rate
                 , hamiltonian

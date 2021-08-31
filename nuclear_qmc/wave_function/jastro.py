@@ -83,7 +83,7 @@ def build_3b_addition_jastro(func_3b, particle_pairs, particle_triplets):
 
 
 def build_sigma_jastro(func_s, particle_pairs, spin_exchange_indices):
-    """Returns the spin-isospin vector. Set psi_vector for calculation to 1.0.
+    """Returns the spin-isospin vector.
 
     Parameters
     ----------
@@ -108,7 +108,7 @@ def build_sigma_jastro(func_s, particle_pairs, spin_exchange_indices):
 
 
 def build_tau_jastro(func_tau, particle_pairs, isospin_exchange_indices):
-    """Returns the spin-isospin vector. Set psi_vector for calculation to 1.0.
+    """Returns the spin-isospin vector.
 
     Parameters
     ----------
@@ -134,7 +134,7 @@ def build_tau_jastro(func_tau, particle_pairs, isospin_exchange_indices):
 
 def build_sigma_tau_jastro(func_sigma_tau, particle_pairs, spin_exchange_indices,
                            isospin_exchange_indices):
-    """Returns the spin-isospin vector. Set psi_vector for calculation to 1.0.
+    """Returns the spin-isospin vector.
 
     Parameters
     ----------

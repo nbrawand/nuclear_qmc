@@ -18,7 +18,6 @@ def sp_boundary(r):
     return sp_conf
 
 
-def get_psi_r(psi_prefactor, psi_parameters, r_coords, psi_vector):
+def get_psi_r(psi_prefactor, psi_parameters, r_coords):
     psi_r = psi_prefactor(psi_parameters, r_coords)
-    psi_r *= psi_vector
     return psi_r

@@ -56,7 +56,7 @@ key, orbital_psi, orbital_psi_params = build_wave_function(key
                                                            , input_json['wave_function']['coefficients']
                                                            , input_json['wave_function']['add_partition_jastro']
                                                            , input_json['wave_function']['confining_factor'])
-key, psi_prefactor, psi_params, psi_vector = add_neural_network_jastros(
+key, psi_prefactor, psi_params = add_neural_network_jastros(
     key
     , orbital_psi
     , orbital_psi_params
@@ -104,7 +104,6 @@ optimize_wave_function(
     , input_json['n_neutron']
     , psi_prefactor
     , psi_params
-    , psi_vector
     , input_json['wave_function']['wave_function_file']
     , hamiltonian
     , **input_json['optimization']

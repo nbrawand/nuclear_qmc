@@ -229,6 +229,4 @@ def add_neural_network_jastros(
 
         return psi_out
 
-    psi_vector = 1.0
-
-    return key, psi_function, psi_parameters, psi_vector
+    return key, psi_function, psi_parameters

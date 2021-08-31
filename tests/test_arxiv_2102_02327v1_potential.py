@@ -28,14 +28,14 @@ def test_build_arxiv_2102_02327v1_2H_zero_delta_r():
     potential = build_arxiv_2102_02327v1(particle_pairs, particle_triplets, spin_exchange_indices,
                                          isospin_exchange_indices, jnp.zeros_like(iso_bin_rep),
                                          model_string='o')
-    psi = lambda p, r: 1.
     psi_params = jnp.array([1.], dtype=jnp.float64)
     r = jnp.zeros(shape=(2, 3), dtype=jnp.float64)
     spin = jnp.array([
         [+1., 0., 0., 0.],
         [-1., 0., 0., 0.]
     ])
-    computed = potential(psi, psi_params, spin, r)
+    psi = lambda p, r: spin
+    computed = potential(psi, psi_params, r)
     computed = get_expectation(spin, computed)
     c10 = -7.04040080
     r0 = 1.54592984
@@ -53,13 +53,13 @@ def test_build_arxiv_2102_02327v1_2H():
                                          isospin_exchange_indices, jnp.zeros_like(iso_bin_rep),
                                          model_string='o')
     psi_fac = 2.0
-    psi = lambda p, r: psi_fac
+    psi = lambda p, r: psi_fac * spin
     psi_params = jnp.array([1.], dtype=jnp.float64)
     r = jnp.array([
         [0.0, 0, 0],
         [1.5, 0, 0],
     ], dtype=jnp.float64)
-    computed = potential(psi, psi_params, spin, r)
+    computed = potential(psi, psi_params, r)
     computed = get_expectation(psi_fac * spin, computed)
     c10 = -7.04040080
     r0 = 1.54592984

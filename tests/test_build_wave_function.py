@@ -11,7 +11,11 @@ class TestGetWFC:
                                                , n_neutron=1
                                                , n_proton=1
                                                , n_dense=2
-                                               , n_hidden_layers=2)
+                                               , n_hidden_layers=2
+                                               , states=[['1_1_d_n', '1_1_d_p']]
+                                               , coefficients=jnp.array([1.])
+                                               , confining_factor=0.0
+                                               )
         r = jnp.ones(shape=(2, 3))
         computed = psi(params, r)
         expected = jnp.array([[1., 0., 0., 0.],
@@ -24,7 +28,11 @@ class TestGetWFC:
                                                , n_neutron=2
                                                , n_proton=1
                                                , n_dense=2
-                                               , n_hidden_layers=2)
+                                               , n_hidden_layers=2
+                                               , states=[['1_1_d_n', '1_1_u_n', '1_1_d_p']]
+                                               , coefficients=jnp.array([1.])
+                                               , confining_factor=0.0
+                                               )
         r = jnp.ones(shape=(3, 3))
         computed = psi(params, r)
         expected = jnp.array([[0., 0., 1., 0., -1., 0., 0., 0.],

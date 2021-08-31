@@ -129,9 +129,9 @@ def build_arxiv_2102_02327v1(particle_pairs
         out = out.sum(axis=-1)  # sum over each particle pair
         return out
 
-    def potential(psi, psi_params, psi_vector, r_coords):
+    def potential(psi, psi_params, r_coords):
         r_ij = get_r_ij(r_coords, particle_pairs)
-        psi_r = get_psi_r(psi, psi_params, r_coords, psi_vector)
+        psi_r = get_psi_r(psi, psi_params, r_coords)
         out = v_c_r(r_ij, psi_r)
         out += v_tau_r(r_ij, psi_r)
         out += v_sigma_r(r_ij, psi_r)

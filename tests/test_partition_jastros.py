@@ -24,7 +24,7 @@ def test_get_partitions():
         [2, 1, 0],
         [2, 0, 1],
     ])
-    computed = get_partitions(orbitals, permutations)
+    computed = get_partitions(orbitals[permutations])
     expected = [
         [np.array([0, 1]), np.array([2])],
         [np.array([0, 2]), np.array([1])],
@@ -45,7 +45,7 @@ def test_get_partitions_indices():
         [2, 1, 0],
         [2, 0, 1],
     ])
-    computed = get_partition_indices(orbitals, permutations)
+    computed = get_partition_indices(orbitals[permutations])
     expected = np.array([0, 1, 0, 1, 2, 2])
     assert np.array_equal(computed, expected)
 
@@ -116,8 +116,7 @@ def test_get_partition_jastro():
         [2, 0, 1],
     ])
     key, psi, params = get_partition_jastro(key
-                                            , orbitals
-                                            , permutations
+                                            , orbitals[permutations]
                                             , n_dense=2
                                             , n_hidden_layers=1, debug=True)
     r_coords = jnp.array([

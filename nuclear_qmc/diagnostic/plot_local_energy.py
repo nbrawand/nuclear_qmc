@@ -12,15 +12,14 @@ def get_average_distance_from_center(r_coords):
     return out
 
 
-def plot_local_energy(psi_prefactor, psi_params, psi_vector, hamiltonian, block_samples
+def plot_local_energy(psi_prefactor, psi_params, hamiltonian, block_samples
                       , local_energy_plot_limits=None
                       , plot_title_str=''):
     # get local energy
-    local_energy_values = jnp.array([vmap(get_local_energy, in_axes=(None, None, None, 0, None))(psi_prefactor
-                                                                                                 , psi_params
-                                                                                                 , psi_vector
-                                                                                                 , samples
-                                                                                                 , hamiltonian)
+    local_energy_values = jnp.array([vmap(get_local_energy, in_axes=(None, None, 0, None))(psi_prefactor
+                                                                                           , psi_params
+                                                                                           , samples
+                                                                                           , hamiltonian)
                                      for samples in block_samples])
     local_energy_values = local_energy_values.reshape(-1)
 
