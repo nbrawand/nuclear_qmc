@@ -3,7 +3,7 @@ import logging
 from jax import random
 from jax.lax import fori_loop
 import jax.numpy as jnp
-from jax import vmap
+from jax import vmap, pmap
 from nuclear_qmc.sampling.sample import sample
 from nuclear_qmc.optimize.low_memory_optimize import get_delta_params
 from nuclear_qmc.diagnostic.plot_local_energy import plot_local_energy as plt_energy
@@ -73,6 +73,7 @@ def optimize_wave_function(
         , plot_local_energy=False
         , local_energy_plot_limits=None
         , local_energy_plot_start_number=0
+        , number_of_parallel_devices=0
 ):
     """
     Optimizes psi_parameters.
@@ -149,12 +150,28 @@ def optimize_wave_function(
 
         # compute and print the local energy
         if print_local_energy:
-            local_energy_per_block = vmap(get_local_energy_for_block
-                                          , in_axes=(None, None, None, 0, None))(psi_prefactor
-                                                                                 , psi_params
-                                                                                 , psi_vector
-                                                                                 , r_coord_samples
-                                                                                 , hamiltonian)
+            if number_of_parallel_devices > 0:
+                def pmap_energy(r, p):
+                    return get_local_energy_for_block(psi_prefactor, p
+                                                      , psi_vector
+                                                      , r
+                                                      , hamiltonian)
+
+                local_energy_per_block = []
+                for i in range(0, len(r_coord_samples) // number_of_parallel_devices):
+                    start = i * number_of_parallel_devices
+                    end = (i + 1) * number_of_parallel_devices
+                    local_energy_per_block.append(
+                        pmap(pmap_energy, in_axes=(0, None))(r_coord_samples[start:end], psi_params)
+                    )
+                local_energy_per_block = jnp.concatenate(local_energy_per_block)
+            else:
+                local_energy_per_block = vmap(get_local_energy_for_block
+                                              , in_axes=(None, None, None, 0, None))(psi_prefactor
+                                                                                     , psi_params
+                                                                                     , psi_vector
+                                                                                     , r_coord_samples
+                                                                                     , hamiltonian)
             local_energy = local_energy_per_block.mean()
             ddof = 1 if n_blocks > 1 else 0
             local_energy_error = jnp.std(local_energy_per_block, ddof=ddof)
@@ -166,24 +183,46 @@ def optimize_wave_function(
                        f'local_energy_{n_opt + local_energy_plot_start_number:05}.png')
 
         # compute average wave function parameter update over each block
-        def sum_delta_params(i, args):
-            _delta_params_sum = args[0]
-            _params = args[1]
-            _delta_params_sum += get_delta_params(
-                psi_prefactor
-                , _params
-                , psi_vector
-                , r_coord_samples[i]
-                , learning_rate
-                , hamiltonian
-                , return_loss=False
-                , eps=epsilon_sr)
-            return _delta_params_sum, _params
+        if number_of_parallel_devices > 0:
+            def sum_delta_params(r, p):
+                return get_delta_params(
+                    psi_prefactor
+                    , p
+                    , psi_vector
+                    , r
+                    , learning_rate
+                    , hamiltonian
+                    , return_loss=False
+                    , eps=epsilon_sr)
 
-        args = (jnp.zeros_like(psi_params), psi_params)
-        args = fori_loop(0, n_blocks, sum_delta_params, args)
-        delta_params_avg = args[0] / n_blocks
-        delta_params_avg = jnp.clip(delta_params_avg, -0.5, 0.5)
+            delta_params_avg = []
+            for i in range(0, len(r_coord_samples) // number_of_parallel_devices):
+                start = i * number_of_parallel_devices
+                end = (i + 1) * number_of_parallel_devices
+                delta_params_avg.append(
+                    pmap(sum_delta_params, in_axes=(0, None))(r_coord_samples[start:end], psi_params)
+                )
+            delta_params_avg = jnp.concatenate(delta_params_avg)
+            delta_params_avg = delta_params_avg.mean(axis=0)
+        else:
+            def sum_delta_params(i, args):
+                _delta_params_sum = args[0]
+                _params = args[1]
+                _delta_params_sum += get_delta_params(
+                    psi_prefactor
+                    , _params
+                    , psi_vector
+                    , r_coord_samples[i]
+                    , learning_rate
+                    , hamiltonian
+                    , return_loss=False
+                    , eps=epsilon_sr)
+                return _delta_params_sum, _params
+
+            args = (jnp.zeros_like(psi_params), psi_params)
+            args = fori_loop(0, n_blocks, sum_delta_params, args)
+            delta_params_avg = args[0] / n_blocks
+
         psi_params += delta_params_avg
         jnp.save(psi_param_file, psi_params)
 
