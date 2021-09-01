@@ -196,6 +196,7 @@ def create_wave_function(key
             func = build_slice_func(partition_psi, start, stop)
             partition_psis.append(func)
 
+    @jit
     def psi(in_params, r_coords):
         # apply every function to each particle coordinate
         orbital_i_r_j = jnp.array(

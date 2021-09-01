@@ -1,6 +1,6 @@
 import numpy as np
 import jax.numpy as jnp
-from jax import vmap
+from jax import jit
 from nuclear_qmc.wave_function.neural_network_jastro_builder.get_deepset_jastro import get_deepset_jastro
 from itertools import product
 
@@ -112,6 +112,7 @@ def get_partition_jastro(key
 
         deepset_start_stops.append([start, stop])
 
+    @jit
     def psi(_params, _r):
         out = []
         for partition in partitions:
