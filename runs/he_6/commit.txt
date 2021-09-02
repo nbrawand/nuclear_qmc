@@ -1,0 +1,5 @@
+commit 98a9c8d0b3cf1ed02e1b203bb6dd6130e3a4b621 (HEAD -> main, origin/main, origin/HEAD)
+Author: Nicholas Brawand <nicholasbrawand@gmail.com>
+Date:   Wed Sep 1 11:50:30 2021 -0400
+
+    jit build wave function and partition jastro
