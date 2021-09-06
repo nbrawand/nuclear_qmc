@@ -53,9 +53,7 @@ def convert_particle_index_to_binary_index(arr, package):
     return package.abs(arr - max_particle_index)
 
 
-def get_isospin_exchange_index(particle_pairs, mass_number, proton_number, as_jax_array=True,
-                               also_return_binary_representation=False):
-    #  generate valid binary isospin representations
+def get_raw_spin_indices(mass_number, as_jax_array):
     if mass_number > 64:
         raise RuntimeError(
             'get_isospin_exchange_index: binary representation limited to 64 digits mass number must be <= 64.')
@@ -69,6 +67,13 @@ def get_isospin_exchange_index(particle_pairs, mass_number, proton_number, as_ja
     else:
         int_size = package.uint64
     indices = package.arange(2 ** mass_number, dtype=int_size)
+    return indices
+
+
+def get_isospin_exchange_index(particle_pairs, mass_number, proton_number, as_jax_array=True,
+                               also_return_binary_representation=False):
+    package = jnp if as_jax_array else np
+    indices = get_raw_spin_indices(mass_number, as_jax_array)
     valid_binary_representation = package.unpackbits(indices.reshape(-1, 1).view(package.uint8)
                                                      , axis=1)  # bits out of order from view(8) but the sum is correct
     number_of_protons = valid_binary_representation.sum(axis=1)
