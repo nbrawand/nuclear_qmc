@@ -70,8 +70,7 @@ def get_raw_spin_indices(mass_number, as_jax_array):
     return indices
 
 
-def get_isospin_exchange_index(particle_pairs, mass_number, proton_number, as_jax_array=True,
-                               also_return_binary_representation=False):
+def get_raw_isospin_indices(mass_number, proton_number, as_jax_array=True):
     package = jnp if as_jax_array else np
     indices = get_raw_spin_indices(mass_number, as_jax_array)
     valid_binary_representation = package.unpackbits(indices.reshape(-1, 1).view(package.uint8)
@@ -80,7 +79,14 @@ def get_isospin_exchange_index(particle_pairs, mass_number, proton_number, as_ja
     number_of_isospin_states = get_number_of_isospin_states(mass_number, proton_number)
     valid_isospin_indices = indices[number_of_protons == proton_number][:number_of_isospin_states]
     valid_binary_representation = valid_binary_representation[valid_isospin_indices]
+    return valid_binary_representation, valid_isospin_indices
 
+
+def get_isospin_exchange_index(particle_pairs, mass_number, proton_number, as_jax_array=True,
+                               also_return_binary_representation=False):
+    package = jnp if as_jax_array else np
+    valid_binary_representation, valid_isospin_indices = get_raw_isospin_indices(mass_number,
+                                                                                 proton_number, as_jax_array=True)
     #  calculate indices for valid isospin states
     exchange_indices = get_spin_exchange_indices(particle_pairs, valid_isospin_indices, as_jax_array=as_jax_array)
     exchange_indices = rankdata(exchange_indices, method='dense').reshape(exchange_indices.shape) - 1
