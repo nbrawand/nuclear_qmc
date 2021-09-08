@@ -109,6 +109,14 @@ def sigma(psi, psi_params, r_coords, spin_exchange_indices, pair_coefficients):
     return sigma_psi_r(psi_r, spin_exchange_indices, pair_coefficients)
 
 
+def sigma_ij_psi_r(psi_r, exchange_indices, pair_coefficients):
+    exchanged_psi_r = psi_r[:, exchange_indices]  # [n_isospin, n_spin, n_pair_exchanges]
+    psi_r = jnp.expand_dims(psi_r, -1)  # [n_isospin, n_spin, 1]
+    psi_r_prime = 2.0 * exchanged_psi_r - psi_r
+    psi_r_prime *= pair_coefficients
+    return psi_r_prime
+
+
 def sigma_psi_r(psi_r, exchange_indices, pair_coefficients):
     """Evaluate sum_ij sigma_ij on psi_r
 
@@ -128,11 +136,17 @@ def sigma_psi_r(psi_r, exchange_indices, pair_coefficients):
         [spin_isospin] :math:`\\sum_{i<j} c_{ij} \\O_{ij} |\\Psi(R)\\rangle.
 
     """
-    exchanged_psi_r = psi_r[:, exchange_indices]  # [n_isospin, n_spin, n_pair_exchanges]
-    psi_r = jnp.expand_dims(psi_r, -1)  # [n_isospin, n_spin, 1]
-    psi_r_prime = 2.0 * exchanged_psi_r - psi_r
-    psi_r_prime *= pair_coefficients
+    psi_r_prime = sigma_ij_psi_r(psi_r, exchange_indices, pair_coefficients)
     psi_r_prime = psi_r_prime.sum(-1)
+    return psi_r_prime
+
+
+def tau_ij_psi_r(psi_r, exchange_indices, pair_coefficients):
+    exchanged_psi_r = psi_r[exchange_indices]  # [n_isospin, n_spin, n_pair_exchanges]
+    psi_r = jnp.expand_dims(psi_r, 1)  # [n_isospin, n_spin, 1]
+    psi_r_prime = 2.0 * exchanged_psi_r - psi_r
+    pair_coefficients = pair_coefficients.reshape(-1, 1)
+    psi_r_prime *= pair_coefficients
     return psi_r_prime
 
 
@@ -155,11 +169,7 @@ def tau_psi_r(psi_r, exchange_indices, pair_coefficients):
         [spin_isospin] :math:`\\sum_{i<j} c_{ij} \\O_{ij} |\\Psi(R)\\rangle.
 
     """
-    exchanged_psi_r = psi_r[exchange_indices]  # [n_isospin, n_spin, n_pair_exchanges]
-    psi_r = jnp.expand_dims(psi_r, 1)  # [n_isospin, n_spin, 1]
-    psi_r_prime = 2.0 * exchanged_psi_r - psi_r
-    pair_coefficients = pair_coefficients.reshape(-1, 1)
-    psi_r_prime *= pair_coefficients
+    psi_r_prime = tau_ij_psi_r(psi_r, exchange_indices, pair_coefficients)
     psi_r_prime = psi_r_prime.sum(1)
     return psi_r_prime
 

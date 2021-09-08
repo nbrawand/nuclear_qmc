@@ -1,5 +1,5 @@
 from nuclear_qmc.operators.iso_tensor import get_iso_tensor_T_ij
-from nuclear_qmc.operators.operators import sigma_psi_r, tau_psi_r, sigma_tau_psi_r, get_sigma_ij, get_tau_ij
+from nuclear_qmc.operators.operators import sigma_ij_psi_r, sigma_psi_r, tau_psi_r, sigma_tau_psi_r, tau_ij_psi_r
 from operator import mul
 
 from nuclear_qmc.operators.spin_orbit import spin_orbit_operator
@@ -228,9 +228,9 @@ def build_arxiv_2102_02327v1(particle_pairs
         out = out.sum(axis=-1)  # sum over each particle pair
         return out
 
-    def v_nlo_t(r_ij, psi_r, sigma_ij, expected_tau_ij, particle_i, particle_j):
+    def v_nlo_t(delta_r_ij, r_ij, psi_r, sigma_ij, expected_tau_ij, particle_i, particle_j):
         """per ij"""
-        sij = get_sij_psi_r(r_ij, psi_r, particle_i, particle_j
+        sij = get_sij_psi_r(delta_r_ij, psi_r, particle_i, particle_j
                             , sigma_flipped_indices
                             , y_sigma_prefactors
                             , z_sigma_prefactors
@@ -239,22 +239,22 @@ def build_arxiv_2102_02327v1(particle_pairs
         sij *= -C_nlo_5 * (d2C(r_ij, expected_tau_ij) - d1C(r_ij, expected_tau_ij) / r_ij)
         return sij
 
-    def v_nlo_t_tau(r_ij, tau_ij, sigma_ij, particle_i, particle_j, expected_tau_ij):
-        sij_tauij = get_sij_tauij_psi_r(r_ij, tau_ij, particle_i, particle_j
+    def v_nlo_t_tau(delta_r_ij, r_ij, tau_ij, sigma_ij, particle_i, particle_j, expected_tau_ij):
+        sij_tauij = get_sij_tauij_psi_r(delta_r_ij, tau_ij, particle_i, particle_j
                                         , sigma_flipped_indices, y_sigma_prefactors, z_sigma_prefactors, sigma_ij)
         sij_tauij *= -C_nlo_6 * (d2C(r_ij, expected_tau_ij) - d1C(r_ij, expected_tau_ij) / r_ij)
         return sij_tauij
 
-    def v_nlo_b(r_coords, r_ij, psi, psi_params, expected_tau_ij):
-        Lij = spin_orbit_operator(psi, psi_params, r_coords, r_ij, sigma_flipped_indices
+    def v_nlo_b(r_coords, r_ij, delta_rij, psi, psi_params, expected_tau_ij):
+        Lij = spin_orbit_operator(psi, psi_params, r_coords, delta_rij, sigma_flipped_indices
                                   , y_sigma_prefactors, z_sigma_prefactors, particle_pairs)
-        Lij *= -C_nlo_7 * d1C(r_ij, expected_tau_ij) / r_ij
+        Lij *= (-C_nlo_7 * d1C(r_ij, expected_tau_ij) / r_ij)[:, None, None]
         Lij = Lij.sum(axis=0)
         return Lij
 
     def v_nlo_T(r_ij, psi_r, tau_ij, expected_tau_ij):
         Tij = get_iso_tensor_T_ij(psi_r, particle_pairs, z_tau_prefactors, tau_ij)
-        Tij *= CIT0 * C_total(r_ij, expected_tau_ij)
+        Tij *= (CIT0 * C_total(r_ij, expected_tau_ij))[:, None, None]
         Tij = Tij.sum(axis=0)
         return Tij
 
@@ -263,23 +263,27 @@ def build_arxiv_2102_02327v1(particle_pairs
         psi_r = get_psi_r(psi, psi_params, r_coords)
         out = 0.0
         if theory_order == 'nlo':
-            sigma_ij = sigma_psi_r(psi_r, spin_exchange_indices, 1.0)
-            tau_ij_psi_r = tau_psi_r(psi_r, isospin_exchange_indices, 1.0)
-            expected_tau_ij = vmap(lambda a: jnp.vdot(a, psi_r))(tau_ij_psi_r) / jnp.vdot(psi_r, psi_r)
-            out += vmap(v_nlo_t, in_axes=(0, None, 0, 0, 0, 0))(r_ij, psi_r
-                                                                , sigma_ij
-                                                                , expected_tau_ij
-                                                                , particle_pairs[:, 0]
-                                                                , particle_pairs[:, 1]).sum(axis=0)
-            out += vmap(v_nlo_t_tau, in_axes=(0, None, 0, 0, 0, 0, 0))(r_ij, tau_ij_psi_r
-                                                                       , sigma_ij
-                                                                       , particle_pairs[:, 0]
-                                                                       , particle_pairs[:, 1]
-                                                                       , expected_tau_ij).sum(axis=0)
-            out += v_nlo_b(r_coords, r_ij, psi, psi_params, expected_tau_ij)
-            out += v_nlo_T(r_ij, psi_r, tau_ij_psi_r, expected_tau_ij)
-            tau_ij = get_expectation(psi_r, tau_ij_psi_r)
-            nlo_linear_pair_coefficients = -d2C(r_ij, tau_ij) - 2.0 * d1C(r_ij, tau_ij) / r_ij
+            sigma_ij = sigma_ij_psi_r(psi_r, spin_exchange_indices, 1.0)
+            sigma_ij = jnp.moveaxis(sigma_ij, -1, 0)
+            tau_ij_psi_r_value = tau_ij_psi_r(psi_r, isospin_exchange_indices, jnp.ones(shape=len(particle_pairs)))
+            tau_ij_psi_r_value = jnp.swapaxes(tau_ij_psi_r_value, 0, 1)
+            expected_tau_ij = vmap(lambda a: jnp.vdot(a, psi_r))(tau_ij_psi_r_value) / jnp.vdot(
+                psi_r,
+                psi_r)
+            delta_rij = r_coords[particle_pairs[:, 0]] - r_coords[particle_pairs[:, 1]]
+            out += vmap(v_nlo_t, in_axes=(0, 0, None, 0, 0, 0, 0))(delta_rij, r_ij, psi_r
+                                                                   , sigma_ij
+                                                                   , expected_tau_ij
+                                                                   , particle_pairs[:, 0]
+                                                                   , particle_pairs[:, 1]).sum(axis=0)
+            out += vmap(v_nlo_t_tau)(delta_rij, r_ij, tau_ij_psi_r_value
+                                     , sigma_ij
+                                     , particle_pairs[:, 0]
+                                     , particle_pairs[:, 1]
+                                     , expected_tau_ij).sum(axis=0)
+            out += v_nlo_b(r_coords, r_ij, delta_rij, psi, psi_params, expected_tau_ij)
+            out += v_nlo_T(r_ij, psi_r, tau_ij_psi_r_value, expected_tau_ij)
+            nlo_linear_pair_coefficients = -d2C(r_ij, expected_tau_ij) - 2.0 * d1C(r_ij, expected_tau_ij) / r_ij
         else:
             nlo_linear_pair_coefficients = 0.0
         out += add_lo_v_c_r(r_ij, psi_r, C_nlo_1 * nlo_linear_pair_coefficients)
