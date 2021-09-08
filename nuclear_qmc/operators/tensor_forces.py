@@ -105,3 +105,9 @@ def get_sij_psi_r(r_ij, psi_r, particle_i, particle_j, flipped_indices, y_prefac
     sij_psi_r = 3 * sigma_i_r * sigma_j_r
     sij_psi_r = sij_psi_r - sigma_ij
     return sij_psi_r
+
+
+def get_sij_tauij_psi_r(r_ij, tau_ij, particle_i, particle_j, flipped_indices, y_prefactors, z_prefactors, sigma_ij):
+    sij_tauij = get_sij_psi_r(r_ij, tau_ij, particle_i, particle_j, flipped_indices, y_prefactors, z_prefactors,
+                              sigma_ij)
+    return sij_tauij
