@@ -90,9 +90,11 @@ else:
     else:
         # create new file with name from input
         logging.info(f'creating wave function parameters file: {input_json["wave_function"]["wave_function_file"]}')
-if not jnp.isreal(psi_params):
+if not jnp.isreal(psi_params).all():
     raise RuntimeError(
         'Wave function parameters contain imaginary components. Verify wave function parameters are real and restart the calulation.')
+elif psi_params.dtype == jnp.complex64 or psi_params.dtype == jnp.complex128:
+    psi_params = psi_params.astype(jnp.float64)
 
 logging.info('## Hamiltonian')
 hamiltonian = build_hamiltonian(input_json['potential_energy']
