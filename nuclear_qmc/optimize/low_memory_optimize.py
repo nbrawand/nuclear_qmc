@@ -169,6 +169,8 @@ def get_delta_params(
         cho_factor_solution = cho_factor(S_ij)
         delta_p = cho_solve(cho_factor_solution, -learning_rate * d_energy)
 
+    delta_p = jnp.real(delta_p)
+
     if return_loss:
         return delta_p, psi_h_psi_avg
     else:
