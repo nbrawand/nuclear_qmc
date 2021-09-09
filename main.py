@@ -94,6 +94,8 @@ if not jnp.isreal(psi_params).all():
     raise RuntimeError(
         'Wave function parameters contain imaginary components. Verify wave function parameters are real and restart the calulation.')
 elif psi_params.dtype == jnp.complex64 or psi_params.dtype == jnp.complex128:
+    logging.info(f"""Wave function parameters were found to be complex but with zero imaginary components. 
+The wave function will be typecasted to real64.""")
     psi_params = psi_params.astype(jnp.float64)
 
 logging.info('## Hamiltonian')
