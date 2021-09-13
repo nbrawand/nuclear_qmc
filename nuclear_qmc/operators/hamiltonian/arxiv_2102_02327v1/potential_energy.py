@@ -267,9 +267,7 @@ def build_arxiv_2102_02327v1(particle_pairs
             sigma_ij = jnp.moveaxis(sigma_ij, -1, 0)
             tau_ij_psi_r_value = tau_ij_psi_r(psi_r, isospin_exchange_indices, jnp.ones(shape=len(particle_pairs)))
             tau_ij_psi_r_value = jnp.swapaxes(tau_ij_psi_r_value, 0, 1)
-            expected_tau_ij = vmap(lambda a: jnp.vdot(a, psi_r))(tau_ij_psi_r_value) / jnp.vdot(
-                psi_r,
-                psi_r)
+            expected_tau_ij = vmap(lambda tau_psi: get_expectation(psi_r, tau_psi))(tau_ij_psi_r_value)
             delta_rij = r_coords[particle_pairs[:, 0]] - r_coords[particle_pairs[:, 1]]
             out += vmap(v_nlo_t, in_axes=(0, 0, None, 0, 0, 0, 0))(delta_rij, r_ij, psi_r
                                                                    , sigma_ij
