@@ -160,12 +160,15 @@ def build_arxiv_2102_02327v1(particle_pairs
         return C(r_ij, R1)
 
     def d1Calpha(r_ij, R):
-        out = -2.0 * r_ij * C(r_ij, R) / R
+        R2 = R ** 2
+        out = -2.0 * r_ij * C(r_ij, R) / R2
         return out
 
     def d2Calpha(r_ij, R):
-        out = 2.0 * C(r_ij, R) / R
-        out *= ((2 * (r_ij ** 2) / R) - 1)
+        R2 = R ** 2
+        rij2 = r_ij ** 2
+        out = -2.0 * C(r_ij, R) / R2
+        out *= (1 - (2 * rij2 / R2))
         return out
 
     def P_0(o_ij):
