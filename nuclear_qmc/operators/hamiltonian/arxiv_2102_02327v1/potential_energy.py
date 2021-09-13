@@ -1,6 +1,7 @@
 from nuclear_qmc.operators.iso_tensor import get_iso_tensor_T_ij
 from nuclear_qmc.operators.operators import sigma_ij_psi_r, sigma_psi_r, tau_psi_r, sigma_tau_psi_r, tau_ij_psi_r
-from nuclear_qmc.operators.hamiltonian.em_interaction import build_v_coulomb_proton_proton
+from nuclear_qmc.operators.hamiltonian.em_interaction import build_v_coulomb_proton_proton, \
+    build_darwin_foldy_potential, build_v_two_photon_proton_proton
 from operator import mul
 
 from nuclear_qmc.operators.spin_orbit import spin_orbit_operator
