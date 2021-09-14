@@ -106,4 +106,5 @@ The kwargs for these potentials can be viewed at each respective builder functio
 and specified in input by adding the kwarg to the potential_kwargs section of the input json file.
 For example the [latest potential kwargs can be viewed 
 here](nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy.build_arxiv_2102_02327v1). Note that
-the user specifies only the kwargs of the potential in the json file directly. 
+the user specifies only the kwargs of the potential in the json file directly. In a different branch the latest
+potential also includes a "theory_order" kwarg to specify just leading order "lo" or next leading order "nlo" terms.
