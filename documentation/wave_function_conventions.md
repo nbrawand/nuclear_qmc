@@ -230,3 +230,14 @@ def build_compound_wave_function(wfc1_args, wfc2_args):
 From the outside, this wave function behaves as if it only has one set of parameters (params) and it manages
 slicing the parameters and feeding them to the correct wfcs. All of the details are managed inside of the
 returned function. This pattern allows arbitrarily complex functions to be built in a modular way. 
+
+
+## Partition Jastro
+Many of the jastro functions are standard such as 2b, 3b, sigma, etc. The partition jastro is a bit more complicated. 
+The partition jastro is built and used
+[here](nuclear_qmc.wave_function.partition_jastro.partition_jastro.get_partition_jastro)
+and
+[here](nuclear_qmc.wave_function.wave_function_builder.build_wave_function.create_wave_function).
+
+
+
