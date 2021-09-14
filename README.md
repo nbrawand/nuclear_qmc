@@ -2,22 +2,30 @@
 
 # Nuclear QMC
 This package contains tools for running Quantum Monte Carlo simulations of nuclei. The code leverages GPU resources 
-to accelerate computations. The project is in its infancy and interfaces are subject to significant change.
+to accelerate computations. 
 
 ## Installation
-The code base is not a package yet (this will change in the future) but can be used using the following:
+The code is tested using python versions 3.7, 3.8, and 3.9.
+### CPU
+For basic CPU installs, code dependencies can be installed using the [requirements file](/requirements.txt) with the following command:
 ```
-export PYTHONPATH="$PWD"
 pip install -r requirements.txt
 ```
-The package jax is necessary to install and run please see the jax website for installation instructions.
+### GPU
+Please follow the jax installation instructions on the jax website if GPUs are necessary.
 
-## Tests
-Testing is done using the pytest package. All tests are in the [tests directory](/tests). Tests can be run using:
+## Tests & Github Workflows
+Testing is done using the pytest package. All tests are in the [tests directory](/tests). Tests can be run manually using:
 ```
 python -m pytest
 ```
+Pytests are automatically run for each push to the main branch using github workflows controlled by
+[.github/workflows/main.yml](/.github/workflows/main.yml).
 
 ## Examples
 Examples for using the code can be found in the [runs directory](/runs).
 
+## Further Documentation
+Additional documentation can be found in the [documentation directory](/documentation).
+* [input specification](/documentation/input.md)
+* [code conventions](/documentation/code_conventions.md)
