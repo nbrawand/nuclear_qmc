@@ -29,7 +29,6 @@ Examples for using the code can be found in the [runs directory](/runs).
 Additional documentation can be found in the [documentation directory](/documentation).
 * [input specification](/documentation/input.md)
 * [wave function conventions and spin-isospin operators](/documentation/wave_function_conventions.md)
-* [wave function antisymmetry](/documentation/wave_function_antisymmetry.md)
 
 
 [comment]: <> (this is how u do math in markdown: <img src="https://render.githubusercontent.com/render/math?math=e^{i \pi} = -1">)
