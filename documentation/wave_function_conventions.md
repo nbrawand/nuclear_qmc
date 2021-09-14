@@ -176,3 +176,57 @@ pn | -R0(r1)Y00(r1)R0(r2)Y00(r2)    0    0    0
 ~~~
 If we were to example put both particles in the n isospin state, then the two terms in the determinant would
 have had the same position in the matrix and their sum would result in zero as expected.
+
+## Function Factory Pattern For Wave Function Construction
+Wave functions in the code have the following function definitions:
+~~~
+def wave_function(parameters: jnp.array, particle_coordinates: jnp.array) -> matrix
+~~~
+
+Often times the behavior of different components of the wave function must be altered at run time based on 
+the user input file. A simple example would be a function which loops over particle pairs will have more pairs
+in 4He compared to 2H. To accomplish this we construct wave functions using a function factory pattern
+(like python decorators) which return functions:
+~~~python
+import jax.numpy as jnp
+
+def build_wave_function(particle_pair_indices):
+    def wave_function(_params, r_coords):
+        delta_r = r_coords[particle_pair_indices[:, 0]] - r_coords[particle_pair_indices[:, 1]] 
+        delta_r = jnp.linalg.norm(delta_r, axis=0)
+        return jnp.exp(- delta_r.sum() * _params[0])
+    params = jnp.array([0])
+    return wave_function, params
+~~~
+The builder function takes as input the particle pair indices for example: 
+~~~
+[[0, 1]
+,[0, 2]
+,[1, 2]]
+~~~
+and constructs a function that takes as input parameters and particle coordinates and calculates the
+pair differences, their norm, their sum and then multiplies them by the first element in the params array.
+The build function then returns the constructed wave function and the initial parameters for
+that wave function. This pattern is used repeatedly to construct
+the wave function. Combining two wave functions can be accomplished with the same pattern:
+
+~~~python
+import jax.numpy as jnp
+
+def build_compound_wave_function(wfc1_args, wfc2_args):
+    wfc1, wfc1_params = build_wfc1(*wfc1_args)
+    n_wfc1_params = len(wfc1_params)
+    wfc2, wfc2_params = build_wfc2(*wfc2_args)
+
+    def compound_wave_function(_params, r_coords):
+        w1 = wfc1(_params[:n_wfc1_params], r_coords)
+        w2 = wfc2(_params[n_wfc1_params:], r_coords)
+        return w1 * w2
+
+    params = jnp.concatenate(wfc1_params, wfc2_params)
+    return compound_wave_function, params
+~~~
+
+From the outside, this wave function behaves as if it only has one set of parameters (params) and it manages
+slicing the parameters and feeding them to the correct wfcs. All of the details are managed inside of the
+returned function. This pattern allows arbitrarily complex functions to be built in a modular way. 
