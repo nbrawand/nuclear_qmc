@@ -239,5 +239,71 @@ The partition jastro is built and used
 and
 [here](nuclear_qmc.wave_function.wave_function_builder.build_wave_function.create_wave_function).
 
+### Definition of A Partition
+To understand the partition jastro, we need to define what we mean by partition. Partitions refer to unique ways
+that particles are partitioned into different radial wave functions. 6Li for example has S and P radial wfcs. 
+A valid set of radial single particle orbitals for 6Li could be:
+
+<img src="https://render.githubusercontent.com/render/math?math=R_S(r_1)R_S(r_2)R_S(r_3)R_S(r_4)R_P(r_5)R_P(r_6)">
+
+We could label this particular partition of the first 4 particles into the S state and the last two particles in
+the P state as partition 0. The following permutations of radial orbitals appearing in the determinant of the
+wave function would all belong to this 0th partition:
+
+Examples of a few permutations belonging to the same partition:
+
+<img src="https://render.githubusercontent.com/render/math?math=R_S(r_1)R_S(r_2)R_S(r_3)R_S(r_4)R_P(r_5)R_P(r_6)">
+<img src="https://render.githubusercontent.com/render/math?math=R_S(r_1)R_S(r_2)R_S(r_3)R_S(r_4)R_P(r_6)R_P(r_5)">
+<img src="https://render.githubusercontent.com/render/math?math=R_S(r_2)R_S(r_1)R_S(r_3)R_S(r_4)R_P(r_5)R_P(r_6)">
+
+All of these are just permutations of:
+
+<img src="https://render.githubusercontent.com/render/math?math=\prod_{i\in\{1,2,3,4\}} \prod_{j\in\{5,6\}} R_S(r_i)R_P(r_j) ">
+
+A different permutation, say permutation 1 would be:
+
+<img src="https://render.githubusercontent.com/render/math?math=R_S(r_6)R_S(r_2)R_S(r_3)R_S(r_4)R_P(r_5)R_P(r_1)">
+
+Here r1 is in the P state and r6 is in the S state and this does not satisfy the definition of the 0th partition
+so this permutation of single particle orbitals would belong to a different partition.
+
+### Partition Jastro Implementation
+The partition jastro consists of 1 unique deepset  for each unique radial orbital (e.g., a total of 2 unique deepsets 
+for the S and P orbitals in Li). Each permutation of particle coordinates:
+~~~
+Particle Permutations
+[1, 2, 3, 4, 5, 6]
+[1, 2, 3, 4, 6, 5]
+[6, 2, 3, 4, 5, 1]
+...
+~~~
+is split based on which radial they are assigned to in the determinant:
+~~~
+     S          P
+[1, 2, 3, 4], [5, 6]
+[1, 2, 3, 4], [6, 5]
+[6, 2, 3, 4], [5, 1]
+...
+~~~
+This is list of partitions is computed once at the start of the calculation and 1 unique
+ deepset is instantiated for each column in the above list. During run time, the particle coordinates
+ are used as input into their respective jastro according to the partition list above resulting
+ in a list of scalars:
+ 
+~~~
+        Deepset Products
+f_0([1, 2, 3, 4]) * f_1([5, 6])
+f_0([1, 2, 3, 4]) * f_1([6, 5])
+f_0([6, 2, 3, 4]) * f_1([5, 1])
+...
+~~~
+
+where f0 and f1 are separate jastros and the list of numbers represents the input of those particle coordinates
+into the deepset. The deepset does not care about the order that the particle coordinates so the first and
+2nd lines above will result in the same value while the last line could result in a different value.
+
+This is done for every permutation, resulting in a list of floats which are then multiplied by every term in the 
+determinant respectively and then the wave function is filled using the spin and isospin indices and explained
+before.
 
 
