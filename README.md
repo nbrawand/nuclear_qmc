@@ -22,8 +22,23 @@ python -m pytest
 Pytests are automatically run for each push to the main branch using github workflows controlled by
 [.github/workflows/main.yml](/.github/workflows/main.yml).
 
-## Examples
+## Running The Code and Examples
+### Adding nuclear qmc to your path
+The code can be run from any directory but you will need to make sure that the package "nuclear_qmc",
+under the root directory, is in your python path. You can add it by navigating to the root directory and
+executing the command:
+~~~
+export PYTHONPATH=/<path>/nuclear_qmc
+~~~
+### Running the code
+To run the code execute the following command:
+~~~
+python /<path>/nuclear_qmc/main.py -i /<path>/input.json
+~~~
+The option -i indicates that the following argument will be read as the input file.
+See the documentation section about input format.
 Examples for using the code can be found in the [runs directory](/runs).
+A job script for swing can be found [here](/scripts/run_swing_job.sh).
 
 ## Further Documentation
 Additional documentation can be found in the [documentation directory](/documentation).
