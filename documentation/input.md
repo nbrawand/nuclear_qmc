@@ -1,9 +1,8 @@
 # Input Specification
-Input is specified using the json standard. Here is and example for 2H:
+Input is specified using the json standard. See run directory for input examples.
+Here is and example for 2H:
 ```json
 {
-  "n_proton": 1,
-  "n_neutron": 1,
   "wave_function": {
     "confining_factor": 0.01,
     "add_partition_jastro": true,
@@ -47,9 +46,6 @@ what is valid input.
 
 Going through each element of the json file:
 ~~~
-   n_proton - number of protons (this should be removed in future versions of the code using the orbital strings)
-   n_neutron - number of neutrons (this should be removed in future versions of the code using the orbital strings)
-
    wave_function - start of the wave function section
      confining_factor - strength of the confining factor applied to the function
      add_partition_jastro - this is a jastro that distinguishes between different partitions between S and P states
