@@ -235,9 +235,9 @@ returned function. This pattern allows arbitrarily complex functions to be built
 ## Partition Jastro
 Many of the jastro functions are standard such as 2b, 3b, sigma, etc. The partition jastro is a bit more complicated. 
 The partition jastro is built and used
-[here](nuclear_qmc.wave_function.partition_jastro.partition_jastro.get_partition_jastro)
+[here](https://github.com/nbrawand/nuclear_qmc/blob/c71a2c430a8149ba75097b99bbb5d8eb6bbf5288/nuclear_qmc/wave_function/partition_jastro/partition_jastro.py#L82)
 and
-[here](nuclear_qmc.wave_function.wave_function_builder.build_wave_function.create_wave_function).
+[here](https://github.com/nbrawand/nuclear_qmc/blob/d045119bcfc91a10e4883c9aaed49021b090117c/nuclear_qmc/wave_function/wave_function_builder/build_wave_function.py#L107).
 
 ### Definition of A Partition
 To understand the partition jastro, we need to define what we mean by partition. Partitions refer to unique ways

@@ -83,7 +83,7 @@ Going through each element of the json file:
 
 ### Jastro Options
 Currently the allowed jastros are determined by the 
-[jastro builder routine](nuclear_qmc/wave_function/neural_network_jastro_builder/add_neural_network_jastros.py:38).
+[jastro builder routine](https://github.com/nbrawand/nuclear_qmc/blob/d045119bcfc91a10e4883c9aaed49021b090117c/nuclear_qmc/wave_function/neural_network_jastro_builder/add_neural_network_jastros.py#L18).
 At this moment, the supported jastros include:
 * 2b - two body jastro with argument |r_i - r_j|
 * 3b - three body jastro
@@ -100,11 +100,11 @@ It is not compatible with the other jastros.
 
 ### Nuclear Potential Options
 The potential of the hamiltonian is determined by the
-[hamiltonian builder function](nuclear_qmc/operators/hamiltonian/build_hamiltonian.py:14).
+[hamiltonian builder function](https://github.com/nbrawand/nuclear_qmc/blob/d045119bcfc91a10e4883c9aaed49021b090117c/nuclear_qmc/operators/hamiltonian/build_hamiltonian.py#L8).
 Currently there are 2 potentials to choose from arxiv_2007_14282v2 and arxiv_2102_02327v1. 
 The kwargs for these potentials can be viewed at each respective builder function
 and specified in input by adding the kwarg to the potential_kwargs section of the input json file.
 For example the [latest potential kwargs can be viewed 
-here](nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy.build_arxiv_2102_02327v1). Note that
+here](https://github.com/nbrawand/nuclear_qmc/blob/d045119bcfc91a10e4883c9aaed49021b090117c/nuclear_qmc/operators/hamiltonian/arxiv_2102_02327v1/potential_energy.py#L19). Note that
 the user specifies only the kwargs of the potential in the json file directly. In a different branch the latest
 potential also includes a "theory_order" kwarg to specify just leading order "lo" or next leading order "nlo" terms.
