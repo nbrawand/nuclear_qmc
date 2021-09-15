@@ -303,7 +303,7 @@ into the deepset. The deepset does not care about the order that the particle co
 2nd lines above will result in the same value while the last line could result in a different value.
 
 This is done for every permutation, resulting in a list of floats which are then multiplied by every term in the 
-determinant respectively and then the wave function is filled using the spin and isospin indices and explained
+determinant respectively and then the wave function is filled using the spin and isospin indices as explained
 before.
 
 
