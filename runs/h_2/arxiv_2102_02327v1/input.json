@@ -1,6 +1,4 @@
 {
-  "n_proton": 1,
-  "n_neutron": 1,
   "wave_function": {
     "confining_factor": 0.05,
     "add_partition_jastro": false,

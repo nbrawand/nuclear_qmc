@@ -1,6 +1,4 @@
 {
-  "n_proton": 2,
-  "n_neutron": 1,
   "wave_function": {
     "seed": 0,
     "confining_factor": 0.05,

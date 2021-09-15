@@ -1,6 +1,4 @@
 {
-  "n_proton": 2,
-  "n_neutron": 4,
   "wave_function": {
     "confining_factor": 0.05,
     "add_partition_jastro": true,
@@ -51,7 +49,7 @@
   "potential_kwargs": {
     "model_string": "o",
     "R3": 1.0,
-    "include_3body":false
+    "include_3body": false
   },
   "optimization": {
     "number_of_parallel_devices": 8,
@@ -67,6 +65,15 @@
     "epsilon_sr": 0.0001,
     "print_local_energy": true,
     "plot_local_energy": false,
-    "local_energy_plot_limits": [[0, 8], [-54, -34]]
+    "local_energy_plot_limits": [
+      [
+        0,
+        8
+      ],
+      [
+        -54,
+        -34
+      ]
+    ]
   }
 }

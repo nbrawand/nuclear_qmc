@@ -1,7 +1,7 @@
 from jax.config import config
 import jax.numpy as jnp
 import json
-
+from nuclear_qmc.utils.n_protons_and_n_neutrons import get_n_protons_and_n_neutrons
 from nuclear_qmc.wave_function.wave_function_builder.build_wave_function import build_wave_function
 from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonian
 from nuclear_qmc.optimize.optimize_wave_function import optimize_wave_function
@@ -39,9 +39,12 @@ if 'potential_kwargs' not in input_json.keys():
     input_json['potential_kwargs'] = None
 if 'add_partition_jastro' not in input_json['wave_function'].keys():
     input_json['wave_function']['add_partition_jastro'] = False
+
 logging.info("```json")
 logging.info(json.dumps(input_json, indent=4, sort_keys=True))
 logging.info("```")
+
+input_json['n_proton'], input_json['n_neutron'] = get_n_protons_and_n_neutrons(input_json['wave_function']['orbitals'])
 
 logging.info('## Building Wave Function System')
 particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_spin_isospin_indices(
