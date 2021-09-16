@@ -33,6 +33,7 @@ Here is and example for 2H:
     "n_optimization_steps": 500,
     "learning_rate": 0.001,
     "epsilon_sr": 0.0001,
+    "number_of_parallel_devices": 0,
     "print_local_energy": true,
     "plot_local_energy": false,
     "local_energy_plot_limits": [[0, 16], [-10, 2]],
@@ -71,6 +72,12 @@ Going through each element of the json file:
      n_optimization_steps - total number of optimization steps before ending run
      learning_rate - learning rate in stochastic reconfiguration optimization step
      epsilon_sr  - The small negative number in stochastic reconfiguration optimization step
+     number_of_parallel_devices - If 0 computations are evaluated on a single GPU using vmap across sampled blocks. 
+                                  If >0 sampled blocks are broken into chunks equal to the integer given and each 
+                                  chunk is evaluated sequentially but each block within the chunk is parallelized
+                                  across GPU devices. By decreasing the number of walkers and increasing the block size
+                                  you can reduce the amount of memory needed for each device at the cost of increased
+                                  execution time which can be midigated Adding more devices speeds up the computations.
      print_local_energy - Print local energy at each optimization step to output log 
      plot_local_energy - Save a local energy plot png to disk numbered by optimization step + local_energy_plot_start_number
      local_energy_plot_limits - local energy plot limits [[x1, x2], [y1, y2]]

@@ -62,6 +62,7 @@
     "n_optimization_steps": 1000000,
     "learning_rate": 0.001,
     "epsilon_sr": 0.0001,
+    "number_of_parallel_devices": 8,
     "print_local_energy": true,
     "plot_local_energy": false,
     "local_energy_plot_limits": [
