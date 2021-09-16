@@ -1,8 +1,6 @@
 {
-  "n_proton": 1,
-  "n_neutron": 1,
   "wave_function": {
-    "confining_factor": 0.01,
+    "confining_factor": 0.05,
     "add_partition_jastro": false,
     "seed": 0,
     "n_dense": 6,
@@ -23,14 +21,16 @@
   },
   "potential_energy": "arxiv_2102_02327v1",
   "potential_kwargs": {
-    "model_string": "o"
+    "model_string": "o",
+    "R3": 1.5,
+    "include_3body": false
   },
   "optimization": {
     "seed": 0,
     "n_dimensions": 3,
     "n_blocks": 4,
     "n_equilibrium_blocks": 4,
-    "n_walkers": 2000,
+    "n_walkers": 400,
     "n_void_steps": 200,
     "walker_step_size": 0.2,
     "initial_walker_standard_deviation": 1.0,
@@ -38,7 +38,7 @@
     "learning_rate": 0.001,
     "epsilon_sr": 0.0001,
     "print_local_energy": true,
-    "plot_local_energy": true,
+    "plot_local_energy": false,
     "local_energy_plot_limits": [
       [
         0,
