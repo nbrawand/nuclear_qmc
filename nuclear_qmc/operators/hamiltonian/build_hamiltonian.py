@@ -1,5 +1,5 @@
 from nuclear_qmc.operators.hamiltonian.arxiv_2007_14282v2.potential_energy import build_arxiv_2007_14282v2
-from nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy import build_arxiv_2102_02327v1
+from nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy import Arxiv_2102_02327v1_Potential
 from nuclear_qmc.operators.operators import kinetic_energy_psi
 from nuclear_qmc.utils.finite_difference import kinetic_energy
 import jax.numpy as jnp
@@ -18,7 +18,7 @@ def build_hamiltonian(potential_energy_expression, particle_pairs, particle_trip
                      spin_exchange_indices],
         },
         'arxiv_2102_02327v1': {
-            'builder': build_arxiv_2102_02327v1,
+            'builder': Arxiv_2102_02327v1_Potential,
             'args': [particle_pairs, particle_triplets
                 , spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation]
         }
