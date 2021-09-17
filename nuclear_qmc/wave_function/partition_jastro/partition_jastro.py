@@ -42,6 +42,14 @@ def transform_partitions_to_matrix_format(partitions):
     return jnp.array(out)
 
 
+def drop_duplicates(lst):
+    out = []
+    for elm in lst:
+        if elm not in out:
+            out.append(elm)
+    return out
+
+
 def get_partition_pair_indices(partitions):
     """
     The output has rows equal to the total number of pairs in each partition combinations. The columns have the following
@@ -60,7 +68,7 @@ def get_partition_pair_indices(partitions):
                 pj = partition[j]
                 combos = list(product(pi, pj))
                 combos = [tuple(sorted([c[0], c[1]])) for c in combos if c[0] != c[1]]
-                combos = set(combos)
+                combos = drop_duplicates(combos)
                 for c in combos:
                     out.append(list(c) + [partition_indx, sub_partition_indx])
                 sub_partition_indx += 1

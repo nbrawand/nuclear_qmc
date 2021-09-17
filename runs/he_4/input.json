@@ -42,6 +42,7 @@
     "n_optimization_steps": 1000,
     "learning_rate": 0.0002,
     "epsilon_sr": 0.0001,
+    "number_of_parallel_devices": 0,
     "print_local_energy": true
   }
 }
