@@ -33,8 +33,8 @@
   "optimization": {
     "seed": 0,
     "n_dimensions": 3,
-    "n_blocks": 5,
-    "n_equilibrium_blocks": 5,
+    "n_blocks": 4,
+    "n_equilibrium_blocks": 4,
     "n_walkers": 1000,
     "n_void_steps": 200,
     "walker_step_size": 0.2,
@@ -42,7 +42,7 @@
     "n_optimization_steps": 1000,
     "learning_rate": 0.0002,
     "epsilon_sr": 0.0001,
-    "number_of_parallel_devices": 0,
+    "number_of_parallel_devices": 4,
     "print_local_energy": true
   }
 }
