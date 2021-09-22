@@ -1,6 +1,6 @@
 {
   "wave_function": {
-    "confining_factor": 0.05,
+    "confining_factor": 0.10,
     "add_partition_jastro": true,
     "seed": 0,
     "n_dense": 4,
