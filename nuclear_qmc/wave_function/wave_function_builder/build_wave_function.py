@@ -14,6 +14,7 @@ from nuclear_qmc.wave_function.get_spin_isospin_indices.get_system_arrays import
 from jax.ops import index
 from itertools import permutations as get_permutations
 from jax.ops import index_add
+import jax
 from nuclear_qmc.wave_function.utility import apply_confining_potential
 
 
@@ -116,6 +117,7 @@ def create_wave_function(key
                          , add_partition_jastro=False
                          , confining_factor=0.1
                          ):
+    """Main routine for building the determinant part of the wave function."""
     n_particles = state_permutations.shape[-1]
     params = jnp.array([])
     signature_indices = signature_indices.reshape(-1, 2)
@@ -123,6 +125,7 @@ def create_wave_function(key
 
     @jit
     def accumulate_wave_function(terms):
+        """Add terms to the wave function assuming position is given by the signature indices"""
         wave_function = jnp.zeros(shape=(n_iso_configs, n_spin_configs))
         terms = terms.reshape(-1)
         i = signature_indices[:, 0]
@@ -131,6 +134,7 @@ def create_wave_function(key
         return wave_function
 
     def decay_func(_r, decay_strength):
+        """Confining potential."""
         mag_r = jnp.linalg.norm(_r) ** 2
         return jnp.exp(-decay_strength * mag_r)
 
@@ -151,6 +155,7 @@ def create_wave_function(key
         return lambda _p, _r: radial_functions[indx](_p[start:stop], _r) * SPHERICAL_HARMONICS[y](_r) * decay_func(_r,
                                                                                                                    confining_factor)
 
+    # build functions for each unique radial orbital and append them to the list
     for orbital in unique_orbitals:
         r = orbital.split('_')[0]
         if r not in seen_radial_orbitals:
@@ -177,11 +182,10 @@ def create_wave_function(key
         i += 1
 
     function_indices = jnp.array([apply_func(orbs, lambda x: function_dict[x]) for orbs in orbitals])
-
     particles = jnp.arange(n_particles)
-
     n_orbital_params = len(params)
 
+    # build the partition jastro
     if add_partition_jastro:
         get_r_orbs = lambda x: x.split('_')[0]
         partition_psis = []
@@ -219,6 +223,29 @@ def create_wave_function(key
 
 def build_wave_function(key, n_neutron, n_proton, n_dense, n_hidden_layers, states, coefficients
                         , add_partition_jastro=False, confining_factor=0.1):
+    """Get the wave function parameterized by jax neural networks.
+
+    Parameters
+    ----------
+    key: jax.random.PRNGKey
+    n_neutron: int
+    n_proton: int
+    n_dense: int
+        number of neurons in each layer.
+    n_hidden_layers: int
+        number of hidden layers in each network.
+    states: list
+        List of strings for each state in every determinant.
+    coefficients: jnp.array
+        List of floats to weight each determinant.
+    add_partition_jastro: bool
+    confining_factor: float
+        multiply wfc by e^(-beta |r|)
+
+    Returns
+    -------
+        Split jax key, wfc of form: function(params, r_coordinates), and wave function parameters
+    """
     # build initial wave function
     n_particles = n_neutron + n_proton
     n_iso_configs = get_number_of_isospin_states(n_particles, n_proton)
