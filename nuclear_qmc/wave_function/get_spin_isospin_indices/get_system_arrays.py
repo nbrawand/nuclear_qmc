@@ -16,6 +16,15 @@ def get_spin_state_indices(mass_number, as_jax_array=True):
 
 
 def get_spin_particle_pairs(mass_number, as_jax_array=True):
+    """Returns the indices for each particle pair.
+
+    Examples
+    --------
+    >>>get_spin_particle_pairs(3)
+   [[0, 1]
+    [0, 2]
+    [1, 2]]
+    """
     package = jnp if as_jax_array else np
     return package.array([[p1, p2] for p2 in range(1, mass_number) for p1 in range(p2)], dtype=package.int32)
 
@@ -29,6 +38,12 @@ def get_spin_exchange_index(state_index, particle_pair, package):
 
 
 def get_spin_exchange_indices(particle_pairs, state_indices, as_jax_array=True):
+    """These are the wave function indices after exchanging the spin for each particle pair.
+
+    Returns
+    -------
+        Returned array is of dimensions [n_pair, n_isospin, n_spin] and is used by the sigma operator.
+    """
     package = jnp if as_jax_array else np
     pairs_indices_in_binary_rep = convert_particle_index_to_binary_index(particle_pairs, package)
     return package.array([get_spin_exchange_index(state_indices, particle_pair, package)
@@ -84,6 +99,12 @@ def get_raw_isospin_indices(mass_number, proton_number, as_jax_array=True):
 
 def get_isospin_exchange_index(particle_pairs, mass_number, proton_number, as_jax_array=True,
                                also_return_binary_representation=False):
+    """Returns the wave function indices after exchanging the isospin for each particle pair.
+
+    Returns
+    -------
+        The returned has dimensions [n_pair, n_spin, n_isospin] and is used by the tau operator.
+    """
     package = jnp if as_jax_array else np
     valid_binary_representation, valid_isospin_indices = get_raw_isospin_indices(mass_number,
                                                                                  proton_number, as_jax_array=True)
@@ -108,7 +129,7 @@ def get_isospin_exchange_index(particle_pairs, mass_number, proton_number, as_ja
 
 def get_system_arrays(n_protons, n_neutrons, as_jax_array=True,
                       also_return_binary_representation=False):
-    """Helper function returns necessary arrays associated with the nuclear system."""
+    """Helper function returns necessary arrays associated with the nuclear system. See called functions for details."""
     mass_number = n_protons + n_neutrons
     particle_pairs = get_spin_particle_pairs(mass_number, as_jax_array)
     particle_triplets = get_triplets(jnp.arange(mass_number))
