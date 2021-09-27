@@ -1,5 +1,5 @@
 from nuclear_qmc.operators.operators import get_sigma_ij
-from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_raw_spin_indices
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_system_arrays import get_raw_spin_indices
 from jax import numpy as jnp, vmap
 
 

@@ -8,7 +8,7 @@ from nuclear_qmc.operators.spin_orbit import spin_orbit_operator
 from nuclear_qmc.operators.tensor_forces import get_sij_psi_r, get_flip_indices, get_sigma_operator_prefactors, \
     get_sij_tauij_psi_r, get_bit, make_negative_1_if_spin_down_else_1
 from nuclear_qmc.utils.get_expectation import get_expectation
-from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_raw_isospin_indices
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_system_arrays import get_raw_isospin_indices
 from nuclear_qmc.wave_function.utility import get_psi_r
 import jax.numpy as jnp
 from nuclear_qmc.constants.constants import H_BAR, ALPHA

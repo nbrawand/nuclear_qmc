@@ -5,8 +5,8 @@ from nuclear_qmc.operators.hamiltonian.get_local_energy import get_local_energy
 from nuclear_qmc.operators.hamiltonian.build_hamiltonian import build_hamiltonian
 from nuclear_qmc.wave_function.legacy_wave_function_for_testing.test_neural_network import build_test_nn_wfc
 from nuclear_qmc.sampling.sample import sample
-from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import \
-    get_system_arrays_pairs_triplets_spin_and_isospin
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_system_arrays import \
+    get_system_arrays
 
 config.update("jax_enable_x64", True)
 
@@ -22,7 +22,7 @@ def test_full_energy_run():
     N_STEPS = 20
     N_VOID_STEPS = 100
     _, psi_prefactor, psi_params = build_test_nn_wfc()
-    particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_system_arrays_pairs_triplets_spin_and_isospin(
+    particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_system_arrays(
         N_PROTON, N_NEUTRON,
         as_jax_array=True)
     hamiltonian = build_hamiltonian('arxiv_2007_14282v2', particle_pairs, particle_triplets,

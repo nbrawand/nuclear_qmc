@@ -9,7 +9,7 @@ from jax import vmap, numpy as jnp
 from sympy.combinatorics.permutations import Permutation
 from scipy.stats import rankdata
 import numpy as np
-from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_number_of_isospin_states, \
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_system_arrays import get_number_of_isospin_states, \
     get_number_of_spin_states
 from jax.ops import index
 from itertools import permutations as get_permutations
