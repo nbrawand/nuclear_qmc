@@ -144,7 +144,7 @@ class TestHamiltonian:
         _, psi, psi_params = build_test_nn_wfc()
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
         expected = jnp.array(0.05251155, dtype=jnp.float64)
-        computed = round(psi(psi_params, ex_r), 8)
+        computed = round(psi(psi_params, ex_r), 7)
         assert jnp.array_equal(expected, computed)
 
     def test_kinetic_energy_with_3H(self):
