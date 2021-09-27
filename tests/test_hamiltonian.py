@@ -143,7 +143,7 @@ class TestHamiltonian:
     def test_psi_r_test_wfc(self):
         _, psi, psi_params = build_test_nn_wfc()
         ex_r = jnp.array([[0.43, 0, 0], [0, 0, 0]])
-        expected = jnp.array(0.05251155, dtype=jnp.float64)
+        expected = round(jnp.array(0.05251155, dtype=jnp.float64), 7)
         computed = round(psi(psi_params, ex_r), 7)
         assert jnp.array_equal(expected, computed)
 
