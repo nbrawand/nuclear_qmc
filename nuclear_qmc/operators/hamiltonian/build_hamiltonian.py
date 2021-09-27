@@ -8,6 +8,7 @@ import jax.numpy as jnp
 def build_hamiltonian(potential_energy_expression, particle_pairs, particle_triplets, spin_exchange_indices,
                       isospin_exchange_indices, isospin_binary_representation=None, potential_kwargs=None
                       , use_finite_diff=True):
+    """Main routine for building the hamiltonian function used for returning H|psi>"""
     if potential_kwargs is None:
         potential_kwargs = {}
 
