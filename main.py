@@ -1,3 +1,10 @@
+"""Main routine for nuclear qmc.
+
+Call:
+    python main.py -h
+
+for instructions.
+"""
 from jax.config import config
 import jax.numpy as jnp
 import json
@@ -16,9 +23,10 @@ import argparse
 
 config.update("jax_enable_x64", True)
 
+# parse args
 parser = argparse.ArgumentParser(description='This routine performs VMC calculations for nuclear systems.')
 parser.add_argument("-i", dest="input_file_name", required=True,
-                    help="input file specifying system and VMC parameters", metavar="FILE")
+                    help="json input file specifying system and VMC parameters", metavar="FILE")
 args = parser.parse_args()
 input_file = open(args.input_file_name, 'r')
 input_json = json.load(input_file)
@@ -32,20 +40,19 @@ logging.info('# Nuclear QMC Run')
 logging.info('## Log File')
 logging.info(log_file)
 logging.info('## Input File')
-# add defaults
+# add input defaults
 if 'potential_energy' not in input_json.keys():
     input_json['potential_energy'] = 'arxiv_2007_14282v2'
 if 'potential_kwargs' not in input_json.keys():
     input_json['potential_kwargs'] = None
 if 'add_partition_jastro' not in input_json['wave_function'].keys():
     input_json['wave_function']['add_partition_jastro'] = False
-
 logging.info("```json")
 logging.info(json.dumps(input_json, indent=4, sort_keys=True))
 logging.info("```")
 
+# create wave function variables
 input_json['n_proton'], input_json['n_neutron'] = get_n_protons_and_n_neutrons(input_json['wave_function']['orbitals'])
-
 logging.info('## Building Wave Function System')
 particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_spin_isospin_indices(
     input_json['n_proton'], input_json['n_neutron'], also_return_binary_representation=True)
@@ -72,9 +79,8 @@ key, psi_prefactor, psi_params = add_neural_network_jastros(
     , n_hidden_layers=input_json['wave_function']['n_hidden_layers']
     , jastro_list=input_json['wave_function']['jastro_list']
 )
-# logging.info(f'Wave Function Expression: {psi_expression}')
-
 logging.info('## Wave Function Parameters')
+# check for existing wave function parameters
 if 'wave_function_file' not in input_json['wave_function']:
     # file not present in input create available file name
     input_json['wave_function']['wave_function_file'] = get_new_file_name('wave_function_parameters_0.npy', 0)
@@ -101,6 +107,7 @@ elif psi_params.dtype == jnp.complex64 or psi_params.dtype == jnp.complex128:
 The wave function will be typecasted to real64.""")
     psi_params = psi_params.astype(jnp.float64)
 
+# setup hamiltonian
 logging.info('## Hamiltonian')
 hamiltonian = build_hamiltonian(input_json['potential_energy']
                                 , particle_pairs
@@ -108,6 +115,8 @@ hamiltonian = build_hamiltonian(input_json['potential_energy']
                                 , spin_exchange_indices, isospin_exchange_indices
                                 , isospin_binary_representation
                                 , input_json['potential_kwargs'])
+
+# start optimization
 logging.info('## Optimization')
 optimize_wave_function(
     input_json['n_proton']
