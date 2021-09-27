@@ -106,8 +106,9 @@ def get_isospin_exchange_index(particle_pairs, mass_number, proton_number, as_ja
         return package.array(exchange_indices)
 
 
-def get_spin_isospin_indices(n_protons, n_neutrons, dtype=jnp.float64, as_jax_array=True,
-                             also_return_binary_representation=False):
+def get_system_arrays_pairs_triplets_spin_and_isospin(n_protons, n_neutrons, dtype=jnp.float64, as_jax_array=True,
+                                                      also_return_binary_representation=False):
+    """Helper function returns necessary arrays associated with the nuclear system."""
     mass_number = n_protons + n_neutrons
     particle_pairs = get_spin_particle_pairs(mass_number, as_jax_array)
     particle_triplets = get_triplets(jnp.arange(mass_number))

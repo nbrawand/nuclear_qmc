@@ -15,7 +15,7 @@ from nuclear_qmc.optimize.optimize_wave_function import optimize_wave_function
 from nuclear_qmc.utils.get_new_file_name import get_new_file_name
 from nuclear_qmc.wave_function.neural_network_jastro_builder.add_neural_network_jastros import \
     add_neural_network_jastros
-from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_spin_isospin_indices
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_system_arrays_pairs_triplets_spin_and_isospin
 import os
 from jax import random
 import logging
@@ -54,7 +54,7 @@ logging.info("```")
 # create wave function variables
 input_json['n_proton'], input_json['n_neutron'] = get_n_protons_and_n_neutrons(input_json['wave_function']['orbitals'])
 logging.info('## Building Wave Function System')
-particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_spin_isospin_indices(
+particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices, isospin_binary_representation = get_system_arrays_pairs_triplets_spin_and_isospin(
     input_json['n_proton'], input_json['n_neutron'], also_return_binary_representation=True)
 key = random.PRNGKey(input_json['wave_function']['seed'])
 key, orbital_psi, orbital_psi_params = build_wave_function(key

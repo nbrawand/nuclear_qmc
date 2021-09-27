@@ -1,6 +1,6 @@
 from nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy import \
     Arxiv_2102_02327v1_Potential as build_arxiv_2102_02327v1
-from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_spin_isospin_indices
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_system_arrays_pairs_triplets_spin_and_isospin
 import jax.numpy as jnp
 
 # def test_next_leading_order_potential_h2():

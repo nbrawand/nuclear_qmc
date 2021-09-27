@@ -12,7 +12,7 @@ from nuclear_qmc.utils.get_dr_ij import get_r_ij_sqrd, get_r_ik_r_ij_cycles
 from nuclear_qmc.wave_function.jastro import exponential_jastro as exp_psi
 
 from nuclear_qmc.wave_function.legacy_wave_function_for_testing.test_neural_network import build_test_nn_wfc
-from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_spin_isospin_indices
+from nuclear_qmc.wave_function.get_spin_isospin_indices.get_spin_isospin_indices import get_system_arrays_pairs_triplets_spin_and_isospin
 
 config.update("jax_enable_x64", True)
 
@@ -54,7 +54,7 @@ class TestHamiltonian:
                 [0.26104348, - 0.38107508, 0.07886705],
             ]
         )
-        particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_spin_isospin_indices(
+        particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_system_arrays_pairs_triplets_spin_and_isospin(
             1, 2,
             dtype=jnp.float64,
             as_jax_array=True)
@@ -78,7 +78,7 @@ class TestHamiltonian:
     def test_get_local_energy(self):
         r_coords = jnp.array([[0.43, 0, 0], [0, 0, 0]])
         _, psi, psi_params = build_test_nn_wfc()
-        particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_spin_isospin_indices(
+        particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_system_arrays_pairs_triplets_spin_and_isospin(
             1, 1,
             dtype=jnp.float64,
             as_jax_array=True)
@@ -107,7 +107,7 @@ class TestHamiltonian:
                                                                    )
         psi_vector = orbital_psi(orbital_psi_params, ex_r)
         psi = lambda _p, _r: psif(_p, _r) * psi_vector
-        particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_spin_isospin_indices(
+        particle_pairs, particle_triplets, spin_exchange_indices, isospin_exchange_indices = get_system_arrays_pairs_triplets_spin_and_isospin(
             1, 1,
             dtype=jnp.float64,
             as_jax_array=True)
