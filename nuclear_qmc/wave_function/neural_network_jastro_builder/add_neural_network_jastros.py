@@ -29,6 +29,9 @@ def add_neural_network_jastros(
         , jastro_list=None
         , include_distance_in_2b=False
 ):
+    """Main routine for building and multiplying wfc determinants (orbital_psi) by jastro factors."""
+
+    # parse function input
     if jastro_list is None:
         jastro_list = []
 
@@ -44,6 +47,7 @@ def add_neural_network_jastros(
     psi_parameters = orbital_psi_params
     n_orbital_params = len(orbital_psi_params)
 
+    # build jastro factors starting with linear operators
     if 'sigma' in jastro_list:
         key, sigma_func, sigma_params = get_nn_jastro_func_and_params(key
                                                                       , n_dense
@@ -75,6 +79,7 @@ def add_neural_network_jastros(
         psi_parameters = jnp.concatenate((psi_parameters, sigtau_params))
         n_sigma_tau = len(sigtau_params)
 
+    # nn(|ri-rj|)
     if '2b' in jastro_list:
         in_shape = (2,) if include_distance_in_2b else (1,)
         key, b2_func, b2_params = get_nn_jastro_func_and_params(key
@@ -87,6 +92,7 @@ def add_neural_network_jastros(
         psi_parameters = jnp.concatenate((psi_parameters, b2_params))
         n_2b = len(b2_params)
 
+    # nn(|ri+rj|)
     if 'add_2b' in jastro_list:
         key, add_b2_func, add_b2_params = get_nn_jastro_func_and_params(key
                                                                         , n_dense
@@ -123,6 +129,7 @@ def add_neural_network_jastros(
         else:
             raise RuntimeError('3b addition jastro requires A>2')
 
+    # deep set with particle pairs as input
     if 'pair_deepset' in jastro_list:
         pair_deepset_wfc = PairDeepset(ndim=3, npart=n_particles, conf=0.10, key=key, mix=0.0, spin=particle_pairs)
         # import pickle
@@ -143,6 +150,7 @@ def add_neural_network_jastros(
         n_deepset_params = len(deepset_params)
         psi_parameters = jnp.concatenate((psi_parameters, deepset_params))
 
+    # deepset that outputs factors for each linear correlation
     if 'total_deepset' in jastro_list:
         n_pairs = len(particle_pairs)
         key, total_deepset_nn_func, total_deepset_params = get_deepset_jastro(key
@@ -176,6 +184,7 @@ def add_neural_network_jastros(
         psi_out += orbitals_psi
 
         # linear operators act on orbitals and are added to the original wave function
+        # each function is written out for easier debugging
         if 'sigma' in jastro_list:
             start = end
             end += n_sigma
