@@ -42,6 +42,7 @@ A job script for swing can be found [here](/scripts/run_swing_job.sh).
 
 ## Further Documentation
 Additional documentation can be found in the [documentation directory](/documentation).
+* [control flow summary](/documentation/control_flow_summary.md)
 * [input specification](/documentation/input.md)
 * [wave function conventions and spin-isospin operators](/documentation/wave_function_conventions.md)
 
