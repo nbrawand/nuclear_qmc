@@ -1,5 +1,5 @@
 # Papers
-This is a short summary of useful papers for this project.
+This is a short summary of useful resources for this project.
 
 ## Quantum Monte Carlo
 [Quantum Monte Carlo Simulation of Solids, 
