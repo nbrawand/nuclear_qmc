@@ -15,6 +15,7 @@ from nuclear_qmc.constants.constants import H_BAR, ALPHA
 from jax import vmap
 
 from nuclear_qmc.utils.get_dr_ij import get_r_ij, get_r_ik_r_ij_cycles
+import logging
 
 
 def get_iso_z_factors(mass_number, proton_number):
@@ -38,6 +39,9 @@ class Arxiv_2102_02327v1_Potential:
                  , include_3body=True
                  , theory_order='lo'
                  ):
+
+        if theory_order == 'nlo':
+            logging.warning(f'Arxiv_2102_02327v1_Potential with theory_order: {theory_order} is not implemented yet.')
 
         self.particle_pairs = particle_pairs
         self.particle_triplets = particle_triplets
