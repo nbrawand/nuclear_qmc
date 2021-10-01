@@ -38,4 +38,3 @@ https://arxiv.org/abs/2108.06836
 * [Charge-symmetry breaking forces and isospin mixing in 8Be](https://arxiv.org/abs/1308.5670)
 * From Nucleons to Nucleus, Jouni Suhonen
 * Weisskopf's nuclear physics textbook (reprinted by Dover)
-* [Ale Thesis]()
