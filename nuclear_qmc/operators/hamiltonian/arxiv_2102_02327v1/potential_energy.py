@@ -298,19 +298,19 @@ class Arxiv_2102_02327v1_Potential:
                                           , expected_tau_ij).sum(axis=0)
             out += self.v_nlo_b(r_coords, r_ij, delta_rij, psi, psi_params, expected_tau_ij)
             out += self.v_nlo_T(r_ij, psi_r, tau_ij_psi_r_value, expected_tau_ij)
-            nlo_linear_pair_coefficients = self.nlo_v_c(r_ij)
             nlo_v_c = vmap(self.nlo_v_c)(r_ij)
             nlo_v_tau = vmap(self.nlo_v_tau)(r_ij)
             nlo_v_sigma = vmap(self.nlo_v_sigma)(r_ij)
+            nlo_v_sigma_tau = vmap(self.nlo_v_sigma_tau)(r_ij)
         else:
-            nlo_linear_pair_coefficients = 0.0
             nlo_v_c = 0.0
             nlo_v_tau = 0.0
             nlo_v_sigma = 0.0
+            nlo_v_sigma_tau = 0.0
         out += self.add_lo_v_c_r(r_ij, psi_r, nlo_v_c)
         out += self.add_lo_v_tau_r(r_ij, psi_r, nlo_v_tau)
         out += self.add_lo_v_sigma_r(r_ij, psi_r, nlo_v_sigma)
-        out += self.add_lo_v_sigma_tau_r(r_ij, psi_r, self.C_nlo_4 * nlo_linear_pair_coefficients)
+        out += self.add_lo_v_sigma_tau_r(r_ij, psi_r, nlo_v_sigma_tau)
         out *= H_BAR
         if self.particle_triplets.shape[0] > 0 and self.include_3body:
             out += self.three_body(r_coords, psi_r)
