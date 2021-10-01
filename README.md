@@ -46,6 +46,7 @@ Additional documentation can be found in the [documentation directory](/document
 * [control flow summary](/documentation/control_flow_summary.md)
 * [input specification](/documentation/input.md)
 * [wave function conventions and spin-isospin operators](/documentation/wave_function_conventions.md)
+* [parallelization](/documentation/parallelization.md)
 
 
 [comment]: <> (this is how u do math in markdown: <img src="https://render.githubusercontent.com/render/math?math=e^{i \pi} = -1">)
