@@ -1,4 +1,4 @@
-# Papers
+# Resources
 This is a short summary of useful resources for this project.
 
 ## Quantum Monte Carlo
