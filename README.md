@@ -48,5 +48,12 @@ Additional documentation can be found in the [documentation directory](/document
 * [wave function conventions and spin-isospin operators](/documentation/wave_function_conventions.md)
 * [parallelization](/documentation/parallelization.md)
 
+## To Do
+* the arxiv_2102_02327v1 potential has been validated up to 6Li up to LO interactions
+* there is an option to include NLO interactions (see input documentation) but only v_c, v_sigma, v_tau, 
+and v_sigma_tau parts of NLO
+have been unit tested (see test_arxiv_2102_02327v1_potential unit test). 
+* The other NLO terms must be validated using the same unit test file and the correct potential 
+values found in files: [LO](tests/pot_nn) and [NLO](tests/pot_NLO_nn).
 
 [comment]: <> (this is how u do math in markdown: <img src="https://render.githubusercontent.com/render/math?math=e^{i \pi} = -1">)
