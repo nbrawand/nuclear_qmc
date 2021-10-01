@@ -1,6 +1,6 @@
 from nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy import Arxiv_2102_02327v1_Potential
 import jax.numpy as jnp
-from jax import config
+from jax import config, vmap, grad
 from nuclear_qmc.wave_function.get_spin_isospin_indices.get_system_arrays import get_system_arrays
 from nuclear_qmc.utils.get_expectation import get_expectation
 from nuclear_qmc.constants.constants import H_BAR
@@ -81,10 +81,10 @@ def test_build_arxiv_2102_02327v1_2H():
 
 
 def test_C():
-    pot = get_pot()
     R = 1
     rij = 1
-    computed = pot.C(rij, R)
+    from nuclear_qmc.operators.hamiltonian.arxiv_2102_02327v1.potential_energy import C
+    computed = C(rij, R)
     expected = jnp.exp(-1) / jnp.pi ** (3 / 2)
     assert computed == expected
 
@@ -142,19 +142,88 @@ def test_d2Calpha():
     assert computed == expected
 
 
-"""
-def test_pot():
-    pot = get_pot()
-    psi = lambda p, _r: jnp.array([
-        [1., 0, 0, 0],
-        [-1., 0, 0, 0]
-    ])
-    params = jnp.array([])
-    r = jnp.array([
-        [0, 0, 0]
-        , [1., 0, 0]
-    ])
-    computed = pot(psi, params, r)
-    expected = 0.1
-    assert computed == expected
-"""
+def test_v_lo():
+    sigfig = 4
+    r_ij = jnp.array([0.004, 0.008, 0.012], dtype=jnp.float64)
+    psi_r = 1.0
+    kwargs = {
+        'model_string': 'o'
+        , 'R3': 1.0
+        , 'include_3body': False
+        , 'theory_order': 'lo'
+    }
+    pot = get_pot(kwargs)
+    hbar = 197.327
+
+    # vc
+    helper = lambda rij: pot.add_lo_v_c_r(rij, psi_r, pair_coefficients=0.0) * hbar
+    computed = vmap(helper)(r_ij).round(sigfig)
+    expected = jnp.array([-0.1837723E+02, -0.1837689E+02, -0.1837633E+02]).round(sigfig)
+    assert jnp.array_equal(computed, expected)
+
+    # vt
+    psi_r = jnp.ones(shape=(2, 4), dtype=jnp.float64)
+    helper = lambda rij: pot.add_lo_v_tau_r(rij, psi_r, pair_coefficients=0.0)[0, 0] * hbar
+    computed = vmap(helper)(r_ij).round(sigfig)
+    expected = jnp.array([0.1075637E+02, 0.1075614E+02, 0.1075577E+02]).round(sigfig)
+    assert jnp.array_equal(computed, expected)
+
+    # vs
+    psi_r = jnp.ones(shape=(2, 4), dtype=jnp.float64)
+    helper = lambda rij: pot.add_lo_v_sigma_r(rij, psi_r, pair_coefficients=0.0)[0, 0] * hbar
+    computed = vmap(helper)(r_ij).round(sigfig)
+    expected = jnp.array([0.1495113E+01, 0.1495116E+01, 0.1495121E+01]).round(sigfig)
+    assert jnp.array_equal(computed, expected)
+
+    # vst
+    psi_r = jnp.ones(shape=(2, 4), dtype=jnp.float64)
+    helper = lambda rij: pot.add_lo_v_sigma_tau_r(rij, psi_r, pair_coefficients=jnp.array([0.0]))[0, 0] * hbar
+    helper(r_ij[0])
+    computed = vmap(helper)(r_ij).round(sigfig)
+    expected = jnp.array([0.6125742E+01, 0.6125630E+01, 0.6125443E+01]).round(sigfig)
+    assert jnp.array_equal(computed, expected)
+
+
+def test_v_nlo():
+    sigfig = 4
+    r_ij = jnp.array([0.01, 0.02, 0.03], dtype=jnp.float64)
+    psi_r = 1.0
+    kwargs = {
+        'model_string': 'o'
+        , 'R3': 1.0
+        , 'include_3body': False
+        , 'theory_order': 'nlo'
+    }
+    pot = get_pot(kwargs)
+    hbar = 197.327
+
+    # vc
+    local = lambda rij: pot.add_lo_v_c_r(rij, psi_r, pair_coefficients=0.0)
+    computed = (vmap(pot.nlo_v_c)(r_ij) + vmap(local)(r_ij)) * hbar
+    computed = computed.round(sigfig)
+    expected = jnp.array([-33.63923584, -33.63392711, -33.62508100]).round(sigfig)
+    assert jnp.array_equal(computed, expected)
+
+    # vt
+    psi_r = jnp.ones(shape=(2, 4), dtype=jnp.float64)
+    helper = lambda rij, tau: pot.add_lo_v_tau_r(rij, psi_r, pair_coefficients=tau)[0, 0] * hbar
+    nlo_v_tau = vmap(pot.nlo_v_tau)(r_ij)
+    computed = vmap(helper)(r_ij, nlo_v_tau).round(sigfig)
+    expected = jnp.array([21.49169908, 21.48775938, 21.48119465]).round(sigfig)
+    assert jnp.array_equal(computed, expected)
+
+    ## vs
+    psi_r = jnp.ones(shape=(2, 4), dtype=jnp.float64)
+    helper = lambda rij, op: pot.add_lo_v_sigma_r(rij, psi_r, pair_coefficients=op)[0, 0] * hbar
+    nlo_v_sigma = vmap(pot.nlo_v_sigma)(r_ij)
+    computed = vmap(helper)(r_ij, nlo_v_sigma).round(sigfig)
+    expected = jnp.array([13.23823961, 13.23579514, 13.23172194]).round(sigfig)
+    assert jnp.array_equal(computed, expected)
+
+    ## vst
+    psi_r = jnp.ones(shape=(2, 4), dtype=jnp.float64)
+    helper = lambda rij, op: pot.add_lo_v_sigma_tau_r(jnp.array([rij]), psi_r, pair_coefficients=op)[0, 0] * hbar
+    nlo_v_sigma_tau = vmap(pot.nlo_v_sigma_tau)(r_ij)
+    computed = vmap(helper)(r_ij, nlo_v_sigma_tau).round(sigfig)
+    expected = jnp.array([-7.11841979, -7.11644482, -7.11315406]).round(sigfig)
+    assert jnp.array_equal(computed, expected)

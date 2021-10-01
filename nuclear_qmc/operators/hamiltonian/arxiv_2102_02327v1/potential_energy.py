@@ -12,7 +12,7 @@ from nuclear_qmc.wave_function.get_spin_isospin_indices.get_system_arrays import
 from nuclear_qmc.wave_function.utility import get_psi_r
 import jax.numpy as jnp
 from nuclear_qmc.constants.constants import H_BAR, ALPHA
-from jax import vmap
+from jax import vmap, grad
 
 from nuclear_qmc.utils.get_dr_ij import get_r_ij, get_r_ik_r_ij_cycles
 
@@ -23,6 +23,17 @@ def get_iso_z_factors(mass_number, proton_number):
     extracted_bits = vmap(lambda particle: vmap(get_bit, in_axes=(0, None))(indices, particle))(particle_index)
     z_prefactors = make_negative_1_if_spin_down_else_1(extracted_bits)
     return z_prefactors
+
+
+def C(r, R):
+    return jnp.exp(-r ** 2 / R ** 2) / jnp.pi ** (3 / 2) / R ** 3
+
+
+def drrc_2drcr(r, R0, R1, coef0, coef1):
+    c0_c1 = lambda r: coef0 * C(r, R0) + coef1 * C(r, R1)
+    dr_c0_c1 = grad(c0_c1)
+    drr_c0_c1 = grad(dr_c0_c1)
+    return drr_c0_c1(r) + 2. * dr_c0_c1(r) / r
 
 
 class Arxiv_2102_02327v1_Potential:
@@ -84,6 +95,7 @@ class Arxiv_2102_02327v1_Potential:
             'lo': {'a': 0., 'b': 0., 'c': 0., 'd': 0., 'o': 0.},
             'nlo': {'a': -1.12720036, 'b': -1.82744818, 'c': -4.12069851, 'd': -4.83330518, 'o': -.938734989}
         }[theory_order][model_string]
+
         self.C_nlo_2 = {
             'lo': {'a': 0., 'b': 0., 'c': 0., 'd': 0., 'o': 0.},
             'nlo': {'a': 0.909366063, 'b': 1.14092429, 'c': 2.51441807, 'd': 1.43873251, 'o': 0.483260368}
@@ -143,28 +155,41 @@ class Arxiv_2102_02327v1_Potential:
         self.v_coulomb_proton_proton = build_v_coulomb_proton_proton(self.particle_pairs,
                                                                      self.isospin_binary_representation)
 
-    @staticmethod
-    def C(r_ij, R):
-        out = jnp.exp(-(r_ij / R) ** 2)
-        out /= jnp.pi ** (3. / 2.)
-        out /= R ** 3
+    def nlo_v_c(self, r_ij):
+        out = -self.C_nlo_1 / 4. * drrc_2drcr(r_ij, self.R0, self.R1, 1, 3)
+        out += -self.C_nlo_2 / 4. * drrc_2drcr(r_ij, self.R0, self.R1, -3, 3)
+        return out
+
+    def nlo_v_tau(self, r_ij):
+        out = -self.C_nlo_1 / 4. * drrc_2drcr(r_ij, self.R0, self.R1, -1, 1)
+        out += -self.C_nlo_2 / 4. * drrc_2drcr(r_ij, self.R0, self.R1, 3, 1)
+        return out
+
+    def nlo_v_sigma(self, r_ij):
+        out = - self.C_nlo_3 / 4. * drrc_2drcr(r_ij, self.R0, self.R1, 1, 3)
+        out += - self.C_nlo_4 / 4. * drrc_2drcr(r_ij, self.R0, self.R1, -3, 3)
+        return out
+
+    def nlo_v_sigma_tau(self, r_ij):
+        out = - self.C_nlo_3 / 4. * drrc_2drcr(r_ij, self.R0, self.R1, -1, 1)
+        out += - self.C_nlo_4 / 4. * drrc_2drcr(r_ij, self.R0, self.R1, 3, 1)
         return out
 
     def C0(self, r_ij):
-        return self.C(r_ij, self.R0)
+        return C(r_ij, self.R0)
 
     def C1(self, r_ij):
-        return self.C(r_ij, self.R1)
+        return C(r_ij, self.R1)
 
     def d1Calpha(self, r_ij, R):
         R2 = R ** 2
-        out = -2.0 * r_ij * self.C(r_ij, R) / R2
+        out = -2.0 * r_ij * C(r_ij, R) / R2
         return out
 
     def d2Calpha(self, r_ij, R):
         R2 = R ** 2
         rij2 = r_ij ** 2
-        out = -2.0 * self.C(r_ij, R) / R2
+        out = -2.0 * C(r_ij, R) / R2
         out *= (1 - (2 * rij2 / R2))
         return out
 
@@ -177,7 +202,7 @@ class Arxiv_2102_02327v1_Potential:
         return (3 + o_ij) / 4.0
 
     def C_total(self, r_ij, tau_ij):
-        out = self.C(r_ij, self.R0) * self.P_0(tau_ij) + self.C(r_ij, self.R1) * self.P_1(tau_ij)
+        out = C(r_ij, self.R0) * self.P_0(tau_ij) + C(r_ij, self.R1) * self.P_1(tau_ij)
         return out
 
     def d1C(self, r_ij, tau_ij):
@@ -269,13 +294,18 @@ class Arxiv_2102_02327v1_Potential:
                                           , expected_tau_ij).sum(axis=0)
             out += self.v_nlo_b(r_coords, r_ij, delta_rij, psi, psi_params, expected_tau_ij)
             out += self.v_nlo_T(r_ij, psi_r, tau_ij_psi_r_value, expected_tau_ij)
-            nlo_linear_pair_coefficients = -self.d2C(r_ij, expected_tau_ij) - 2.0 * self.d1C(r_ij,
-                                                                                             expected_tau_ij) / r_ij
+            nlo_linear_pair_coefficients = self.nlo_v_c(r_ij)
+            nlo_v_c = vmap(self.nlo_v_c)(r_ij)
+            nlo_v_tau = vmap(self.nlo_v_tau)(r_ij)
+            nlo_v_sigma = vmap(self.nlo_v_sigma)(r_ij)
         else:
             nlo_linear_pair_coefficients = 0.0
-        out += self.add_lo_v_c_r(r_ij, psi_r, self.C_nlo_1 * nlo_linear_pair_coefficients)
-        out += self.add_lo_v_tau_r(r_ij, psi_r, self.C_nlo_2 * nlo_linear_pair_coefficients)
-        out += self.add_lo_v_sigma_r(r_ij, psi_r, self.C_nlo_3 * nlo_linear_pair_coefficients)
+            nlo_v_c = 0.0
+            nlo_v_tau = 0.0
+            nlo_v_sigma = 0.0
+        out += self.add_lo_v_c_r(r_ij, psi_r, nlo_v_c)
+        out += self.add_lo_v_tau_r(r_ij, psi_r, nlo_v_tau)
+        out += self.add_lo_v_sigma_r(r_ij, psi_r, nlo_v_sigma)
         out += self.add_lo_v_sigma_tau_r(r_ij, psi_r, self.C_nlo_4 * nlo_linear_pair_coefficients)
         out *= H_BAR
         if self.particle_triplets.shape[0] > 0 and self.include_3body:
