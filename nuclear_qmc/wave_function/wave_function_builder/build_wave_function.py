@@ -11,9 +11,7 @@ from scipy.stats import rankdata
 import numpy as np
 from nuclear_qmc.wave_function.get_spin_isospin_indices.get_system_arrays import get_number_of_isospin_states, \
     get_number_of_spin_states
-from jax.ops import index
 from itertools import permutations as get_permutations
-from jax.ops import index_add
 import jax
 from nuclear_qmc.wave_function.utility import apply_confining_potential
 
@@ -130,7 +128,7 @@ def create_wave_function(key
         terms = terms.reshape(-1)
         i = signature_indices[:, 0]
         j = signature_indices[:, 1]
-        wave_function = index_add(wave_function, index[i, j], terms)
+        wave_function = wave_function.at[i, j].add(terms)
         return wave_function
 
     def decay_func(_r, decay_strength):

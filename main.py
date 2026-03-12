@@ -5,7 +5,7 @@ Call:
 
 for instructions.
 """
-from jax.config import config
+import jax
 import jax.numpy as jnp
 import json
 from nuclear_qmc.utils.n_protons_and_n_neutrons import get_n_protons_and_n_neutrons
@@ -21,7 +21,7 @@ from jax import random
 import logging
 import argparse
 
-config.update("jax_enable_x64", True)
+jax.config.update("jax_enable_x64", True)
 
 # parse args
 parser = argparse.ArgumentParser(description='This routine performs VMC calculations for nuclear systems.')

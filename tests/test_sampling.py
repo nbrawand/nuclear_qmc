@@ -1,9 +1,9 @@
-from jax.config import config
+import jax
 import jax.numpy as jnp
 from jax import random, vmap
 from nuclear_qmc.sampling.sample import sample, get_psi_psi_r
 
-config.update("jax_enable_x64", True)
+jax.config.update("jax_enable_x64", True)
 
 
 def test_psi_psi_vector():

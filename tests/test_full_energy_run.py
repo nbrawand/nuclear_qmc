@@ -1,4 +1,4 @@
-from jax.config import config
+import jax
 import jax.numpy as jnp
 from jax import random, vmap
 from nuclear_qmc.operators.hamiltonian.get_local_energy import get_local_energy
@@ -8,7 +8,7 @@ from nuclear_qmc.sampling.sample import sample
 from nuclear_qmc.wave_function.get_spin_isospin_indices.get_system_arrays import \
     get_system_arrays
 
-config.update("jax_enable_x64", True)
+jax.config.update("jax_enable_x64", True)
 
 
 def test_full_energy_run():

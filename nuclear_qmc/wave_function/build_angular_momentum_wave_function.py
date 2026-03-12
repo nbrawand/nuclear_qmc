@@ -1,5 +1,4 @@
 from jax import vmap, jit
-from jax.ops import index, index_update
 import jax.numpy as jnp
 from nuclear_qmc.wave_function.wave_function_builder.spherical_harmonics import get_spherical_harmonic_systems
 
@@ -49,7 +48,7 @@ def build_angular_momentum_wave_function(key, n_particles
         new_values = vmap(f)(jnp.arange(len(iso_indices)))
         wave_function = spin_isospin_wave_function.copy()
         for i in range(len(iso_indices)):
-            wave_function = index_update(wave_function, index[iso_indices[i], spin_indices[i]], new_values[i])
+            wave_function = wave_function.at[iso_indices[i], spin_indices[i]].set(new_values[i])
         return wave_function
 
     return key, wave_function, params

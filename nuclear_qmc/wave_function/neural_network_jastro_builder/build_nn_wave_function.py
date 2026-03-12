@@ -2,8 +2,8 @@ import pickle
 
 import jax
 from jax import numpy as jnp, random
-from jax.experimental import stax
-from jax.experimental.stax import Dense, Tanh
+from jax.example_libraries import stax
+from jax.example_libraries.stax import Dense, Tanh
 from jax.flatten_util import ravel_pytree
 
 
@@ -23,7 +23,7 @@ def build_nn_wave_function(ndense=4, key=None, params_file=None, in_shape=(1,), 
     else:
         key, key_input = jax.random.split(key)
         _, unflattened_params = phi_a_init(key_input, in_shape)
-        unflattened_params = jax.tree_multimap(lambda params: params.astype(jnp.float64), unflattened_params)
+        unflattened_params = jax.tree.map(lambda params: params.astype(jnp.float64), unflattened_params)
 
     flat_params, unflatten_params_function = ravel_pytree(unflattened_params)
 

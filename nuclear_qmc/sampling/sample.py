@@ -1,7 +1,6 @@
 import jax
 import jax.numpy as jnp
 from jax import random, jit, vmap
-from jax.ops import index, index_update
 from jax.lax import fori_loop
 from nuclear_qmc.utils.center_particles import center_walkers
 
@@ -59,7 +58,7 @@ def sample(
         x_o, wpsi_o = fori_loop(0, n_void_steps, step, (x_o, wpsi_o))
         x_o = center_walkers(x_o)
 
-        x_stored = index_update(x_stored, index[i, :, :, :], x_o)
+        x_stored = x_stored.at[i, :, :, :].set(x_o)
 
         return key, x_o, x_stored
 

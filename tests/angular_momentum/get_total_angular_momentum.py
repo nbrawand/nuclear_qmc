@@ -1,7 +1,6 @@
 from jax import vmap, hessian, jacfwd
 from itertools import combinations as get_combinations
 import jax.numpy as jnp
-from jax.ops import index_update, index
 
 
 def rotate_r(r_coords, theta, ith_particle, axis):
@@ -19,7 +18,7 @@ def rotate_r(r_coords, theta, ith_particle, axis):
          [0., 0., 1.]]  # z
     ])[axis]
     rotated_ith_coords_prime = jnp.einsum('ji,i', rotation_matrix, r_coords[ith_particle])
-    r_coords = index_update(r_coords, index[ith_particle], rotated_ith_coords_prime)
+    r_coords = r_coords.at[ith_particle].set(rotated_ith_coords_prime)
     return r_coords
 
 

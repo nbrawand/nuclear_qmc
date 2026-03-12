@@ -6,7 +6,7 @@ import jax.numpy as jnp
 
 from nuclear_qmc.operators.hamiltonian.arxiv_2007_14282v2.potential_energy import build_arxiv_2007_14282v2
 from nuclear_qmc.operators.operators import kinetic_energy_psi
-from jax.config import config
+import jax
 
 from nuclear_qmc.utils.get_dr_ij import get_r_ij_sqrd, get_r_ik_r_ij_cycles
 from nuclear_qmc.wave_function.jastro import exponential_jastro as exp_psi
@@ -15,7 +15,7 @@ from nuclear_qmc.wave_function.legacy_wave_function_for_testing.test_neural_netw
 from nuclear_qmc.wave_function.get_spin_isospin_indices.get_system_arrays import \
     get_system_arrays
 
-config.update("jax_enable_x64", True)
+jax.config.update("jax_enable_x64", True)
 
 
 class TestHamiltonian:

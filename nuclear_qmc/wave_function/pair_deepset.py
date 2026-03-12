@@ -4,11 +4,10 @@ import jax.numpy as jnp
 from jax import random, grad, jit, vmap, pmap, jacfwd, jacrev
 from jax.tree_util import tree_flatten
 from jax.flatten_util import ravel_pytree
-from jax.experimental import stax
-from jax.experimental.stax import (BatchNorm, Conv, Dense, Flatten,
+from jax.example_libraries import stax
+from jax.example_libraries.stax import (BatchNorm, Conv, Dense, Flatten,
                                    Relu, LogSoftmax, Softplus, Tanh, Sigmoid, elementwise)
 from jax.nn.initializers import glorot_normal, normal, ones, zeros
-from jax.ops import index, index_add, index_update
 
 from functools import partial
 import pickle
@@ -68,7 +67,7 @@ class PairDeepset(object):
         net_params = phi_a_params + rho_a_params + theta
 
         # cast to double
-        net_params = jax.tree_multimap(self.update_cast, net_params)
+        net_params = jax.tree.map(self.update_cast, net_params)
         flat_net_params = self.flatten_params(net_params)
 
         return flat_net_params

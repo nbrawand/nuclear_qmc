@@ -1,7 +1,6 @@
 import jax.numpy as jnp
 import numpy as np
 from jax import vmap
-from jax.ops import index, index_update
 
 
 def get_particle_pairs_index(particle_pairs):

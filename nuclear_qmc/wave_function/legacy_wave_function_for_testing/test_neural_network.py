@@ -2,8 +2,8 @@ import jax
 from jax import random
 from jax.flatten_util import ravel_pytree
 import jax.numpy as jnp
-from jax.experimental import stax
-from jax.experimental.stax import Dense, Tanh
+from jax.example_libraries import stax
+from jax.example_libraries.stax import Dense, Tanh
 import pickle
 import os
 
