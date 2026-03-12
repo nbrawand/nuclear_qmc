@@ -57,4 +57,16 @@ have been unit tested (see test_arxiv_2102_02327v1_potential unit test).
 * The other NLO terms must be validated using the same unit test file and the correct potential 
 values found in files: [LO](tests/pot_nn) and [NLO](tests/pot_NLO_nn).
 
+## Contributions
+{
+  "authors": ["Gnech, A.", "Adams, C.", "Brawand, N.", "et al."],
+  "title": "Nuclei with Up to Nucleons with Artificial Neural Network Wave Functions",
+  "journal": "Few-Body Systems",
+  "volume": 63,
+  "article": 7,
+  "year": 2022,
+  "doi": "10.1007/s00601-021-01706-0",
+  "url": "https://doi.org/10.1007/s00601-021-01706-0"
+}
+
 [comment]: <> (this is how u do math in markdown: <img src="https://render.githubusercontent.com/render/math?math=e^{i \pi} = -1">)
